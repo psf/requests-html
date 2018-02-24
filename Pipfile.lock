@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "94acbec9dacb3fc6349401e4bb044fabe92671a962f56f908c8d4246354eab93"
+            "sha256": "7fea86728660b19b58ee32ea324ef582c66acbebce424a21cfc63e51d6a0ed38"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -48,6 +48,19 @@
             ],
             "version": "==1.0.3"
         },
+        "fake-useragent": {
+            "hashes": [
+                "sha256:cc9b9ddcebc708b3deac846f5fccb16e37c02ee47435a4ec7132271dd96aec8c"
+            ],
+            "version": "==0.1.10"
+        },
+        "html2text": {
+            "hashes": [
+                "sha256:490db40fe5b2cd79c461cf56be4d39eb8ca68191ae41ba3ba79f6cb05b7dd662",
+                "sha256:627514fb30e7566b37be6900df26c2c78a030cc9e6211bda604d8181233bcdd4"
+            ],
+            "version": "==2018.1.9"
+        },
         "idna": {
             "hashes": [
                 "sha256:8c7309c718f94b3a625cb648ace320157ad16ff131ae0af362c9f21b80ef6ec4",
@@ -87,6 +100,12 @@
                 "sha256:940caef1ec7c78e0c34b0f6b94fe42d0f2022915ffc78643d28538a5cfd0f40e"
             ],
             "version": "==4.1.1"
+        },
+        "parse": {
+            "hashes": [
+                "sha256:8048dde3f5ca07ad7ac7350460952d83b63eaacecdac1b37f45fd74870d849d2"
+            ],
+            "version": "==1.8.2"
         },
         "pyquery": {
             "hashes": [

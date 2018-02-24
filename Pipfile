@@ -9,6 +9,9 @@ name = "pypi"
 
 requests = "*"
 pyquery = "*"
+"html2text" = "*"
+fake-useragent = "*"
+parse = "*"
 
 
 [dev-packages]
