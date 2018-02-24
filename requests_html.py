@@ -1,6 +1,8 @@
 import requests
 from pyquery import PyQuery
 
+from lxml.etree import tostring
+
 class Element:
     """docstring for Element"""
     def __init__(self, element):
@@ -26,6 +28,18 @@ class Element:
     @property
     def text(self):
         return self.pq.text()
+
+    @property
+    def html(self):
+        return tostring(self.element).decode('utf-8').strip()
+
+    def find(self, selector):
+        def gen():
+            for found in self.pq(selector):
+                yield Element(found)
+
+        return [g for g in gen()]
+
 
 
 class HTML(object):
@@ -87,7 +101,6 @@ class HTML(object):
         return PyQuery(self.html)
 
 
-
 def handle_response(response, **kwargs):
     response.html = HTML(response)
     return response
@@ -97,4 +110,4 @@ session = requests.Session()
 session.hooks = {'response': handle_response}
 
 r = session.get('https://kennethreitz.org/')
-print(r.html.absolute_links)
+print(r.html.find('a')[0].html)
