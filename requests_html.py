@@ -1,15 +1,23 @@
+from tempfile import TemporaryFile
+
 import html2text
 import requests
 from pyquery import PyQuery
 
+from fake_useragent import UserAgent
 from lxml.etree import tostring
+from parse import search as parse_search
+from parse import findall
 
 # HTML 2 Markdown converter.
 html2text = html2text.HTML2Text()
+useragent = UserAgent()
 
+# xpath support next.
+# parse support.
 
 class Element:
-    """docstring for Element"""
+    """An element of HTML."""
     def __init__(self, element):
         self.element = element
 
@@ -19,65 +27,90 @@ class Element:
             attrs.append('{}={}'.format(attr, repr(self.attrs[attr])))
 
         return "<Element {} {}>".format(repr(self.element.tag), ' '.join(attrs))
-        # return tostring(self.element).decode('utf-8')
 
     @property
     def pq(self):
+        """PyQuery representation of the element."""
         return PyQuery(self.element)
 
     @property
     def attrs(self):
-        # print(dir(self.element))
+        """Returns a dictionary of the attributes of the element."""
         return {k: self.pq.attr[k] for k in self.element.keys()}
 
     @property
     def text(self):
+        """The text content of the element."""
         return self.pq.text()
 
     @property
     def full_text(self):
+        """The full text content (including links) of the element."""
         return self.pq.text_content()
 
     @property
     def markdown(self):
+        """Markdown representation of the element."""
         return html2text.handle(self.html)
 
     @property
     def html(self):
+        """HTML representation of the element."""
         return tostring(self.element).decode('utf-8').strip()
 
     def find(self, selector):
+        """Given a jQuery selector, returns a list of element objects."""
         def gen():
             for found in self.pq(selector):
                 yield Element(found)
 
         return [g for g in gen()]
 
+    def search(self, template):
+        """Searches the element for the given parse template."""
+        return parse_search(template, self.html)
+
+    def search_all(self, template):
+        """Searches the element (multiple times) for the given parse
+        template.
+        """
+        return [r for r in findall(template, self.html)]
 
 
-class HTML(object):
-    """docstring for HTML"""
+class HTML:
+    """An HTML document."""
     def __init__(self, response):
         self.html = response.text
         self.url = response.url
         self.skip_anchors = True
 
     def __repr__(self):
-        return repr("<HTML url={}>".format(repr(self.url)))
+        return "<HTML url={}>".format(repr(self.url))
 
-    def find(self, selector=None):
+    def find(self, selector):
+        """Given a jQuery selector, returns a list of element objects."""
         def gen():
             for found in self.pq(selector):
                 yield Element(found)
 
         return [g for g in gen()]
 
+    def search(self, template):
+        """Searches the page for the given parse template."""
+        return parse_search(template, self.html)
+
+    def search_all(self, template):
+        """Searches the page (multiple times) for the given parse template."""
+        return [r for r in findall(template, self.html)]
+
     @property
     def markdown(self):
+        """Markdown representation of the page."""
         return html2text.handle(self.html)
 
     @property
     def links(self):
+        """All found links on page, in as–is form."""
         def gen():
             for link in self.find('a'):
                 try:
@@ -91,6 +124,7 @@ class HTML(object):
 
     @property
     def base_url(self):
+        """The base URL for the page."""
         url = '/'.join(self.url.split('/')[:-1])
         if url.endswith('/'):
             url = url[:-1]
@@ -99,9 +133,11 @@ class HTML(object):
 
     @property
     def absolute_links(self):
+        """All found links on page, in absolute form."""
         def gen():
             for link in self.links:
-                if not link.startswith('http'):
+                # Appears to not be an absolute link.
+                if ':' not in link:
                     if link.startswith('/'):
                         href = '{}{}'.format(self.base_url, link)
                     else:
@@ -115,15 +151,44 @@ class HTML(object):
 
     @property
     def pq(self):
+        """PyQuery representation of the page."""
         return PyQuery(self.html)
 
 
-def handle_response(response, **kwargs):
+def _handle_response(response, **kwargs):
+    """Requests HTTP Response handler. Attaches .html property to Response
+    objects.
+    """
+
     response.html = HTML(response)
     return response
 
 
-session = requests.Session()
-session.hooks = {'response': handle_response}
+def user_agent(style=None):
+    """Returns a random user-agent, if not requested one of a specific
+    style.
+    """
 
-print(session.get('https://github.com/kennethreitz/requests-html').html.find('.message')[0].text)
+    if not style:
+        return useragent.random
+    else:
+        return useragent[style]
+
+def get_session(mock_browser=True):
+    """Returns a consumable session, for cookie persistience and connection
+    pooling, amongst other things.
+    """
+
+    # Requests Session.
+    session = requests.Session()
+
+    # Mock a web browser's user agent.
+    if mock_browser:
+        session.headers['User-Agent'] = user_agent()
+
+    # Hook into Requests.
+    session.hooks = {'response': _handle_response}
+
+    return session
+
+session = get_session()
