@@ -1,11 +1,12 @@
+import html2text
 import requests
 from pyquery import PyQuery
 
 from lxml.etree import tostring
-import html2text
+
+# HTML 2 Markdown converter.
 html2text = html2text.HTML2Text()
 
-# TODO: Markdown converter.
 
 class Element:
     """docstring for Element"""
@@ -125,4 +126,4 @@ def handle_response(response, **kwargs):
 session = requests.Session()
 session.hooks = {'response': handle_response}
 
-print(session.get('http://httpbin.org/').html.markdown)
+print(session.get('https://github.com/kennethreitz/requests-html').html.find('.message')[0].text)
