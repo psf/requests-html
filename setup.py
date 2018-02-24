@@ -21,7 +21,7 @@ VERSION = '0.0.1'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'requests', 'pyquery'
+    'requests', 'pyquery', 'html2text'
 ]
 
 # The rest you shouldn't have to touch too much :)

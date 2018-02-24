@@ -2,6 +2,10 @@ import requests
 from pyquery import PyQuery
 
 from lxml.etree import tostring
+import html2text
+html2text = html2text.HTML2Text()
+
+# TODO: Markdown converter.
 
 class Element:
     """docstring for Element"""
@@ -30,6 +34,14 @@ class Element:
         return self.pq.text()
 
     @property
+    def full_text(self):
+        return self.pq.text_content()
+
+    @property
+    def markdown(self):
+        return html2text.handle(self.html)
+
+    @property
     def html(self):
         return tostring(self.element).decode('utf-8').strip()
 
@@ -50,14 +62,18 @@ class HTML(object):
         self.skip_anchors = True
 
     def __repr__(self):
-        return repr(self.html)
+        return repr("<HTML url={}>".format(repr(self.url)))
 
-    def find(self, selector):
+    def find(self, selector=None):
         def gen():
             for found in self.pq(selector):
                 yield Element(found)
 
         return [g for g in gen()]
+
+    @property
+    def markdown(self):
+        return html2text.handle(self.html)
 
     @property
     def links(self):
@@ -108,3 +124,5 @@ def handle_response(response, **kwargs):
 
 session = requests.Session()
 session.hooks = {'response': handle_response}
+
+print(session.get('http://httpbin.org/').html.markdown)
