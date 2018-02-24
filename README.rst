@@ -23,8 +23,7 @@ Usage
 
     >>> from requests_html import session
 
-    >>> url = 'https://python.org/'
-    >>> r = session.get(url)
+    >>> r = session.get('https://python.org/')
 
     >>> r.html.links
     {'/users/membership/', '/about/gettingstarted/', 'http://feedproxy.google.com/~r/PythonInsider/~3/zVC80sq9s00/python-364-is-now-available.html', '/about/success/', 'http://flask.pocoo.org/', 'http://www.djangoproject.com/', '/blogs/', ... '/psf-landing/', 'https://wiki.python.org/moin/PythonBooks'}
