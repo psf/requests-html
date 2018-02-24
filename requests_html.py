@@ -108,6 +108,3 @@ def handle_response(response, **kwargs):
 
 session = requests.Session()
 session.hooks = {'response': handle_response}
-
-r = session.get('https://kennethreitz.org/')
-print(r.html.find('a')[0].html)

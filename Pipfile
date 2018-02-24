@@ -13,3 +13,4 @@ pyquery = "*"
 
 [dev-packages]
 
+twine = "*"
