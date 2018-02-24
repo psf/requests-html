@@ -49,25 +49,38 @@ class HTML(object):
     def links(self):
         def gen():
             for link in self.find('a'):
-                href = link.attrs['href']
-                if not href.startswith('#') and self.skip_anchors:
-                    yield href
-        return [g for g in gen()]
+                try:
+                    href = link.attrs['href']
+                    if not href.startswith('#') and self.skip_anchors:
+                        yield href
+                except KeyError:
+                    pass
+
+        return set(g for g in gen())
 
     @property
     def base_url(self):
-        return '/'.join(self.url.split('/')[:-1])
+        url = '/'.join(self.url.split('/')[:-1])
+        if url.endswith('/'):
+            url = url[:-1]
+
+        return url
 
     @property
     def absolute_links(self):
         def gen():
             for link in self.links:
                 if not link.startswith('http'):
-                    href = '{}/{}'.format(self.base_url, link)
+                    if link.startswith('/'):
+                        href = '{}{}'.format(self.base_url, link)
+                    else:
+                        href = '{}/{}'.format(self.base_url, link)
+                else:
+                    href = link
 
                 yield href
 
-        return [g for g in gen()]
+        return set(g for g in gen())
 
     @property
     def pq(self):
@@ -79,8 +92,9 @@ def handle_response(response, **kwargs):
     response.html = HTML(response)
     return response
 
+
 session = requests.Session()
 session.hooks = {'response': handle_response}
 
-r = session.get('https://pythonhosted.org/pyquery/')
+r = session.get('https://kennethreitz.org/')
 print(r.html.absolute_links)
