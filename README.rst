@@ -31,7 +31,8 @@ Usage
     >>> r.html.absolute_links
     {'http://feedproxy.google.com/~r/PythonInsider/~3/zVC80sq9s00/python-364-is-now-available.html', 'https://www.python.org/downloads/mac-osx/', 'http://flask.pocoo.org/', 'https://www.python.org//docs.python.org/3/tutorial/', 'http://www.djangoproject.com/', 'https://wiki.python.org/moin/BeginnersGuide', 'https://www.python.org//docs.python.org/3/tutorial/controlflow.html#defining-functions', 'https://www.python.org/about/success/', 'http://twitter.com/ThePSF', 'https://www.python.org/events/python-user-group/634/', ..., 'https://wiki.python.org/moin/PythonBooks'}
 
-    >>> print(r.html.find('#about')[0].text)
+    >>> about = r.html.find('#about')[0]
+    >>> print(about.text)
     About
     Applications
     Quotes
@@ -39,7 +40,7 @@ Usage
     Help
     Python Brochure
 
-    >>> print(r.html.find('#about')[0].markdown)
+    >>> print(about.markdown)
 
     * [About](/about/)
 
@@ -49,10 +50,10 @@ Usage
       * [Help](/about/help/)
       * [Python Brochure](http://brochure.getpython.info/)
 
-    >>> r.html.find('#about')[0].attrs
+    >>> about.attrs
     {'id': 'about', 'class': 'tier-1 element-1  ', 'aria-haspopup': 'true'}
 
-    >>> r.html.find('#about')[0].find('a')
+    >>> about.find('a')
     [<Element 'a' href='/about/' title='' class=''>, <Element 'a' href='/about/apps/' title=''>, <Element 'a' href='/about/quotes/' title=''>, <Element 'a' href='/about/gettingstarted/' title=''>, <Element 'a' href='/about/help/' title=''>, <Element 'a' href='http://brochure.getpython.info/' title=''>]
 
     >>> r.html.search('Python is a {} language')[0]
