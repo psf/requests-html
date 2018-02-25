@@ -104,6 +104,13 @@ More complex CSS Selector example (copied from Chrome dev tools):
     >>> print(r.html.find(sel)[0].text)
     GitHub is a development platform inspired by the way you work. From open source to business, you can host and review code, manage projects, and build software alongside millions of other developers.
 
+XPath is also supported:
+
+.. code-block:: pycon
+
+   >>> r.html.xpath('a')
+   [<Element 'a' class='btn' href='https://help.github.com/articles/supported-browsers'>]
+
 Installation
 ============
 
