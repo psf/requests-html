@@ -12,7 +12,6 @@ pyquery = "*"
 "html2text" = "*"
 fake-useragent = "*"
 parse = "*"
-"bs4" = "*"
 
 
 [dev-packages]
