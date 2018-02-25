@@ -1,5 +1,3 @@
-from io import StringIO
-
 import html2text
 import requests
 from pyquery import PyQuery
