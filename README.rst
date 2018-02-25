@@ -42,7 +42,7 @@ Grab a list of all links on the page, in absolute form (anchors excluded):
     >>> r.html.absolute_links
     {'http://feedproxy.google.com/~r/PythonInsider/~3/zVC80sq9s00/python-364-is-now-available.html', 'https://www.python.org/downloads/mac-osx/', 'http://flask.pocoo.org/', 'https://www.python.org/docs.python.org/3/tutorial/', 'http://www.djangoproject.com/', 'https://wiki.python.org/moin/BeginnersGuide', 'https://www.python.org/about/success/', 'http://twitter.com/ThePSF', 'https://www.python.org/events/python-user-group/634/', ..., 'https://wiki.python.org/moin/PythonBooks'}
 
-Select an element with a jQuery selector.
+Select an element with a CSS Selector:
 
 .. code-block:: pycon
 
