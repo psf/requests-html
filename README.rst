@@ -6,7 +6,8 @@ simple and intuitive as possible.
 
 When using this library you automatically get:
 
-- jQuery selectors (thanks to PyQuery).
+- CSS Selectors (a.k.a jQuery-style, thanks to PyQuery).
+- XPath Selectors, for the faint at heart.
 - Mocked user-agent (like a real web browser).
 - Automatic following of redirects.
 - Connection–pooling and cookie persistience.
