@@ -63,13 +63,21 @@ class Element:
         """HTML representation of the element."""
         return etree.tostring(self.element).decode('utf-8').strip()
 
-    def find(self, selector):
+    def find(self, selector, first=False):
         """Given a jQuery selector, returns a list of element objects."""
         def gen():
             for found in self.pq(selector):
                 yield Element(found)
 
-        return [g for g in gen()]
+        c = [g for g in gen()]
+
+        if first:
+            try:
+                return c[0]
+            except IndexError:
+                return None
+        else:
+            return c
 
     def xpath(self, selector):
         """Given an XPath selector, returns a list of element objects."""
@@ -96,13 +104,21 @@ class HTML:
     def __repr__(self):
         return "<HTML url={}>".format(repr(self.url))
 
-    def find(self, selector):
+    def find(self, selector, first=False):
         """Given a jQuery selector, returns a list of element objects."""
         def gen():
             for found in self.pq(selector):
                 yield Element(found)
 
-        return [g for g in gen()]
+        c = [g for g in gen()]
+
+        if first:
+            try:
+                return c[0]
+            except IndexError:
+                return None
+        else:
+            return c
 
     def search(self, template):
         """Searches the page for the given parse template."""

@@ -45,7 +45,7 @@ Select an element with a jQuery selector.
 
 .. code-block:: pycon
 
-    >>> about = r.html.find('#about')[0]
+    >>> about = r.html.find('#about', first=True)
 
 Grab an element's text contents:
 
@@ -85,11 +85,11 @@ Render an Element as Markdown:
       * [Getting Started](/about/gettingstarted/)
       * [Help](/about/help/)
       * [Python Brochure](http://brochure.getpython.info/)
-      
+
  Search for text on the page:
- 
+
  .. code-block:: pycon
- 
+
     >>> r.html.search('Python is a {} language')[0]
     programming
 
@@ -97,6 +97,7 @@ More complex CSS Selector example:
 
     >>> r = session.get('https://github.com/')
     >>> sel = 'body > div.application-main > div.jumbotron.jumbotron-codelines > div > div > div.col-md-7.text-center.text-md-left > p'
+
     >>> print(r.html.find(sel)[0].text)
     GitHub is a development platform inspired by the way you work. From open source to business, you can host and review code, manage projects, and build software alongside millions of other developers.
 
