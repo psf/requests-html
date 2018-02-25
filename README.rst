@@ -22,17 +22,34 @@ Usage
 
 .. code-block:: pycon
 
-    >>> from requests_html import session
+Make a GET request to 'python.org', using Requests:
 
+    >>> from requests_html import session
     >>> r = session.get('https://python.org/')
+
+Grab a list of all links on the page, as–is (anchors excluded):
+
+.. code-block:: pycon
 
     >>> r.html.links
     {'/users/membership/', '/about/gettingstarted/', 'http://feedproxy.google.com/~r/PythonInsider/~3/zVC80sq9s00/python-364-is-now-available.html', '/about/success/', 'http://flask.pocoo.org/', 'http://www.djangoproject.com/', '/blogs/', ... '/psf-landing/', 'https://wiki.python.org/moin/PythonBooks'}
 
+Grab a list of all links on the page, in absolute form (anchors excluded):
+
+.. code-block:: pycon
+
     >>> r.html.absolute_links
     {'http://feedproxy.google.com/~r/PythonInsider/~3/zVC80sq9s00/python-364-is-now-available.html', 'https://www.python.org/downloads/mac-osx/', 'http://flask.pocoo.org/', 'https://www.python.org//docs.python.org/3/tutorial/', 'http://www.djangoproject.com/', 'https://wiki.python.org/moin/BeginnersGuide', 'https://www.python.org//docs.python.org/3/tutorial/controlflow.html#defining-functions', 'https://www.python.org/about/success/', 'http://twitter.com/ThePSF', 'https://www.python.org/events/python-user-group/634/', ..., 'https://wiki.python.org/moin/PythonBooks'}
 
+Select an element with a jQuery selector.
+
+.. code-block:: pycon
+
     >>> about = r.html.find('#about')[0]
+
+Grab an element's text contents:
+
+.. code-block:: pycon
 
     >>> print(about.text)
     About
@@ -42,6 +59,23 @@ Usage
     Help
     Python Brochure
 
+Introspect an Element's attributes:
+
+.. code-block:: pycon
+
+    >>> about.attrs
+    {'id': 'about', 'class': 'tier-1 element-1  ', 'aria-haspopup': 'true'}
+
+Select Elements within Elements:
+
+.. code-block:: pycon
+
+    >>> about.find('a')
+    [<Element 'a' href='/about/' title='' class=''>, <Element 'a' href='/about/apps/' title=''>, <Element 'a' href='/about/quotes/' title=''>, <Element 'a' href='/about/gettingstarted/' title=''>, <Element 'a' href='/about/help/' title=''>, <Element 'a' href='http://brochure.getpython.info/' title=''>]
+
+Render an Element as Markdown:
+
+.. code-block:: pycon
     >>> print(about.markdown)
 
     * [About](/about/)
@@ -51,13 +85,11 @@ Usage
       * [Getting Started](/about/gettingstarted/)
       * [Help](/about/help/)
       * [Python Brochure](http://brochure.getpython.info/)
-
-    >>> about.attrs
-    {'id': 'about', 'class': 'tier-1 element-1  ', 'aria-haspopup': 'true'}
-
-    >>> about.find('a')
-    [<Element 'a' href='/about/' title='' class=''>, <Element 'a' href='/about/apps/' title=''>, <Element 'a' href='/about/quotes/' title=''>, <Element 'a' href='/about/gettingstarted/' title=''>, <Element 'a' href='/about/help/' title=''>, <Element 'a' href='http://brochure.getpython.info/' title=''>]
-
+      
+ Search for text on the page:
+ 
+ .. code-block:: pycon
+ 
     >>> r.html.search('Python is a {} language')[0]
     programming
 
