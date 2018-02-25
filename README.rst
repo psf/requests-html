@@ -27,7 +27,7 @@ Make a GET request to 'python.org', using Requests:
     >>> from requests_html import session
     >>> r = session.get('https://python.org/')
 
-Grab a list of all links on the page (anchors excluded):
+Grab a list of all links on the page, as–is (anchors excluded):
 
 .. code-block:: pycon
 
