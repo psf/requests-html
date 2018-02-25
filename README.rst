@@ -89,14 +89,14 @@ Render an Element as Markdown:
 
 Search for text on the page:
 
- .. code-block:: pycon
+.. code-block:: pycon
 
     >>> r.html.search('Python is a {} language')[0]
     programming
 
 More complex CSS Selector example (copied from Chrome dev tools):
 
- .. code-block:: pycon
+.. code-block:: pycon
 
     >>> r = session.get('https://github.com/')
     >>> sel = 'body > div.application-main > div.jumbotron.jumbotron-codelines > div > div > div.col-md-7.text-center.text-md-left > p'
