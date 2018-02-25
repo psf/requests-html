@@ -1,5 +1,3 @@
-from tempfile import TemporaryFile
-
 import html2text
 import requests
 from pyquery import PyQuery
