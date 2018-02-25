@@ -17,17 +17,31 @@ useragent = UserAgent()
 # xpath support next.
 # parse support.
 
-class BaseParser:
-    """docstring for BaseParser"""
+class Element:
+    """An element of HTML."""
+    def __init__(self, element):
+        self.element = element
+
+    def __repr__(self):
+        attrs = []
+        for attr in self.attrs:
+            attrs.append('{}={}'.format(attr, repr(self.attrs[attr])))
+
+        return "<Element {} {}>".format(repr(self.element.tag), ' '.join(attrs))
+
     @property
     def pq(self):
-        """PyQuery representation of the page."""
-        return PyQuery(self.html)
+        """PyQuery representation of the element."""
+        return PyQuery(self.element)
 
     @property
     def lxml(self):
-        """Etree representation of the page."""
         return fromstring(self.html)
+
+    @property
+    def attrs(self):
+        """Returns a dictionary of the attributes of the element."""
+        return {k: self.pq.attr[k] for k in self.element.keys()}
 
     @property
     def text(self):
@@ -71,6 +85,38 @@ class BaseParser:
         """
         return [r for r in findall(template, self.html)]
 
+
+class HTML:
+    """An HTML document."""
+    def __init__(self, response):
+        self.html = response.text
+        self.url = response.url
+        self.skip_anchors = True
+
+    def __repr__(self):
+        return "<HTML url={}>".format(repr(self.url))
+
+    def find(self, selector):
+        """Given a jQuery selector, returns a list of element objects."""
+        def gen():
+            for found in self.pq(selector):
+                yield Element(found)
+
+        return [g for g in gen()]
+
+    def search(self, template):
+        """Searches the page for the given parse template."""
+        return parse_search(template, self.html)
+
+    def search_all(self, template):
+        """Searches the page (multiple times) for the given parse template."""
+        return [r for r in findall(template, self.html)]
+
+    @property
+    def markdown(self):
+        """Markdown representation of the page."""
+        return html2text.handle(self.html)
+
     @property
     def links(self):
         """All found links on page, in as–is form."""
@@ -84,36 +130,6 @@ class BaseParser:
                     pass
 
         return set(g for g in gen())
-
-
-class Element(BaseParser):
-    """An element of HTML."""
-    def __init__(self, element):
-        self.element = element
-
-    def __repr__(self):
-        attrs = []
-        for attr in self.attrs:
-            attrs.append('{}={}'.format(attr, repr(self.attrs[attr])))
-
-        return "<Element {} {}>".format(repr(self.element.tag), ' '.join(attrs))
-
-    @property
-    def attrs(self):
-        """Returns a dictionary of the attributes of the element."""
-        return {k: self.pq.attr[k] for k in self.element.keys()}
-
-
-class HTML(BaseParser):
-    """An HTML document."""
-
-    def __init__(self, response):
-        self.html = response.text
-        self.url = response.url
-        self.skip_anchors = True
-
-    def __repr__(self):
-        return "<HTML url={}>".format(repr(self.url))
 
     @property
     def base_url(self):
@@ -142,6 +158,20 @@ class HTML(BaseParser):
 
         return set(g for g in gen())
 
+    @property
+    def pq(self):
+        """PyQuery representation of the page."""
+        return PyQuery(self.html)
+
+    @property
+    def lxml(self):
+        """Etree representation of the page."""
+        return fromstring(self.html)
+
+    def xpath(self, selector):
+        """Given an XPath selector, returns a list of element objects."""
+        return [Element(e) for e in self.lxml.xpath(selector)]
+
 
 def _handle_response(response, **kwargs):
     """Requests HTTP Response handler. Attaches .html property to Response
@@ -162,7 +192,6 @@ def user_agent(style=None):
     else:
         return useragent[style]
 
-
 def get_session(mock_browser=True):
     """Returns a consumable session, for cookie persistience and connection
     pooling, amongst other things.
@@ -179,6 +208,5 @@ def get_session(mock_browser=True):
     session.hooks = {'response': _handle_response}
 
     return session
-
 
 session = get_session()

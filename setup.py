@@ -17,11 +17,11 @@ DESCRIPTION = 'HTML Parsing for Humans.'
 URL = 'https://github.com/requests/requests'
 EMAIL = 'me@kennethreitz.org'
 AUTHOR = 'Kenneth Reitz'
-VERSION = '0.1.0'
+VERSION = '0.1.1'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'requests', 'pyquery', 'html2text', 'fake-useragent', 'parse'
+    'requests', 'pyquery', 'html2text', 'fake-useragent', 'parse', 'bs4'
 ]
 
 # The rest you shouldn't have to touch too much :)
