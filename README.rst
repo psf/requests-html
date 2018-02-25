@@ -94,7 +94,7 @@ Render an Element as Markdown:
     >>> r.html.search('Python is a {} language')[0]
     programming
 
-More complex CSS Selector example:
+More complex CSS Selector example (copied from Chrome dev tools):
 
  .. code-block:: pycon
 
