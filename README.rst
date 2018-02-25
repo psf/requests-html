@@ -20,9 +20,9 @@ Other nice features include:
 Usage
 =====
 
-.. code-block:: pycon
-
 Make a GET request to 'python.org', using Requests:
+
+.. code-block:: pycon
 
     >>> from requests_html import session
     >>> r = session.get('https://python.org/')
