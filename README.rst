@@ -87,7 +87,7 @@ Render an Element as Markdown:
       * [Help](/about/help/)
       * [Python Brochure](http://brochure.getpython.info/)
 
- Search for text on the page:
+Search for text on the page:
 
  .. code-block:: pycon
 
