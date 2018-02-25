@@ -102,7 +102,7 @@ More complex CSS Selector example (copied from Chrome dev tools):
     >>> r = session.get('https://github.com/')
     >>> sel = 'body > div.application-main > div.jumbotron.jumbotron-codelines > div > div > div.col-md-7.text-center.text-md-left > p'
 
-    >>> print(r.html.find(sel)[0].text)
+    >>> print(r.html.find(sel, first=True).text)
     GitHub is a development platform inspired by the way you work. From open source to business, you can host and review code, manage projects, and build software alongside millions of other developers.
 
 XPath is also supported:
