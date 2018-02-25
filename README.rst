@@ -95,6 +95,8 @@ Render an Element as Markdown:
 
 More complex CSS Selector example:
 
+ .. code-block:: pycon
+
     >>> r = session.get('https://github.com/')
     >>> sel = 'body > div.application-main > div.jumbotron.jumbotron-codelines > div > div > div.col-md-7.text-center.text-md-left > p'
 
