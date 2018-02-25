@@ -14,7 +14,7 @@ from setuptools import find_packages, setup, Command
 # Package meta-data.
 NAME = 'requests-html'
 DESCRIPTION = 'HTML Parsing for Humans.'
-URL = 'https://github.com/requests/requests'
+URL = 'https://github.com/kennethreitz/requests-html'
 EMAIL = 'me@kennethreitz.org'
 AUTHOR = 'Kenneth Reitz'
 VERSION = '0.1.1'
