@@ -12,8 +12,6 @@ from parse import findall
 html2text = html2text.HTML2Text()
 useragent = UserAgent()
 
-# xpath support next.
-# parse support.
 
 class Element:
     """An element of HTML."""
