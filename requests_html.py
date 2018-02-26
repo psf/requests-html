@@ -8,8 +8,7 @@ from lxml.html.soupparser import fromstring
 from parse import search as parse_search
 from parse import findall
 
-# HTML 2 Markdown converter.
-html2text = html2text.HTML2Text()
+
 useragent = UserAgent()
 
 
@@ -48,11 +47,6 @@ class Element:
     def full_text(self):
         """The full text content (including links) of the element."""
         return self.pq.text_content()
-
-    @property
-    def markdown(self):
-        """Markdown representation of the element."""
-        return html2text.handle(self.html)
 
     @property
     def html(self):
@@ -123,11 +117,6 @@ class HTML:
     def search_all(self, template):
         """Searches the page (multiple times) for the given parse template."""
         return [r for r in findall(template, self.html)]
-
-    @property
-    def markdown(self):
-        """Markdown representation of the page."""
-        return html2text.handle(self.html)
 
     @property
     def links(self):

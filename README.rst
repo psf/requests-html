@@ -74,20 +74,6 @@ Select Elements within Elements:
     >>> about.find('a')
     [<Element 'a' href='/about/' title='' class=''>, <Element 'a' href='/about/apps/' title=''>, <Element 'a' href='/about/quotes/' title=''>, <Element 'a' href='/about/gettingstarted/' title=''>, <Element 'a' href='/about/help/' title=''>, <Element 'a' href='http://brochure.getpython.info/' title=''>]
 
-Render an Element as Markdown:
-
-.. code-block:: pycon
-
-    >>> print(about.markdown)
-
-    * [About](/about/)
-
-      * [Applications](/about/apps/)
-      * [Quotes](/about/quotes/)
-      * [Getting Started](/about/gettingstarted/)
-      * [Help](/about/help/)
-      * [Python Brochure](http://brochure.getpython.info/)
-
 Search for text on the page:
 
 .. code-block:: pycon
@@ -120,4 +106,4 @@ Installation
     $ pipenv install requests-html
     ✨🍰✨
 
-Only Python 3 is supported. 
+Only Python 3 is supported.
