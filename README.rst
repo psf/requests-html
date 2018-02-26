@@ -120,3 +120,4 @@ Installation
     $ pipenv install requests-html
     ✨🍰✨
 
+Only Python 3 is supported. 
