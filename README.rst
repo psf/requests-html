@@ -13,9 +13,9 @@ When using this library you automatically get:
 - Connection–pooling and cookie persistience.
 - The Requests experience you know and love, with magical parsing abilities.
 
-Other nice features include:
+.. Other nice features include:
 
-- Markdown export of pages and elements.
+    - Markdown export of pages and elements.
 
 
 Usage
