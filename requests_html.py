@@ -18,10 +18,7 @@ class Element:
         self.element = element
 
     def __repr__(self):
-        attrs = []
-        for attr in self.attrs:
-            attrs.append('{}={}'.format(attr, repr(self.attrs[attr])))
-
+        attrs = ['{}={}'.format(attr, repr(self.attrs[attr])) for attr in self.attrs]
         return "<Element {} {}>".format(repr(self.element.tag), ' '.join(attrs))
 
     @property
