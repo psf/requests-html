@@ -126,11 +126,18 @@ class BaseParser:
     @property
     def base_url(self):
         """The base URL for the page."""
-        url = '/'.join(self.url.split('/')[:-1])
-        if url.endswith('/'):
-            url = url[:-1]
 
-        return url
+        # Support for <base> tag.
+        base = self.find('base', first=True)
+        if base:
+            return base.attrs['href']
+
+        else:
+            url = '/'.join(self.url.split('/')[:-1])
+            if url.endswith('/'):
+                url = url[:-1]
+
+            return url
 
 
 class Element(BaseParser):
