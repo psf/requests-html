@@ -65,7 +65,7 @@ Introspect an Element's attributes:
 .. code-block:: pycon
 
     >>> about.attrs
-    {'id': 'about', 'class': 'tier-1 element-1  ', 'aria-haspopup': 'true'}
+    {'id': 'about', 'class': ['tier-1', 'element-1'], 'aria-haspopup': 'true'}
 
 Select Elements within Elements:
 
