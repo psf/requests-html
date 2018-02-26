@@ -17,15 +17,44 @@ useragent = UserAgent()
 class BaseParser:
     """A basic HTML/Element Parser, for Humans."""
 
-    def __init__(self, *, element, html=None, url):
+    def __init__(self, *, element, default_encoding=None, html=None, url):
         self.element = element
         self.url = url
         self.skip_anchors = True
+        self.default_encoding = default_encoding
+        self._encoding = None
+        self._html = html
 
-        if not html:
-            self.html = etree.tostring(self.element).decode('utf-8').strip()
-        else:
-            self.html = html
+    @property
+    def html(self):
+        if not self._html:
+            return etree.tostring(self.element).decode(self.encoding).strip()
+        return self._html
+
+    @html.setter
+    def set_html(self, html):
+        self._html = html
+
+    @property
+    def encoding(self):
+        if self._encoding:
+            return self._encoding
+
+        # Scan meta tags for chaset.
+        for meta_tag in self.find('meta', _encoding=self.default_encoding):
+
+            # HTML 5 support.
+            if 'charset' in meta_tag.attrs:
+                self._encoding = meta_tag.attrs['charset']
+
+            # HTML 4 support.
+            if 'content' in meta_tag.attrs:
+                try:
+                    self._encoding = meta_tag.attrs['content'].split('charset=')[1]
+                except IndexError:
+                    pass
+
+        return self._encoding if self._encoding else self.default_encoding
 
     @property
     def pq(self):
@@ -49,11 +78,11 @@ class BaseParser:
         """The full text content (including links) of the element."""
         return self.pq.text_content()
 
-    def find(self, selector, first=False):
+    def find(self, selector, first=False, _encoding=None):
         """Given a jQuery selector, returns a list of element objects."""
         def gen():
             for found in self.pq(selector):
-                yield Element(element=found, url=self.url)
+                yield Element(element=found, url=self.url, default_encoding=_encoding or self.encoding)
 
         c = [g for g in gen()]
 
@@ -67,7 +96,7 @@ class BaseParser:
 
     def xpath(self, selector, first=False):
         """Given an XPath selector, returns a list of element objects."""
-        c = [Element(element=e, url=self.url) for e in self.lxml.xpath(selector)]
+        c = [Element(element=e, url=self.url, encoding=self.encoding) for e in self.lxml.xpath(selector)]
         if first:
             try:
                 return c[0]
@@ -143,8 +172,8 @@ class BaseParser:
 class Element(BaseParser):
     """An element of HTML."""
 
-    def __init__(self, *, element, url):
-        super(Element, self).__init__(element=element, url=url)
+    def __init__(self, *, element, url, default_encoding):
+        super(Element, self).__init__(element=element, url=url, default_encoding=default_encoding)
         self.element = element
 
     def __repr__(self):
@@ -162,6 +191,7 @@ class Element(BaseParser):
         # Split class up, as there are ussually many of them:
         if 'class' in attrs:
             attrs['class'] = tuple(attrs['class'].split())
+
         return attrs
 
 
@@ -172,7 +202,8 @@ class HTML(BaseParser):
         super(HTML, self).__init__(
             element=fromstring(response.text),
             html=response.text,
-            url=response.url
+            url=response.url,
+            default_encoding=response.encoding
         )
 
     def __repr__(self):
