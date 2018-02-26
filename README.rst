@@ -11,7 +11,7 @@ When using this library you automatically get:
 - Mocked user-agent (like a real web browser).
 - Automatic following of redirects.
 - Connection–pooling and cookie persistience.
-- The Requests experience you know and love, with magic parsing abilities.
+- The Requests experience you know and love, with magical parsing abilities.
 
 Other nice features include:
 
