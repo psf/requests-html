@@ -62,9 +62,16 @@ class BaseParser:
         else:
             return c
 
-    def xpath(self, selector):
+    def xpath(self, selector, first=False):
         """Given an XPath selector, returns a list of element objects."""
-        return [Element(element=e, url=self.url) for e in self.lxml.xpath(selector)]
+        c = [Element(element=e, url=self.url) for e in self.lxml.xpath(selector)]
+        if first:
+            try:
+                return c[0]
+            except IndexError:
+                return None
+        else:
+            return c
 
     def search(self, template):
         """Searches the element for the given parse template."""
@@ -146,7 +153,7 @@ class HTML(BaseParser):
     """An HTML document."""
     def __init__(self, *, response):
         super(HTML, self).__init__(
-            element=fromstring(self.html),
+            element=fromstring(response.text),
             html=response.text,
             url=response.url
         )
@@ -174,21 +181,26 @@ def user_agent(style=None):
     else:
         return useragent[style]
 
-def get_session(mock_browser=True):
-    """Returns a consumable session, for cookie persistence and connection
-    pooling, amongst other things.
-    """
 
-    # Requests Session.
-    session = requests.Session()
+class Session(requests.Session):
+    """A consumable session, for cookie persistience and connection pooling,
+    amongst other things."""
+    def __init__(self, mock_browser=True, *args, **kwargs):
+        super(Session, self).__init__(*args, **kwargs)
 
-    # Mock a web browser's user agent.
-    if mock_browser:
-        session.headers['User-Agent'] = user_agent()
+        # Mock a web browser's user agent.
+        if mock_browser:
+            self.headers['User-Agent'] = user_agent()
 
-    # Hook into Requests.
-    session.hooks = {'response': _handle_response}
+        self.hooks = {'response': self._handle_response}
 
-    return session
+    @staticmethod
+    def _handle_response(response, **kwargs):
+        """Requests HTTP Response handler. Attaches .html property to Response
+        objects.
+        """
 
-session = get_session()
+        response.html = HTML(response=response)
+        return response
+
+session = Session()
