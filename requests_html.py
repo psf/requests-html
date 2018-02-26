@@ -1,4 +1,3 @@
-import html2text
 import requests
 from pyquery import PyQuery
 
@@ -14,7 +13,7 @@ useragent = UserAgent()
 
 class BaseParser:
     """docstring for BaseParser"""
-    def __init__(self, *, url, element, html=None):
+    def __init__(self, *, element, html=None, url):
         self.element = element
         self.url = url
         self.skip_anchors = True
