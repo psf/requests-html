@@ -1,4 +1,3 @@
-import sys
 from urllib.parse import urlparse, urlunparse
 
 import requests
@@ -9,6 +8,7 @@ from lxml import etree
 from lxml.html.soupparser import fromstring
 from parse import search as parse_search
 from parse import findall
+from w3lib.encoding import html_to_unicode
 
 try:
     from PyQt5.QtWidgets import QApplication
@@ -50,18 +50,7 @@ class BaseParser:
             return self._encoding
 
         # Scan meta tags for chaset.
-        for meta_tag in self.find('meta', _encoding=self.default_encoding):
-
-            # HTML 5 support.
-            if 'charset' in meta_tag.attrs:
-                self._encoding = meta_tag.attrs['charset']
-
-            # HTML 4 support.
-            if 'content' in meta_tag.attrs:
-                try:
-                    self._encoding = meta_tag.attrs['content'].split('charset=')[1]
-                except IndexError:
-                    pass
+        self._encoding = html_to_unicode(self.default_encoding, self.html)[0]
 
         return self._encoding if self._encoding else self.default_encoding
 

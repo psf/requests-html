@@ -12,7 +12,8 @@ pyquery = "*"
 fake-useragent = "*"
 parse = "*"
 "bs4" = "*"
-"PyQt5" = "*"
+"pyqt5" = "*"
+"w3lib" = "*"
 
 
 [dev-packages]

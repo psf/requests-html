@@ -21,7 +21,7 @@ VERSION = '0.3.2'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'requests', 'pyquery', 'fake-useragent', 'parse', 'bs4'
+    'requests', 'pyquery', 'fake-useragent', 'parse', 'bs4', 'w3lib'
 ]
 
 # The rest you shouldn't have to touch too much :)
