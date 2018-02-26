@@ -128,7 +128,7 @@ Let's grab some text that's rendered by JavaScript:
 
 .. code-block:: shell
 
-    $ pipenv install requests-http[browser]
+    $ pipenv install requests-html[browser]
 
 .. code-block:: pycon
 
