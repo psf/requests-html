@@ -17,7 +17,7 @@ DESCRIPTION = 'HTML Parsing for Humans.'
 URL = 'https://github.com/kennethreitz/requests-html'
 EMAIL = 'me@kennethreitz.org'
 AUTHOR = 'Kenneth Reitz'
-VERSION = '0.2.0'
+VERSION = '0.2.1'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
