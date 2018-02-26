@@ -184,7 +184,7 @@ class Element(BaseParser):
     @property
     def attrs(self):
         """Returns a dictionary of the attributes of the element."""
-        attrs = {k: self.pq.attr[k] for k in self.element.keys()}
+        attrs = {k: self.pq.attr[k].strip() for k in self.element.keys()}
 
         # Split class up, as there are ussually many of them:
         if 'class' in attrs:
