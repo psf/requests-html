@@ -108,6 +108,29 @@ XPath is also supported:
    >>> r.html.xpath('a')
    [<Element 'a' class='btn' href='https://help.github.com/articles/supported-browsers'>]
 
+Other Fun (with Markdown)
+=========================
+
+If you'd like to take an element and convert it to Markdown, for example, use `html2text`, by Aaron Swartz:
+
+.. code-block:: shell
+
+    $ pipenv install html2text
+
+.. code-block:: pycon
+
+    >>> from html2text import HTML2Text
+    >>> h = html2text.HTML2Text()
+    >>> print(h.handle(about.html))
+    * [About](/about/)
+
+      * [Applications](/about/apps/)
+      * [Quotes](/about/quotes/)
+      * [Getting Started](/about/gettingstarted/)
+      * [Help](/about/help/)
+      * [Python Brochure](http://brochure.getpython.info/)
+
+
 Installation
 ============
 
