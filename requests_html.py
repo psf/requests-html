@@ -268,7 +268,7 @@ class BrowserSession(Session):
         r = super(BrowserSession, self).request(*args, **kwargs)
 
         r._content = self.render(r.text).encode(DEFAULT_ENCODING)
-        r.encoding = 'utf-8'
+        r.encoding = DEFAULT_ENCODING
 
         r.html = HTML(url=r.url, html=r.text, default_encoding=r.encoding)
 
