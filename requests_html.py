@@ -136,7 +136,7 @@ class HTML:
             for link in self.find('a'):
                 try:
                     href = link.attrs['href']
-                    if not href.startswith('#') and self.skip_anchors:
+                    if not href.startswith('#') and self.skip_anchors and href not in ['javascript:;']:
                         yield href
                 except KeyError:
                     pass
