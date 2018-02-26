@@ -27,9 +27,10 @@ class BaseParser:
 
     @property
     def html(self):
-        if not self._html:
+        if self._html:
+            return self._html
+        else:
             return etree.tostring(self.element).decode(self.encoding).strip()
-        return self._html
 
     @html.setter
     def set_html(self, html):
