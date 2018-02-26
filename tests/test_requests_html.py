@@ -53,10 +53,12 @@ def test_search():
     style = r.html.search('Python is a {} language')[0]
     assert style == 'programming'
 
+
 def test_xpath():
     r = get()
     html = r.html.xpath('/html', first=True)
     assert 'no-js' in html.attrs['class']
+
 
 if __name__ == '__main__':
     # test_file_get()
