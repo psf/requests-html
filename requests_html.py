@@ -202,5 +202,3 @@ class Session(requests.Session):
 
         response.html = HTML(response=response)
         return response
-
-session = Session()
