@@ -241,7 +241,7 @@ class Session(requests.Session):
         if not response.encoding:
             response.encoding = DEFAULT_ENCODING
 
-        response.html = HTML(url=response.url, html=response.text, default_encoding=response.encoding)
+        response.html = HTML(url=response.url, html=response.content, default_encoding=response.encoding)
 
         return response
 
