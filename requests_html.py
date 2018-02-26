@@ -205,7 +205,7 @@ def user_agent(style=None):
         return useragent[style]
 
 def get_session(mock_browser=True):
-    """Returns a consumable session, for cookie persistience and connection
+    """Returns a consumable session, for cookie persistence and connection
     pooling, amongst other things.
     """
 
