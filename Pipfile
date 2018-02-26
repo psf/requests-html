@@ -12,6 +12,8 @@ pyquery = "*"
 fake-useragent = "*"
 parse = "*"
 "bs4" = "*"
+"Ghost.py" = {git = "git://github.com/carrerasrodrigo/Ghost.py.git", editable = true}
+dukpy = "*"
 
 
 [dev-packages]

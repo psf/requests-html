@@ -1,3 +1,4 @@
+import sys
 from urllib.parse import urlparse, urlunparse
 
 import requests
@@ -8,6 +9,13 @@ from lxml import etree
 from lxml.html.soupparser import fromstring
 from parse import search as parse_search
 from parse import findall
+
+try:
+    from PyQt5.QtWidgets import QApplication
+    from PyQt5.QtWebEngineWidgets import QWebEngineView
+except ImportError:
+    pass
+
 
 DEFAULT_ENCODING = 'utf-8'
 
@@ -222,6 +230,7 @@ def user_agent(style=None):
         return useragent[style]
 
 
+
 class Session(requests.Session):
     """A consumable session, for cookie persistience and connection pooling,
     amongst other things.
@@ -247,6 +256,52 @@ class Session(requests.Session):
         response.html = HTML(url=response.url, html=response.text, default_encoding=response.encoding)
 
         return response
+
+
+class BrowserSession(Session):
+    """A web-browser interpreted session (for JavaScript)."""
+
+    def __init__(self, *args, **kwargs):
+        super(BrowserSession, self).__init__(*args, **kwargs)
+
+    def request(self, *args, **kwargs):
+        r = super(BrowserSession, self).request(*args, **kwargs)
+
+        r._content = self.render(r.text).encode(DEFAULT_ENCODING)
+        r.encoding = 'utf-8'
+
+        r.html = HTML(url=r.url, html=r.text, default_encoding=r.encoding)
+
+        return r
+
+    @staticmethod
+    def render(source_url):
+        """Fully render HTML, JavaScript and all."""
+
+        if not 'QApplication' in globals():
+            raise RuntimeError('PyQt5 must be installed.')
+
+        class Render(QWebEngineView):
+            def __init__(self, html):
+                self.html = None
+                self.app = QApplication([])
+                QWebEngineView.__init__(self)
+                self.loadFinished.connect(self._loadFinished)
+                self.setHtml(html)
+                # self.load(QUrl(url))
+                self.app.exec_()
+
+            def _loadFinished(self, result):
+                # This is an async call, you need to wait for this
+                # to be called before closing the app
+                self.page().toHtml(self._callable)
+
+            def _callable(self, data):
+                self.html = data
+                # Data has been stored, it's safe to quit the app
+                self.app.quit()
+
+        return Render(source_url).html
 
 
 # Backwards compatiblity.

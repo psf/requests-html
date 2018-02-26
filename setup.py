@@ -79,6 +79,9 @@ setup(
     author_email=EMAIL,
     url=URL,
     python_requires='>=3.5.0',
+    extras_require={
+        'browser': ['PyQt5'],
+    },
     # If your package is a single module, use this instead of 'packages':
     py_modules=['requests_html'],
 
