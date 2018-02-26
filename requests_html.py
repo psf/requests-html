@@ -120,7 +120,7 @@ class BaseParser:
             for link in self.find('a'):
 
                 try:
-                    href = link.attrs['href']
+                    href = link.attrs['href'].strip()
                     if not href.startswith('#') and self.skip_anchors and href not in ['javascript:;']:
                         yield href
                 except KeyError:
