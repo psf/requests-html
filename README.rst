@@ -186,4 +186,11 @@ Installation
     $ pipenv install requests-html
     ✨🍰✨
 
+Or, if you want access to ``BrowserSession``:
+
+.. code-block:: shell
+
+    $ pipenv install requests-html[browser]
+    ✨🍰✨
+
 Only Python 3 is supported.
