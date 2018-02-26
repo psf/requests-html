@@ -9,6 +9,7 @@ simple and intuitive as possible.
 
 When using this library you automatically get:
 
+- Optional JavaScript support!
 - CSS Selectors (a.k.a jQuery-style, thanks to PyQuery).
 - XPath Selectors, for the faint at heart.
 - Mocked user-agent (like a real web browser).
@@ -71,14 +72,14 @@ Introspect an Element's attributes:
 
     >>> about.attrs
     {'id': 'about', 'class': ('tier-1', 'element-1'), 'aria-haspopup': 'true'}
-    
+
 Render out an Element's HTML:
 
 .. code-block:: pycon
 
     >>> about.html
     '<li aria-haspopup="true" class="tier-1 element-1 " id="about">\n<a class="" href="/about/" title="">About</a>\n<ul aria-hidden="true" class="subnav menu" role="menu">\n<li class="tier-2 element-1" role="treeitem"><a href="/about/apps/" title="">Applications</a></li>\n<li class="tier-2 element-2" role="treeitem"><a href="/about/quotes/" title="">Quotes</a></li>\n<li class="tier-2 element-3" role="treeitem"><a href="/about/gettingstarted/" title="">Getting Started</a></li>\n<li class="tier-2 element-4" role="treeitem"><a href="/about/help/" title="">Help</a></li>\n<li class="tier-2 element-5" role="treeitem"><a href="http://brochure.getpython.info/" title="">Python Brochure</a></li>\n</ul>\n</li>'
-    
+
 
 
 Select Elements within Elements:
@@ -119,6 +120,21 @@ XPath is also supported:
 
    >>> r.html.xpath('a')
    [<Element 'a' class='btn' href='https://help.github.com/articles/supported-browsers'>]
+
+JavaScript Support
+==================
+
+Let's grab some text that's rendered by JavaScript:
+
+.. code-block:: pycon
+
+    >>> from requests_html import BrowserSession
+    >>> session = BrowserSession()
+
+    >>> r = session.get('http://python-requests.org')
+    >>> r.html.search('Python 2 will retire in only {months} months!')['months']
+    '<time>25</time>'
+
 
 Using without Requests
 ======================
