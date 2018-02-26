@@ -1,3 +1,5 @@
+from urllib.parse import urlparse, urlunparse
+
 import requests
 from pyquery import PyQuery
 
@@ -6,6 +8,7 @@ from lxml import etree
 from lxml.html.soupparser import fromstring
 from parse import search as parse_search
 from parse import findall
+
 
 
 useragent = UserAgent()
@@ -88,6 +91,7 @@ class BaseParser:
         """All found links on page, in as–is form."""
         def gen():
             for link in self.find('a'):
+
                 try:
                     href = link.attrs['href']
                     if not href.startswith('#') and self.skip_anchors and href not in ['javascript:;']:
@@ -102,14 +106,18 @@ class BaseParser:
         """All found links on page, in absolute form."""
         def gen():
             for link in self.links:
-                # Appears to not be an absolute link.
-                if ':' not in link:
-                    if link.startswith('/'):
-                        href = '{}{}'.format(self.base_url, link)
-                    else:
-                        href = '{}/{}'.format(self.base_url, link)
-                else:
-                    href = link
+                # Parse the link with stdlib.
+                parsed = urlparse(link)._asdict()
+
+                # Appears to be a relative link:
+                if not parsed['netloc']:
+                    parsed['netloc'] = urlparse(self.base_url).netloc
+                if not parsed['scheme']:
+                    parsed['scheme'] = urlparse(self.base_url).scheme
+
+                # Re-construct URL, with new data.
+                parsed = (v for v in parsed.values())
+                href = urlunparse(parsed)
 
                 yield href
 
