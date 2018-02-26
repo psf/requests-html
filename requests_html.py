@@ -32,7 +32,7 @@ class BaseParser:
         self.default_encoding = default_encoding
         self._encoding = None
         self._html = html
-
+ 
     @property
     def html(self):
         if self._html:
@@ -63,7 +63,7 @@ class BaseParser:
                 except IndexError:
                     pass
 
-        return self._encoding if self._encoding else self.default_encoding
+        return self._encoding if self._encoding else self.default_encoding 
 
     @property
     def pq(self):
@@ -186,11 +186,8 @@ class Element(BaseParser):
         self.element = element
 
     def __repr__(self):
-        attrs = []
-        for attr in self.attrs:
-            attrs.append('{}={}'.format(attr, repr(self.attrs[attr])))
-
-        return "<Element {} {}>".format(repr(self.element.tag), ' '.join(attrs))
+        attrs = ['{}={}'.format(attr, repr(self.attrs[attr])) for attr in self.attrs]
+        return "<Element {} {}>".format(repr(self.element.tag), ' '.join(attrs)) 
 
     @property
     def attrs(self):
