@@ -78,6 +78,7 @@ setup(
     author=AUTHOR,
     author_email=EMAIL,
     url=URL,
+    python_requires='>=3.5.0',
     # If your package is a single module, use this instead of 'packages':
     py_modules=['requests_html'],
 
