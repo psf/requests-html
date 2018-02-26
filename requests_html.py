@@ -77,7 +77,7 @@ class BaseParser:
     @property
     def full_text(self):
         """The full text content (including links) of the element."""
-        return self.pq.text_content()
+        return self.lxml.text_content()
 
     def find(self, selector, first=False, _encoding=None):
         """Given a jQuery selector, returns a list of element objects."""
