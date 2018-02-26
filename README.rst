@@ -111,6 +111,21 @@ XPath is also supported:
    >>> r.html.xpath('a')
    [<Element 'a' class='btn' href='https://help.github.com/articles/supported-browsers'>]
 
+Using without Requests
+======================
+
+You can also use this library without Requests:
+
+.. code-block:: pycon
+
+    >>> from requests_html import HTML
+    >>> doc = """<a href='https://httpbin.org'>"""
+
+    >>> html = HTML(html=doc, url='fakeurl', default_encoding='utf-8')
+    >>> html.links
+    {'https://httpbin.org'}
+
+
 Other Fun (with Markdown)
 =========================
 
