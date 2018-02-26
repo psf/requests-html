@@ -157,7 +157,7 @@ class BaseParser:
         # Support for <base> tag.
         base = self.find('base', first=True)
         if base:
-            return base.attrs['href']
+            return base.attrs['href'].strip()
 
         else:
             url = '/'.join(self.url.split('/')[:-1])
@@ -217,7 +217,6 @@ def user_agent(style=None):
         return useragent.random
     else:
         return useragent[style]
-
 
 
 class Session(requests.Session):
