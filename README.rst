@@ -65,7 +65,7 @@ Introspect an Element's attributes:
 .. code-block:: pycon
 
     >>> about.attrs
-    {'id': 'about', 'class': 'tier-1 element-1  ', 'aria-haspopup': 'true'}
+    {'id': 'about', 'class': ('tier-1', 'element-1'), 'aria-haspopup': 'true'}
 
 Select Elements within Elements:
 
@@ -73,6 +73,14 @@ Select Elements within Elements:
 
     >>> about.find('a')
     [<Element 'a' href='/about/' title='' class=''>, <Element 'a' href='/about/apps/' title=''>, <Element 'a' href='/about/quotes/' title=''>, <Element 'a' href='/about/gettingstarted/' title=''>, <Element 'a' href='/about/help/' title=''>, <Element 'a' href='http://brochure.getpython.info/' title=''>]
+    
+Search for links within an element:
+
+.. code-block:: pycon
+
+    >>> about.absolute_links
+    {'http://brochure.getpython.info/', 'https://www.python.org/about/gettingstarted/', 'https://www.python.org/about/', 'https://www.python.org/about/quotes/', 'https://www.python.org/about/help/', 'https://www.python.org/about/apps/'}
+    
 
 Search for text on the page:
 
