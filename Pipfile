@@ -9,7 +9,6 @@ name = "pypi"
 
 requests = "*"
 pyquery = "*"
-"html2text" = "*"
 fake-useragent = "*"
 parse = "*"
 "bs4" = "*"
@@ -21,6 +20,7 @@ twine = "*"
 requests-file = "*"
 pytest = "*"
 "e1839a8" = {path = ".", editable = true}
+
 
 [scripts]
 
