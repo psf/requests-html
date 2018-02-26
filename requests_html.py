@@ -199,25 +199,16 @@ class Element(BaseParser):
 class HTML(BaseParser):
     """An HTML document."""
 
-    def __init__(self, *, response):
+    def __init__(self, *, url, html, default_encoding=DEFAULT_ENCODING):
         super(HTML, self).__init__(
-            element=fromstring(response.text),
-            html=response.text,
-            url=response.url,
-            default_encoding=response.encoding
+            element=fromstring(html),
+            html=html,
+            url=url,
+            default_encoding=default_encoding
         )
 
     def __repr__(self):
         return "<HTML url={}>".format(repr(self.url))
-
-
-def _handle_response(response, **kwargs):
-    """Requests HTTP Response handler. Attaches .html property to Response
-    objects.
-    """
-
-    response.html = HTML(response=response)
-    return response
 
 
 def user_agent(style=None):
@@ -253,7 +244,7 @@ class Session(requests.Session):
         if not response.encoding:
             response.encoding = DEFAULT_ENCODING
 
-        response.html = HTML(response=response)
+        response.html = HTML(url=response.url, html=response.text, default_encoding=response.encoding)
 
         return response
 
