@@ -11,10 +11,7 @@ def get():
     path = os.path.sep.join((os.path.dirname(os.path.abspath(__file__)), 'python.html'))
     url = 'file://{}'.format(path)
 
-    r = session.get(url)
-    r.encoding = 'utf-8'
-
-    return r
+    return session.get(url)
 
 
 def test_file_get():
