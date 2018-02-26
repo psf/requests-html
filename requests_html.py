@@ -12,7 +12,8 @@ useragent = UserAgent()
 
 
 class BaseParser:
-    """docstring for BaseParser"""
+    """A basic HTML/Element Parser, for Humans."""
+
     def __init__(self, *, element, html=None, url):
         self.element = element
         self.url = url
@@ -126,6 +127,7 @@ class BaseParser:
 
 class Element(BaseParser):
     """An element of HTML."""
+
     def __init__(self, *, element, url):
         super(Element, self).__init__(element=element, url=url)
         self.element = element
@@ -150,6 +152,7 @@ class Element(BaseParser):
 
 class HTML(BaseParser):
     """An HTML document."""
+
     def __init__(self, *, response):
         super(HTML, self).__init__(
             element=fromstring(response.text),
@@ -183,7 +186,9 @@ def user_agent(style=None):
 
 class Session(requests.Session):
     """A consumable session, for cookie persistience and connection pooling,
-    amongst other things."""
+    amongst other things.
+    """
+
     def __init__(self, mock_browser=True, *args, **kwargs):
         super(Session, self).__init__(*args, **kwargs)
 
@@ -201,6 +206,7 @@ class Session(requests.Session):
 
         response.html = HTML(response=response)
         return response
+
 
 # Backwards compatiblity.
 session = Session()
