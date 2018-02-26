@@ -9,7 +9,7 @@ from lxml.html.soupparser import fromstring
 from parse import search as parse_search
 from parse import findall
 
-
+DEFAULT_ENCODING = 'utf-8'
 
 useragent = UserAgent()
 
@@ -95,9 +95,9 @@ class BaseParser:
         else:
             return c
 
-    def xpath(self, selector, first=False):
+    def xpath(self, selector, first=False, _encoding=None):
         """Given an XPath selector, returns a list of element objects."""
-        c = [Element(element=e, url=self.url, encoding=self.encoding) for e in self.lxml.xpath(selector)]
+        c = [Element(element=e, url=self.url, default_encoding=_encoding or self.encoding) for e in self.lxml.xpath(selector)]
         if first:
             try:
                 return c[0]
@@ -250,8 +250,11 @@ class Session(requests.Session):
         """Requests HTTP Response handler. Attaches .html property to Response
         objects.
         """
+        if not response.encoding:
+            response.encoding = DEFAULT_ENCODING
 
         response.html = HTML(response=response)
+
         return response
 
 

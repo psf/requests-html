@@ -11,7 +11,10 @@ def get():
     path = os.path.sep.join((os.path.dirname(os.path.abspath(__file__)), 'python.html'))
     url = 'file://{}'.format(path)
 
-    return session.get(url)
+    r = session.get(url)
+    r.encoding = 'utf-8'
+
+    return r
 
 
 def test_file_get():
@@ -21,6 +24,7 @@ def test_file_get():
 
 def test_css_selector():
     r = get()
+
     about = r.html.find('#about', first=True)
 
     for menu_item in (
@@ -57,3 +61,6 @@ def test_xpath():
     html = r.html.xpath('/html', first=True)
     assert 'no-js' in html.attrs['class']
 
+if __name__ == '__main__':
+    # test_file_get()
+    test_css_selector()
