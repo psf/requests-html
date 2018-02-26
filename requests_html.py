@@ -2,13 +2,12 @@ import sys
 from urllib.parse import urlparse, urlunparse
 
 import requests
-from pyquery import PyQuery
-
 from fake_useragent import UserAgent
 from lxml import etree
 from lxml.html.soupparser import fromstring
-from parse import search as parse_search
 from parse import findall
+from parse import search as parse_search
+from pyquery import PyQuery
 
 try:
     from PyQt5.QtWidgets import QApplication
@@ -20,6 +19,14 @@ except ImportError:
 DEFAULT_ENCODING = 'utf-8'
 
 useragent = UserAgent()
+
+
+class AttributeDict(dict):
+    def __getattr__(self, attr):
+        return self[attr]
+
+    def __setattr__(self, attr, value):
+        self[attr] = value
 
 
 class BaseParser:
@@ -89,6 +96,7 @@ class BaseParser:
 
     def find(self, selector, first=False, _encoding=None):
         """Given a jQuery selector, returns a list of element objects."""
+
         def gen():
             for found in self.pq(selector):
                 yield Element(element=found, url=self.url, default_encoding=_encoding or self.encoding)
@@ -127,6 +135,7 @@ class BaseParser:
     @property
     def links(self):
         """All found links on page, in as–is form."""
+
         def gen():
             for link in self.find('a'):
 
@@ -142,6 +151,7 @@ class BaseParser:
     @property
     def absolute_links(self):
         """All found links on page, in absolute form."""
+
         def gen():
             for link in self.links:
                 # Parse the link with stdlib.
@@ -201,7 +211,7 @@ class Element(BaseParser):
         if 'class' in attrs:
             attrs['class'] = tuple(attrs['class'].split())
 
-        return attrs
+        return AttributeDict(attrs)
 
 
 class HTML(BaseParser):
