@@ -29,6 +29,7 @@ def test_css_selector():
         'Python Brochure'
     ):
         assert menu_item in about.text.split('\n')
+        assert menu_item in about.full_text.split('\n')
 
 
 def test_attrs():
@@ -51,7 +52,6 @@ def test_search():
     r = get()
     style = r.html.search('Python is a {} language')[0]
     assert style == 'programming'
-
 
 def test_xpath():
     r = get()
