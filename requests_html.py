@@ -12,17 +12,17 @@ from parse import findall
 useragent = UserAgent()
 
 
-class Element:
-    """An element of HTML."""
-    def __init__(self, element):
+class BaseParser:
+    """docstring for BaseParser"""
+    def __init__(self, *, url, element, html=None):
         self.element = element
+        self.url = url
+        self.skip_anchors = True
 
-    def __repr__(self):
-        attrs = []
-        for attr in self.attrs:
-            attrs.append('{}={}'.format(attr, repr(self.attrs[attr])))
-
-        return "<Element {} {}>".format(repr(self.element.tag), ' '.join(attrs))
+        if not html:
+            self.html = etree.tostring(self.element).decode('utf-8').strip()
+        else:
+            self.html = html
 
     @property
     def pq(self):
@@ -31,12 +31,10 @@ class Element:
 
     @property
     def lxml(self):
-        return fromstring(self.html)
-
-    @property
-    def attrs(self):
-        """Returns a dictionary of the attributes of the element."""
-        return {k: self.pq.attr[k] for k in self.element.keys()}
+        if self.element:
+            return self.element
+        else:
+            return fromstring(self.html)
 
     @property
     def text(self):
@@ -48,16 +46,11 @@ class Element:
         """The full text content (including links) of the element."""
         return self.pq.text_content()
 
-    @property
-    def html(self):
-        """HTML representation of the element."""
-        return etree.tostring(self.element).decode('utf-8').strip()
-
     def find(self, selector, first=False):
         """Given a jQuery selector, returns a list of element objects."""
         def gen():
             for found in self.pq(selector):
-                yield Element(found)
+                yield Element(element=found, url=self.url)
 
         c = [g for g in gen()]
 
@@ -71,7 +64,7 @@ class Element:
 
     def xpath(self, selector):
         """Given an XPath selector, returns a list of element objects."""
-        return [Element(e) for e in self.lxml.xpath(selector)]
+        return [Element(element=e, url=self.url) for e in self.lxml.xpath(selector)]
 
     def search(self, template):
         """Searches the element for the given parse template."""
@@ -81,41 +74,6 @@ class Element:
         """Searches the element (multiple times) for the given parse
         template.
         """
-        return [r for r in findall(template, self.html)]
-
-
-class HTML:
-    """An HTML document."""
-    def __init__(self, response):
-        self.html = response.text
-        self.url = response.url
-        self.skip_anchors = True
-
-    def __repr__(self):
-        return "<HTML url={}>".format(repr(self.url))
-
-    def find(self, selector, first=False):
-        """Given a jQuery selector, returns a list of element objects."""
-        def gen():
-            for found in self.pq(selector):
-                yield Element(found)
-
-        c = [g for g in gen()]
-
-        if first:
-            try:
-                return c[0]
-            except IndexError:
-                return None
-        else:
-            return c
-
-    def search(self, template):
-        """Searches the page for the given parse template."""
-        return parse_search(template, self.html)
-
-    def search_all(self, template):
-        """Searches the page (multiple times) for the given parse template."""
         return [r for r in findall(template, self.html)]
 
     @property
@@ -131,15 +89,6 @@ class HTML:
                     pass
 
         return set(g for g in gen())
-
-    @property
-    def base_url(self):
-        """The base URL for the page."""
-        url = '/'.join(self.url.split('/')[:-1])
-        if url.endswith('/'):
-            url = url[:-1]
-
-        return url
 
     @property
     def absolute_links(self):
@@ -160,18 +109,50 @@ class HTML:
         return set(g for g in gen())
 
     @property
-    def pq(self):
-        """PyQuery representation of the page."""
-        return PyQuery(self.html)
+    def base_url(self):
+        """The base URL for the page."""
+        url = '/'.join(self.url.split('/')[:-1])
+        if url.endswith('/'):
+            url = url[:-1]
+
+        return url
+
+
+class Element(BaseParser):
+    """An element of HTML."""
+    def __init__(self, *, element, url):
+        super(Element, self).__init__(element=element, url=url)
+        self.element = element
+
+    def __repr__(self):
+        attrs = []
+        for attr in self.attrs:
+            attrs.append('{}={}'.format(attr, repr(self.attrs[attr])))
+
+        return "<Element {} {}>".format(repr(self.element.tag), ' '.join(attrs))
 
     @property
-    def lxml(self):
-        """Etree representation of the page."""
-        return fromstring(self.html)
+    def attrs(self):
+        """Returns a dictionary of the attributes of the element."""
+        attrs = {k: self.pq.attr[k] for k in self.element.keys()}
 
-    def xpath(self, selector):
-        """Given an XPath selector, returns a list of element objects."""
-        return [Element(e) for e in self.lxml.xpath(selector)]
+        # Split class up, as there are ussually many of them:
+        if 'class' in attrs:
+            attrs['class'] = tuple(attrs['class'].split())
+        return attrs
+
+
+class HTML(BaseParser):
+    """An HTML document."""
+    def __init__(self, *, response):
+        super(HTML, self).__init__(
+            element=fromstring(self.html),
+            html=response.text,
+            url=response.url
+        )
+
+    def __repr__(self):
+        return "<HTML url={}>".format(repr(self.url))
 
 
 def _handle_response(response, **kwargs):
@@ -179,7 +160,7 @@ def _handle_response(response, **kwargs):
     objects.
     """
 
-    response.html = HTML(response)
+    response.html = HTML(response=response)
     return response
 
 
