@@ -1,6 +1,6 @@
 import asyncio
 from urllib.parse import urlparse, urlunparse
-
+from concurrent.futures._base import TimeoutError
 import pyppeteer
 import requests
 from pyquery import PyQuery
@@ -299,21 +299,34 @@ class BrowserHTMLSession(HTMLSession):
         return r
 
     @staticmethod
-    def render(source_url):
-        """Fully render HTML, JavaScript and all."""
+    def render(source_url, retries=8):
+        """Fully render HTML, JavaScript and all.
+        Will attempt 8 times by default.
+        """
 
         async def _async_render(url):
-            browser = pyppeteer.launch()
-            page = await browser.newPage()
+            try:
+                browser = pyppeteer.launch()
+                page = await browser.newPage()
 
-            # Load the given page (GET request, obviously.)
-            await page.goto(url)
+                # Load the given page (GET request, obviously.)
+                await page.goto(url)
 
-            # Return the content of the page, JavaScript evaluated.
-            return await page.content()
+                # Return the content of the page, JavaScript evaluated.
+                return await page.content()
+            except TimeoutError:
+                return None
+
 
         loop = asyncio.get_event_loop()
-        content = loop.run_until_complete(_async_render(source_url))
+        content = None
+
+        for i in range(retries):
+            if not content:
+                try:
+                    content = loop.run_until_complete(_async_render(source_url))
+                except TimeoutError:
+                    pass
 
         return content
 

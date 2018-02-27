@@ -126,10 +126,6 @@ JavaScript Support
 
 Let's grab some text that's rendered by JavaScript:
 
-.. code-block:: shell
-
-    $ pipenv install requests-html[browser]
-
 .. code-block:: pycon
 
     >>> from requests_html import BrowserHTMLSession
