@@ -40,20 +40,18 @@ Installation
 .. code-block:: shell
 
     $ pipenv install requests-html
-    ✨🍰✨
 
-Or, if you want access to ``BrowserSession``:
+Or, if you want access to :class:`BrowserHTMLSession <BrowserHTMLSession>`:
 
 .. code-block:: shell
 
     $ pipenv install requests-html[browser]
-    ✨🍰✨
 
-Only Python 3 is supported.
+Only  later version of **Python 3** are supported.
 
 
-Usage
-=====
+Tutorial & Usage
+================
 
 Make a GET request to 'python.org', using Requests:
 
