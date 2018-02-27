@@ -224,14 +224,17 @@ class HTML(BaseParser):
     def __repr__(self) -> str:
         return "<HTML url={}>".format(repr(self.url))
 
-    def render(self, retries: int = 8, script: str = None):
+    def render(self, retries: int = 8, script: str = None, scrolldown = False, sleep: int = 0):
         """Reloads the response in Chromium, and replaces HTML content
         with an updated version, with JavaScript executed.
+
+        If scrolldown is specified, the page will scrolldown the specified
+        number of times, after sleeping the specified amount of time.
 
         Warning: the first time you run this method, it will download
         Chromium into your home directory (``~/.pyppeteer``).
         """
-        async def _async_render(url: str, script: str = None):
+        async def _async_render(*, url: str, script: str = None, scrolldown, sleep: int):
             try:
                 browser = pyppeteer.launch(headless=True)
                 page = await browser.newPage()
@@ -239,8 +242,22 @@ class HTML(BaseParser):
                 # Load the given page (GET request, obviously.)
                 await page.goto(url)
 
+                result = None
                 if script:
                     result = await page.evaluate(script)
+
+                if scrolldown:
+                    for _ in range(scrolldown):
+                        await page._keyboard.down('PageDown')
+                        await asyncio.sleep(sleep)
+                        # await page._keyboard.up('PageDown')
+
+
+                else:
+                    await asyncio.sleep(sleep)
+
+                if scrolldown:
+                    await page._keyboard.up('PageDown')
 
                 # Return the content of the page, JavaScript evaluated.
                 content = await page.content()
@@ -254,7 +271,7 @@ class HTML(BaseParser):
         for i in range(retries):
             if not content:
                 try:
-                    content, result = loop.run_until_complete(_async_render(url=self.url, script=script))
+                    content, result = loop.run_until_complete(_async_render(url=self.url, script=script, sleep=sleep, scrolldown=scrolldown))
                 except TimeoutError:
                     pass
 
