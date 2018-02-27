@@ -22,7 +22,10 @@ DEFAULT_ENCODING = 'utf-8'
 useragent = UserAgent()
 
 class HTMLResponse(requests.Response):
-    """docstring for Response"""
+    """An HTML-enabled :class:`Response <Response>` object.
+    Same as Requests class:`Response <Response>` object, but with an
+    intelligent ``.html`` property added.
+    """
 
     def __init__(self, *args, **kwargs):
         super(HTMLResponse, self).__init__(*args, **kwargs)
@@ -57,6 +60,7 @@ class BaseParser:
 
     @property
     def html(self):
+        """Unicode representation of the HTML content."""
         if self._html:
             return self._html
         else:
@@ -64,10 +68,14 @@ class BaseParser:
 
     @html.setter
     def set_html(self, html):
+        """Property setter for self.html."""
         self._html = html
 
     @property
     def encoding(self):
+        """The encoding string to be used, extracted from the HTML and
+        :class:`HTMLResponse <HTMLResponse>` headers.
+        """
         if self._encoding:
             return self._encoding
 
@@ -79,7 +87,7 @@ class BaseParser:
 
     @property
     def pq(self):
-        """PyQuery representation of the element."""
+        """PyQuery representation of the :class:`Element <Element>` or :class:`HTML <HTML>`."""
         return PyQuery(self.element)
 
     @property
@@ -88,16 +96,16 @@ class BaseParser:
 
     @property
     def text(self):
-        """The text content of the element."""
+        """The text content of the :class:`Element <Element>` or :class:`HTML <HTML>`.."""
         return self.pq.text()
 
     @property
     def full_text(self):
-        """The full text content (including links) of the element."""
+        """The full text content (including links) of the :class:`Element <Element>` or :class:`HTML <HTML>`.."""
         return self.lxml.text_content()
 
     def find(self, selector, first=False, _encoding=None):
-        """Given a jQuery selector, returns a list of element objects."""
+        """Given a jQuery selector, returns a list of :class:`Element <Element>` objects."""
         def gen():
             for found in self.pq(selector):
                 yield Element(element=found, url=self.url, default_encoding=_encoding or self.encoding)
@@ -113,7 +121,7 @@ class BaseParser:
             return c
 
     def xpath(self, selector, first=False, _encoding=None):
-        """Given an XPath selector, returns a list of element objects."""
+        """Given an XPath selector, returns a list of :class:`Element <Element>` objects."""
         c = [Element(element=e, url=self.url, default_encoding=_encoding or self.encoding) for e in self.lxml.xpath(selector)]
         if first:
             try:
@@ -124,11 +132,11 @@ class BaseParser:
             return c
 
     def search(self, template):
-        """Searches the element for the given parse template."""
+        """Searches the :class:`Element <Element>` for the given parse template."""
         return parse_search(template, self.html)
 
     def search_all(self, template):
-        """Searches the element (multiple times) for the given parse
+        """Searches the :class:`Element <Element>` (multiple times) for the given parse
         template.
         """
         return [r for r in findall(template, self.html)]
@@ -172,7 +180,7 @@ class BaseParser:
 
     @property
     def base_url(self):
-        """The base URL for the page."""
+        """The base URL for the page. Supports the <base> tag."""
 
         # Support for <base> tag.
         base = self.find('base', first=True)
@@ -203,7 +211,7 @@ class Element(BaseParser):
 
     @property
     def attrs(self):
-        """Returns a dictionary of the attributes of the element."""
+        """Returns a dictionary of the attributes of the class:`Element <Element>`."""
         attrs = {k: self.pq.attr[k].strip() for k in self.element.keys()}
 
         # Split class up, as there are ussually many of them:
@@ -214,7 +222,7 @@ class Element(BaseParser):
 
 
 class HTML(BaseParser):
-    """An HTML document."""
+    """An HTML document, ready for parsing."""
 
     def __init__(self, *, url, html, default_encoding=DEFAULT_ENCODING):
         super(HTML, self).__init__(
@@ -272,7 +280,8 @@ class HTMLSession(requests.Session):
 
 
 class BrowserHTMLSession(HTMLSession):
-    """A web-browser interpreted session (for JavaScript)."""
+    """A web-browser interpreted session (for JavaScript), powered by
+    PyQt5's QWebEngineView."""
 
     def __init__(self, *args, **kwargs):
         super(BrowserHTMLSession, self).__init__(*args, **kwargs)
