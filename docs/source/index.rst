@@ -158,6 +158,9 @@ Let's grab some text that's rendered by JavaScript:
     >>> r.html.search('Python 2 will retire in only {months} months!')['months']
     '<time>25</time>'
 
+Note, the first time you ever run the ``render()`` method, it will download
+Chromium into your home directory (e.g. ``~/.pyppeteer/``).
+
 
 Using without Requests
 ======================
