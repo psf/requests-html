@@ -270,9 +270,9 @@ class HTML(BaseParser):
         self.__dict__.update(html.__dict__)
 
 
-def user_agent(style=None):
+def user_agent(style='chrome'):
     """Returns a random user-agent, if not requested one of a specific
-    style.
+    style. Defaults to a Chrome-style User-Agent.
     """
 
     if not style:
