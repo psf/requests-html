@@ -317,7 +317,6 @@ class BrowserHTMLSession(HTMLSession):
             except TimeoutError:
                 return None
 
-
         loop = asyncio.get_event_loop()
         content = None
 
