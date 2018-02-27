@@ -37,8 +37,7 @@ class BaseParser:
     def html(self):
         if self._html:
             return self._html
-        else:
-            return etree.tostring(self.element).decode(self.encoding).strip()
+        return etree.tostring(self.element).decode(self.encoding).strip()
 
     @html.setter
     def set_html(self, html):
@@ -51,9 +50,9 @@ class BaseParser:
 
         # Scan meta tags for chaset.
         if self._html:
-            self._encoding = html_to_unicode(self.default_encoding, self.html.encode(DEFAULT_ENCODING))[0]
+            return html_to_unicode(self.default_encoding, self.html.encode(DEFAULT_ENCODING))[0]
 
-        return self._encoding if self._encoding else self.default_encoding
+        return self.default_encoding
 
     @property
     def pq(self):
@@ -64,8 +63,7 @@ class BaseParser:
     def lxml(self):
         if self.element:
             return self.element
-        else:
-            return fromstring(self.html)
+        return fromstring(self.html)
 
     @property
     def text(self):
@@ -160,12 +158,11 @@ class BaseParser:
         if base:
             return base.attrs['href'].strip()
 
-        else:
-            url = '/'.join(self.url.split('/')[:-1])
-            if url.endswith('/'):
-                url = url[:-1]
+        url = '/'.join(self.url.split('/')[:-1])
+        if url.endswith('/'):
+            url = url[:-1]
 
-            return url
+        return url
 
 
 class Element(BaseParser):
@@ -216,8 +213,7 @@ def user_agent(style=None):
 
     if not style:
         return useragent.random
-    else:
-        return useragent[style]
+    return useragent[style]
 
 
 class Session(requests.Session):
