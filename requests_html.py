@@ -50,7 +50,8 @@ class BaseParser:
             return self._encoding
 
         # Scan meta tags for chaset.
-        self._encoding = html_to_unicode(self.default_encoding, self.html.encode(DEFAULT_ENCODING))[0]
+        if self._html:
+            self._encoding = html_to_unicode(self.default_encoding, self.html.encode(DEFAULT_ENCODING))[0]
 
         return self._encoding if self._encoding else self.default_encoding
 
