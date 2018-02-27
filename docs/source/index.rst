@@ -21,7 +21,7 @@ simple and intuitive as possible.
 
 When using this library you automatically get:
 
-- Full **JavaScript support**!
+- **Full JavaScript support**!
 - *CSS Selectors* (a.k.a jQuery-style, thanks to PyQuery).
 - *XPath Selectors*, for the faint at heart.
 - Mocked user-agent (like a real web browser).
@@ -159,7 +159,8 @@ Let's grab some text that's rendered by JavaScript:
     '<time>25</time>'
 
 Note, the first time you ever run the ``render()`` method, it will download
-Chromium into your home directory (e.g. ``~/.pyppeteer/``).
+Chromium into your home directory (e.g. ``~/.pyppeteer/``). This only happens
+once.
 
 
 Using without Requests
