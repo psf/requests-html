@@ -12,7 +12,7 @@ from lxml import etree
 from lxml.html import HtmlElement
 from lxml.html.soupparser import fromstring
 from parse import search as parse_search
-from parse import findall
+from parse import findall, Result
 from w3lib.encoding import html_to_unicode
 
 
@@ -110,11 +110,11 @@ class BaseParser:
         else:
             return c
 
-    def search(self, template: str):
+    def search(self, template: str) -> Result:
         """Searches the :class:`Element <Element>` for the given parse template."""
         return parse_search(template, self.html)
 
-    def search_all(self, template: str):
+    def search_all(self, template: str) -> Result:
         """Searches the :class:`Element <Element>` (multiple times) for the given parse
         template.
         """
@@ -178,11 +178,11 @@ class BaseParser:
 class Element(BaseParser):
     """An element of HTML."""
 
-    def __init__(self, *, element, url, default_encoding):
+    def __init__(self, *, element, url, default_encoding) -> None:
         super(Element, self).__init__(element=element, url=url, default_encoding=default_encoding)
         self.element = element
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         attrs = []
         for attr in self.attrs:
             attrs.append('{}={}'.format(attr, repr(self.attrs[attr])))
@@ -204,7 +204,7 @@ class Element(BaseParser):
 class HTML(BaseParser):
     """An HTML document, ready for parsing."""
 
-    def __init__(self, *, url, html, default_encoding=DEFAULT_ENCODING):
+    def __init__(self, *, url, html, default_encoding=DEFAULT_ENCODING) -> None:
         super(HTML, self).__init__(
             element=PyQuery(html)('html'),
             html=html,
@@ -215,7 +215,7 @@ class HTML(BaseParser):
     def __repr__(self) -> str:
         return "<HTML url={}>".format(repr(self.url))
 
-    def render(self, retries: int = 8):
+    def render(self, retries: int = 8) -> None:
         """Loads the response in Chromium, and replaces HTML content
         with an updated version, JavaScript executed.
         """
@@ -245,8 +245,6 @@ class HTML(BaseParser):
         html = HTML(url=self.url, html=content, default_encoding=DEFAULT_ENCODING)
         self.__dict__.update(html.__dict__)
 
-        return self
-
 
 class HTMLResponse(requests.Response):
     """An HTML-enabled :class:`Response <Response>` object.
@@ -254,7 +252,7 @@ class HTMLResponse(requests.Response):
     intelligent ``.html`` property added.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super(HTMLResponse, self).__init__(*args, **kwargs)
         self._html = None
 
