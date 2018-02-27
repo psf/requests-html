@@ -60,7 +60,7 @@ class BaseParser:
         if self._html:
             return self._html
         else:
-            return etree.tostring(self.element, 'unicode').decode(self.encoding).strip()
+            return etree.tostring(self.element, encoding='unicode').decode(self.encoding).strip()
 
     @html.setter
     def set_html(self, html):
