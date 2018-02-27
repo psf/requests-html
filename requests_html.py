@@ -228,13 +228,13 @@ class HTML(BaseParser):
         """Reloads the response in Chromium, and replaces HTML content
         with an updated version, with JavaScript executed.
 
-        If scrolldown is specified, the page will scrolldown the specified
+        If ``scrolldown`` is specified, the page will scrolldown the specified
         number of times, after sleeping the specified amount of time.
 
-        If script is specified, it will execute the provided JavaScript at
+        If ``script`` is specified, it will execute the provided JavaScript at
         runtime.
 
-        Returns the return value of script, if any is provided.
+        Returns the return value of ``script``, if any is provided.
 
         Warning: the first time you run this method, it will download
         Chromium into your home directory (``~/.pyppeteer``).
