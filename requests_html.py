@@ -271,7 +271,7 @@ class HTMLSession(requests.Session):
         return html_r
 
 
-class BrowserHTMLSession(Session):
+class BrowserHTMLSession(HTMLSession):
     """A web-browser interpreted session (for JavaScript)."""
 
     def __init__(self, *args, **kwargs):
@@ -280,12 +280,11 @@ class BrowserHTMLSession(Session):
     def request(self, *args, **kwargs):
         # Convert Request object into HTTPRequest object.
         r = super(BrowserHTMLSession, self).request(*args, **kwargs)
-        html_r = HTMLResponse._from_response(r)
 
-        html_r._content = self.render(r.text).encode(DEFAULT_ENCODING)
-        html_r.encoding = DEFAULT_ENCODING
+        r._content = self.render(r.text).encode(DEFAULT_ENCODING)
+        r.encoding = DEFAULT_ENCODING
 
-        return html_r
+        return r
 
     @staticmethod
     def render(source_url):
