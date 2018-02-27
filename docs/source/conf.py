@@ -20,8 +20,8 @@
 # -- Project information -----------------------------------------------------
 import requests_html
 
-project = 'requests-html'
-copyright = '2018, Kenneth Reitz'
+project = 'requests-HTML'
+copyright = u'MMXVIII. A <a href="http://kennethreitz.com/pages/open-projects.html">Kenneth Reitz</a> Project'
 author = 'Kenneth Reitz'
 
 # The short X.Y version
