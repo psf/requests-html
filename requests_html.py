@@ -224,14 +224,14 @@ class HTML(BaseParser):
     def __repr__(self) -> str:
         return "<HTML url={}>".format(repr(self.url))
 
-    def render(self, retries: int = 8) -> None:
+    def render(self, retries: int = 8, script: str = None):
         """Reloads the response in Chromium, and replaces HTML content
         with an updated version, with JavaScript executed.
 
         Warning: the first time you run this method, it will download
         Chromium into your home directory (``~/.pyppeteer``).
         """
-        async def _async_render(url: str):
+        async def _async_render(url: str, script: str = None):
             try:
                 browser = pyppeteer.launch(headless=True)
                 page = await browser.newPage()
@@ -239,23 +239,30 @@ class HTML(BaseParser):
                 # Load the given page (GET request, obviously.)
                 await page.goto(url)
 
+                result = None
+                if script:
+                    result = await page.evaluate(script)
+
                 # Return the content of the page, JavaScript evaluated.
-                return await page.content()
+                content = await page.content()
+                return content, result
             except TimeoutError:
                 return None
 
         loop = asyncio.get_event_loop()
         content = None
+        result = None
 
         for i in range(retries):
             if not content:
                 try:
-                    content = loop.run_until_complete(_async_render(url=self.url))
+                    content, result = loop.run_until_complete(_async_render(url=self.url))
                 except TimeoutError:
                     pass
 
         html = HTML(url=self.url, html=content.encode(DEFAULT_ENCODING), default_encoding=DEFAULT_ENCODING)
         self.__dict__.update(html.__dict__)
+        return result
 
 
 class HTMLResponse(requests.Response):
