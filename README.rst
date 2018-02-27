@@ -151,7 +151,7 @@ You can also use this library without Requests:
     >>> from requests_html import HTML
     >>> doc = """<a href='https://httpbin.org'>"""
 
-    >>> html = HTML(html=doc, url='fakeurl', default_encoding='utf-8')
+    >>> html = HTML(html=doc)
     >>> html.links
     {'https://httpbin.org'}
 

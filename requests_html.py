@@ -17,6 +17,7 @@ from w3lib.encoding import html_to_unicode
 
 
 DEFAULT_ENCODING = 'utf-8'
+DEFAULT_URL = 'https://example.org/'
 
 useragent = UserAgent()
 
@@ -204,7 +205,7 @@ class Element(BaseParser):
 class HTML(BaseParser):
     """An HTML document, ready for parsing."""
 
-    def __init__(self, *, url, html, default_encoding=DEFAULT_ENCODING) -> None:
+    def __init__(self, *, url=DEFAULT_URL, html, default_encoding=DEFAULT_ENCODING) -> None:
         super(HTML, self).__init__(
             element=PyQuery(html)('html'),
             html=html,
