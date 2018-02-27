@@ -9,7 +9,7 @@ simple and intuitive as possible.
 
 When using this library you automatically get:
 
-- Optional JavaScript support!
+- Full JavaScript support!
 - CSS Selectors (a.k.a jQuery-style, thanks to PyQuery).
 - XPath Selectors, for the faint at heart.
 - Mocked user-agent (like a real web browser).

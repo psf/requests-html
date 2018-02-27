@@ -21,7 +21,7 @@ simple and intuitive as possible.
 
 When using this library you automatically get:
 
-- Optional JavaScript support!
+- Full JavaScript support!
 - CSS Selectors (a.k.a jQuery-style, thanks to PyQuery).
 - XPath Selectors, for the faint at heart.
 - Mocked user-agent (like a real web browser).
@@ -40,14 +40,9 @@ Installation
 .. code-block:: shell
 
     $ pipenv install requests-html
+    ✨🍰✨
 
-Or, if you want access to :class:`BrowserHTMLSession <BrowserHTMLSession>`:
-
-.. code-block:: shell
-
-    $ pipenv install requests-html[browser]
-
-Only later version of **Python 3** are supported.
+Only later versions of **Python 3** are supported.
 
 
 Tutorial & Usage
@@ -153,10 +148,6 @@ JavaScript Support
 ==================
 
 Let's grab some text that's rendered by JavaScript:
-
-.. code-block:: shell
-
-    $ pipenv install requests-html[browser]
 
 .. code-block:: pycon
 
