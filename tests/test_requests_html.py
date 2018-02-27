@@ -1,9 +1,9 @@
 import os
 
-from requests_html import Session
+from requests_html import HTMLSession
 from requests_file import FileAdapter
 
-session = Session()
+session = HTMLSession()
 session.mount('file://', FileAdapter())
 
 
