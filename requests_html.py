@@ -245,7 +245,7 @@ class HTMLSession(requests.Session):
     """
 
     def __init__(self, mock_browser=True, *args, **kwargs):
-        super(Session, self).__init__(*args, **kwargs)
+        super(HTMLSession, self).__init__(*args, **kwargs)
 
         # Mock a web browser's user agent.
         if mock_browser:
@@ -265,7 +265,7 @@ class HTMLSession(requests.Session):
 
     def request(self, *args, **kwargs):
         # Convert Request object into HTTPRequest object.
-        r = super(Session, self).request(*args, **kwargs)
+        r = super(HTMLSession, self).request(*args, **kwargs)
         html_r = HTMLResponse._from_response(r)
 
         return html_r
@@ -275,11 +275,11 @@ class BrowserHTMLSession(Session):
     """A web-browser interpreted session (for JavaScript)."""
 
     def __init__(self, *args, **kwargs):
-        super(BrowserSession, self).__init__(*args, **kwargs)
+        super(BrowserHTMLSession, self).__init__(*args, **kwargs)
 
     def request(self, *args, **kwargs):
         # Convert Request object into HTTPRequest object.
-        r = super(Session, self).request(*args, **kwargs)
+        r = super(BrowserHTMLSession, self).request(*args, **kwargs)
         html_r = HTMLResponse._from_response(r)
 
         html_r._content = self.render(r.text).encode(DEFAULT_ENCODING)
@@ -291,7 +291,7 @@ class BrowserHTMLSession(Session):
     def render(source_url):
         """Fully render HTML, JavaScript and all."""
 
-        if not 'QApplication' in globals():
+        if 'QApplication' not in globals():
             raise RuntimeError('PyQt5 must be installed.')
 
         class Render(QWebEngineView):
