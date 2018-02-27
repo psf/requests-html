@@ -84,10 +84,7 @@ class BaseParser:
 
     @property
     def lxml(self):
-        if self.element:
-            return self.element
-        else:
-            return fromstring(self.html)
+        return fromstring(self.html)
 
     @property
     def text(self):
