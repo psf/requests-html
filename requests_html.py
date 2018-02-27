@@ -224,7 +224,7 @@ class HTML(BaseParser):
     def __repr__(self) -> str:
         return "<HTML url={}>".format(repr(self.url))
 
-    def render(self, retries: int = 8, script: str = None, scrolldown = False, sleep: int = 0):
+    def render(self, retries: int = 8, script: str = None, scrolldown=False, sleep: int = 0):
         """Reloads the response in Chromium, and replaces HTML content
         with an updated version, with JavaScript executed.
 
