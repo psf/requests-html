@@ -216,8 +216,11 @@ class HTML(BaseParser):
         return "<HTML url={}>".format(repr(self.url))
 
     def render(self, retries: int = 8) -> None:
-        """Loads the response in Chromium, and replaces HTML content
-        with an updated version, JavaScript executed.
+        """Reloads the response in Chromium, and replaces HTML content
+        with an updated version, with JavaScript executed.
+
+        Warning: the first time you run this method, it will download
+        Chromium into your home directory.
         """
         async def _async_render(url: str):
             try:
