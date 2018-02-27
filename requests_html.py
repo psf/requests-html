@@ -254,7 +254,7 @@ class HTML(BaseParser):
                 except TimeoutError:
                     pass
 
-        html = HTML(url=self.url, html=content, default_encoding=DEFAULT_ENCODING)
+        html = HTML(url=self.url, html=content.encode(DEFAULT_ENCODING), default_encoding=DEFAULT_ENCODING)
         self.__dict__.update(html.__dict__)
 
 
