@@ -24,8 +24,8 @@ When using this library you automatically get:
     - Markdown export of pages and elements.
 
 
-Usage
-=====
+Tutorial & Usage
+================
 
 Make a GET request to 'python.org', using Requests:
 
