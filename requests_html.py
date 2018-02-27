@@ -35,15 +35,23 @@ class BaseParser:
         self._html = html
 
     @property
-    def html(self) -> str:
-        """Unicode representation of the HTML content."""
+    def raw_html(self):
+        """Bytes representation of the HTML content."""
         if self._html:
             return self._html
+        else:
+            return etree.tostring(self.element, encoding='unicode').strip().encode(self.encoding)
+
+    @property
+    def html(self) -> bytes:
+        """Unicode representation of the HTML content."""
+        if self._html:
+            return self._html.decode(self.encoding)
         else:
             return etree.tostring(self.element, encoding='unicode').strip()
 
     @html.setter
-    def set_html(self, html: str) -> None:
+    def set_html(self, html: bytes) -> None:
         """Property setter for self.html."""
         self._html = html
 
@@ -57,7 +65,7 @@ class BaseParser:
 
         # Scan meta tags for chaset.
         if self._html:
-            self._encoding = html_to_unicode(self.default_encoding, self.html.encode(DEFAULT_ENCODING))[0]
+            self._encoding = html_to_unicode(self.default_encoding, self._html)[0]
 
         return self._encoding if self._encoding else self.default_encoding
 
@@ -265,7 +273,7 @@ class HTMLResponse(requests.Response):
         if self._html:
             return self._html
 
-        self._html = HTML(url=self.url, html=self.text, default_encoding=self.encoding)
+        self._html = HTML(url=self.url, html=self.content, default_encoding=self.encoding)
         return self._html
 
     @classmethod
