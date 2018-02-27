@@ -26,7 +26,7 @@ When using this library you automatically get:
 - XPath Selectors, for the faint at heart.
 - Mocked user-agent (like a real web browser).
 - Automatic following of redirects.
-- Connection–pooling and cookie persistience.
+- Connection–pooling and cookie persistence.
 - The Requests experience you know and love, with magical parsing abilities.
 
 .. Other nice features include:

@@ -251,7 +251,7 @@ def user_agent(style=None):
 
 
 class HTMLSession(requests.Session):
-    """A consumable session, for cookie persistience and connection pooling,
+    """A consumable session, for cookie persistence and connection pooling,
     amongst other things.
     """
 
