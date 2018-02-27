@@ -1,7 +1,7 @@
 Requests-HTML: HTML Parsing for Humans™
 =======================================
 
-.. image:: https://farm5.staticflickr.com/4746/39182947334_13641dcf64_k_d.jpg
+.. image:: https://farm5.staticflickr.com/4695/39152770914_a3ab8af40d_k_d.jpg
 
 .. image:: https://travis-ci.org/kennethreitz/requests-html.svg?branch=master
     :target: https://travis-ci.org/kennethreitz/requests-html
