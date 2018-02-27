@@ -239,7 +239,6 @@ class HTML(BaseParser):
                 # Load the given page (GET request, obviously.)
                 await page.goto(url)
 
-                result = None
                 if script:
                     result = await page.evaluate(script)
 
@@ -251,12 +250,11 @@ class HTML(BaseParser):
 
         loop = asyncio.get_event_loop()
         content = None
-        result = None
 
         for i in range(retries):
             if not content:
                 try:
-                    content, result = loop.run_until_complete(_async_render(url=self.url))
+                    content, result = loop.run_until_complete(_async_render(url=self.url, script=script))
                 except TimeoutError:
                     pass
 
