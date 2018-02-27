@@ -332,4 +332,4 @@ class BrowserHTMLSession(HTMLSession):
 # Backwards compatiblity.
 session = HTMLSession()
 Session = HTMLSession
-BroserSession = BrowserHTMLSession
+BrowserSession = BrowserHTMLSession
