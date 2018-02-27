@@ -153,29 +153,6 @@ You can also use this library without Requests:
     {'https://httpbin.org'}
 
 
-Other Fun (with Markdown)
-=========================
-
-If you'd like to take an element and convert it to Markdown, for example, use `html2text`, by Aaron Swartz:
-
-.. code-block:: shell
-
-    $ pipenv install html2text
-
-.. code-block:: pycon
-
-    >>> from html2text import HTML2Text
-    >>> h = html2text.HTML2Text()
-    >>> print(h.handle(about.html))
-    * [About](/about/)
-
-      * [Applications](/about/apps/)
-      * [Quotes](/about/quotes/)
-      * [Getting Started](/about/gettingstarted/)
-      * [Help](/about/help/)
-      * [Python Brochure](http://brochure.getpython.info/)
-
-
 Installation
 ============
 
