@@ -291,7 +291,7 @@ class BrowserHTMLSession(HTMLSession):
 
     def request(self, *args, **kwargs):
         # Convert Request object into HTTPRequest object.
-        r = super(BrowserHTMLSession, self).request(*args, **kwargs)
+        r = super(BrowserHTMLSession, self).request(stream=True, *args, **kwargs)
 
         r._content = self.render(r.url).encode(DEFAULT_ENCODING)
         r.encoding = DEFAULT_ENCODING
@@ -305,10 +305,12 @@ class BrowserHTMLSession(HTMLSession):
         async def _async_render(url):
             browser = pyppeteer.launch()
             page = await browser.newPage()
+
+            # Load the given page (GET request, obviously.)
             await page.goto(url)
 
-            content = await page.content()
-            return content
+            # Return the content of the page, JavaScript evaluated.
+            return await page.content()
 
         loop = asyncio.get_event_loop()
         content = loop.run_until_complete(_async_render(source_url))
