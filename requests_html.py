@@ -21,6 +21,28 @@ DEFAULT_ENCODING = 'utf-8'
 
 useragent = UserAgent()
 
+class HTMLResponse(requests.Response):
+    """docstring for Response"""
+
+    def __init__(self, *args, **kwargs):
+        super(HTMLResponse, self).__init__(*args, **kwargs)
+        self._html = None
+
+    @property
+    def html(self):
+        if self._html:
+            return self._html
+
+        self._html = HTML(url=self.url, html=self.text, default_encoding=self.encoding)
+        return self._html
+
+    @classmethod
+    def _from_response(cls, response):
+        html_r = cls()
+        html_r.__dict__.update(response.__dict__)
+        return html_r
+
+
 
 class BaseParser:
     """A basic HTML/Element Parser, for Humans."""
@@ -242,9 +264,14 @@ class Session(requests.Session):
         if not response.encoding:
             response.encoding = DEFAULT_ENCODING
 
-        response.html = HTML(url=response.url, html=response.text, default_encoding=response.encoding)
-
         return response
+
+    def request(self, *args, **kwargs):
+        # Convert Request object into HTTPRequest object.
+        r = super(Session, self).request(*args, **kwargs)
+        html_r = HTMLResponse._from_response(r)
+
+        return html_r
 
 
 class BrowserSession(Session):
@@ -254,14 +281,14 @@ class BrowserSession(Session):
         super(BrowserSession, self).__init__(*args, **kwargs)
 
     def request(self, *args, **kwargs):
-        r = super(BrowserSession, self).request(*args, **kwargs)
+        # Convert Request object into HTTPRequest object.
+        r = super(Session, self).request(*args, **kwargs)
+        html_r = HTMLResponse._from_response(r)
 
-        r._content = self.render(r.text).encode(DEFAULT_ENCODING)
-        r.encoding = DEFAULT_ENCODING
+        html_r._content = self.render(r.text).encode(DEFAULT_ENCODING)
+        html_r.encoding = DEFAULT_ENCODING
 
-        r.html = HTML(url=r.url, html=r.text, default_encoding=r.encoding)
-
-        return r
+        return html_r
 
     @staticmethod
     def render(source_url):
