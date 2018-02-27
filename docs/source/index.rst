@@ -151,10 +151,10 @@ Let's grab some text that's rendered by JavaScript:
 
 .. code-block:: pycon
 
-    >>> from requests_html import BrowserHTMLSession
-    >>> session = BrowserHTMLSession()
+    >>> r = session.get('http://python-requests.org/')
 
-    >>> r = session.get('http://python-requests.org')
+    >>> r.html.render()
+
     >>> r.html.search('Python 2 will retire in only {months} months!')['months']
     '<time>25</time>'
 

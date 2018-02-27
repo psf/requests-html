@@ -45,6 +45,7 @@ class HTMLResponse(requests.Response):
 
 
 
+
 class BaseParser:
     """A basic HTML/Element Parser, for Humans."""
 
@@ -238,6 +239,36 @@ class HTML(BaseParser):
     def __repr__(self):
         return "<HTML url={}>".format(repr(self.url))
 
+    def render(self, retries=8):
+        """Loads the response in Chromium, and replaces HTML content
+        with an updated version, JavaScript executed.
+        """
+        async def _async_render(url):
+            try:
+                browser = pyppeteer.launch()
+                page = await browser.newPage()
+
+                # Load the given page (GET request, obviously.)
+                await page.goto(url)
+
+                # Return the content of the page, JavaScript evaluated.
+                return await page.content()
+            except TimeoutError:
+                return None
+
+        loop = asyncio.get_event_loop()
+        content = None
+
+        for i in range(retries):
+            if not content:
+                try:
+                    content = loop.run_until_complete(_async_render(self.url))
+                except TimeoutError:
+                    pass
+
+        html = HTML(url=self.url, html=content, default_encoding=DEFAULT_ENCODING)
+        self.__dict__.update(html.__dict__)
+
 
 def user_agent(style=None):
     """Returns a random user-agent, if not requested one of a specific
@@ -280,57 +311,3 @@ class HTMLSession(requests.Session):
         html_r = HTMLResponse._from_response(r)
 
         return html_r
-
-
-class BrowserHTMLSession(HTMLSession):
-    """A web-browser interpreted session (for JavaScript), powered by
-    `PyPpeteer <https://pypi.python.org/pypi/pyppeteer>`_."""
-
-    def __init__(self, *args, **kwargs):
-        super(BrowserHTMLSession, self).__init__(*args, **kwargs)
-
-    def request(self, *args, **kwargs):
-        # Convert Request object into HTTPRequest object.
-        r = super(BrowserHTMLSession, self).request(stream=True, *args, **kwargs)
-
-        r._content = self.render(r.url).encode(DEFAULT_ENCODING)
-        r.encoding = DEFAULT_ENCODING
-
-        return r
-
-    @staticmethod
-    def render(source_url, retries=8):
-        """Fully render HTML, JavaScript and all.
-        Will attempt 8 times by default.
-        """
-
-        async def _async_render(url):
-            try:
-                browser = pyppeteer.launch()
-                page = await browser.newPage()
-
-                # Load the given page (GET request, obviously.)
-                await page.goto(url)
-
-                # Return the content of the page, JavaScript evaluated.
-                return await page.content()
-            except TimeoutError:
-                return None
-
-        loop = asyncio.get_event_loop()
-        content = None
-
-        for i in range(retries):
-            if not content:
-                try:
-                    content = loop.run_until_complete(_async_render(source_url))
-                except TimeoutError:
-                    pass
-
-        return content
-
-
-# Backwards compatiblity.
-session = HTMLSession()
-Session = HTMLSession
-BrowserSession = BrowserHTMLSession
