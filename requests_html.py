@@ -239,7 +239,7 @@ def user_agent(style=None):
         return useragent[style]
 
 
-class Session(requests.Session):
+class HTMLSession(requests.Session):
     """A consumable session, for cookie persistience and connection pooling,
     amongst other things.
     """
@@ -271,7 +271,7 @@ class Session(requests.Session):
         return html_r
 
 
-class BrowserSession(Session):
+class BrowserHTMLSession(Session):
     """A web-browser interpreted session (for JavaScript)."""
 
     def __init__(self, *args, **kwargs):
@@ -318,4 +318,6 @@ class BrowserSession(Session):
 
 
 # Backwards compatiblity.
-session = Session()
+session = HTMLSession()
+Session = HTMLSession
+BroserSession = BrowserHTMLSession
