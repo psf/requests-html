@@ -59,7 +59,6 @@ def test_xpath():
     html = r.html.xpath('/html', first=True)
     assert 'no-js' in html.attrs['class']
 
-
 if __name__ == '__main__':
-    # test_file_get()
     test_css_selector()
+

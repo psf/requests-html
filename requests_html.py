@@ -50,7 +50,7 @@ class BaseParser:
             return self._encoding
 
         # Scan meta tags for chaset.
-        self._encoding = html_to_unicode(self.default_encoding, self.html)[0]
+        self._encoding = html_to_unicode(self.default_encoding, self.html.encode(DEFAULT_ENCODING))[0]
 
         return self._encoding if self._encoding else self.default_encoding
 
@@ -241,7 +241,7 @@ class Session(requests.Session):
         if not response.encoding:
             response.encoding = DEFAULT_ENCODING
 
-        response.html = HTML(url=response.url, html=response.text, default_encoding=response.encoding)
+        response.html = HTML(url=response.url, html=response.content, default_encoding=response.encoding)
 
         return response
 
