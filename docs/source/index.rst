@@ -105,7 +105,7 @@ Render out an :class:`Element <Element>`'s HTML:
 
 
 
-Select :class:`Element <Element>`s within :class:`Element <Element>`s:
+Select an :class:`Element <Element>` list within an :class:`Element <Element>`:
 
 .. code-block:: pycon
 
