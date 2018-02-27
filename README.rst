@@ -29,8 +29,8 @@ Make a GET request to 'python.org', using Requests:
 
 .. code-block:: pycon
 
-    >>> import requests_html
-    >>> session = requests_html.Session()
+    >>> from requests_html import HTMLSession
+    >>> session = HTMLSession()
 
     >>> r = session.get('https://python.org/')
 
@@ -132,8 +132,8 @@ Let's grab some text that's rendered by JavaScript:
 
 .. code-block:: pycon
 
-    >>> from requests_html import BrowserSession
-    >>> session = BrowserSession()
+    >>> from requests_html import BrowserHTMLSession
+    >>> session = BrowserHTMLSession()
 
     >>> r = session.get('http://python-requests.org')
     >>> r.html.search('Python 2 will retire in only {months} months!')['months']
