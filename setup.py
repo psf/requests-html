@@ -21,7 +21,7 @@ VERSION = '0.3.5'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'requests', 'pyquery', 'fake-useragent', 'parse', 'bs4', 'w3lib'
+    'requests', 'pyquery', 'fake-useragent', 'parse', 'bs4', 'w3lib', 'pyppeteer'
 ]
 
 # The rest you shouldn't have to touch too much :)
@@ -79,9 +79,6 @@ setup(
     author_email=EMAIL,
     url=URL,
     python_requires='>=3.5.0',
-    extras_require={
-        'browser': ['PyQt5'],
-    },
     # If your package is a single module, use this instead of 'packages':
     py_modules=['requests_html'],
 

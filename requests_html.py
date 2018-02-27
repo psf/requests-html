@@ -1,5 +1,7 @@
+import asyncio
 from urllib.parse import urlparse, urlunparse
 
+import pyppeteer
 import requests
 from pyquery import PyQuery
 
@@ -10,11 +12,7 @@ from parse import search as parse_search
 from parse import findall
 from w3lib.encoding import html_to_unicode
 
-try:
-    from PyQt5.QtWidgets import QApplication
-    from PyQt5.QtWebEngineWidgets import QWebEngineView
-except ImportError:
-    pass
+
 
 
 DEFAULT_ENCODING = 'utf-8'
@@ -154,7 +152,8 @@ class BaseParser:
                 try:
                     href = link.attrs['href'].strip()
                     if not href.startswith('#') and self.skip_anchors and href not in ['javascript:;']:
-                        yield href
+                        if href:
+                            yield href
                 except KeyError:
                     pass
 
@@ -285,7 +284,7 @@ class HTMLSession(requests.Session):
 
 class BrowserHTMLSession(HTMLSession):
     """A web-browser interpreted session (for JavaScript), powered by
-    PyQt5's QWebEngineView."""
+    `PyPpeteer <https://pypi.python.org/pypi/pyppeteer>`_."""
 
     def __init__(self, *args, **kwargs):
         super(BrowserHTMLSession, self).__init__(*args, **kwargs)
@@ -294,7 +293,7 @@ class BrowserHTMLSession(HTMLSession):
         # Convert Request object into HTTPRequest object.
         r = super(BrowserHTMLSession, self).request(*args, **kwargs)
 
-        r._content = self.render(r.text).encode(DEFAULT_ENCODING)
+        r._content = self.render(r.url).encode(DEFAULT_ENCODING)
         r.encoding = DEFAULT_ENCODING
 
         return r
@@ -303,30 +302,18 @@ class BrowserHTMLSession(HTMLSession):
     def render(source_url):
         """Fully render HTML, JavaScript and all."""
 
-        if 'QApplication' not in globals():
-            raise RuntimeError('PyQt5 must be installed.')
+        async def _async_render(url):
+            browser = pyppeteer.launch()
+            page = await browser.newPage()
+            await page.goto(url)
 
-        class Render(QWebEngineView):
-            def __init__(self, html):
-                self.html = None
-                self.app = QApplication([])
-                QWebEngineView.__init__(self)
-                self.loadFinished.connect(self._loadFinished)
-                self.setHtml(html)
-                # self.load(QUrl(url))
-                self.app.exec_()
+            content = await page.content()
+            return content
 
-            def _loadFinished(self, result):
-                # This is an async call, you need to wait for this
-                # to be called before closing the app
-                self.page().toHtml(self._callable)
+        loop = asyncio.get_event_loop()
+        content = loop.run_until_complete(_async_render(source_url))
 
-            def _callable(self, data):
-                self.html = data
-                # Data has been stored, it's safe to quit the app
-                self.app.quit()
-
-        return Render(source_url).html
+        return content
 
 
 # Backwards compatiblity.
