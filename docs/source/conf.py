@@ -88,7 +88,14 @@ html_theme = 'alabaster'
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+    'show_powered_by': False,
+    'github_user': 'kennethreitz',
+    'github_repo': 'requests-html',
+    'github_banner': True,
+    'show_related': False,
+    'note_bg': '#FFF59C'
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -103,8 +110,15 @@ html_static_path = ['_static']
 # default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
 # 'searchbox.html']``.
 #
-# html_sidebars = {}
+html_sidebars = {
+    'index':    ['sidebarintro.html', 'sourcelink.html', 'searchbox.html',
+                 'hacks.html'],
+    '**':       ['sidebarlogo.html', 'localtoc.html', 'relations.html',
+                 'sourcelink.html', 'searchbox.html', 'hacks.html']
+}
 
+html_show_sphinx = False
+html_show_sourcelink = False
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
