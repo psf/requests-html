@@ -255,9 +255,6 @@ class HTML(BaseParser):
                     for _ in range(scrolldown):
                         await page._keyboard.down('PageDown')
                         await asyncio.sleep(sleep)
-                        # await page._keyboard.up('PageDown')
-
-
                 else:
                     await asyncio.sleep(sleep)
 
