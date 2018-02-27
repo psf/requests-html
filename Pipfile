@@ -24,6 +24,7 @@ requests-file = "*"
 pytest = "*"
 "e1839a8" = {path = ".", editable = true}
 sphinx = "*"
+mypy = "*"
 
 
 [scripts]

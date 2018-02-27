@@ -1,7 +1,7 @@
 import asyncio
 from urllib.parse import urlparse, urlunparse
 from concurrent.futures._base import TimeoutError
-from typing import List
+from typing import Set
 
 import pyppeteer
 import requests
@@ -16,43 +16,16 @@ from parse import findall
 from w3lib.encoding import html_to_unicode
 
 
-
-
 DEFAULT_ENCODING = 'utf-8'
 
 useragent = UserAgent()
-
-class HTMLResponse(requests.Response):
-    """An HTML-enabled :class:`Response <Response>` object.
-    Same as Requests class:`Response <Response>` object, but with an
-    intelligent ``.html`` property added.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super(HTMLResponse, self).__init__(*args, **kwargs)
-        self._html = None
-
-    @property
-    def html(self) -> str:
-        if self._html:
-            return self._html
-
-        self._html = HTML(url=self.url, html=self.text, default_encoding=self.encoding)
-        return self._html
-
-    @classmethod
-    def _from_response(cls, response):
-        html_r = cls()
-        html_r.__dict__.update(response.__dict__)
-        return html_r
-
 
 
 
 class BaseParser:
     """A basic HTML/Element Parser, for Humans."""
 
-    def __init__(self, *, element, default_encoding: str = None, html: str = None, url: str):
+    def __init__(self, *, element, default_encoding: str = None, html: str = None, url: str) -> None:
         self.element = element
         self.url = url
         self.skip_anchors = True
@@ -69,7 +42,7 @@ class BaseParser:
             return etree.tostring(self.element, encoding='unicode').strip()
 
     @html.setter
-    def set_html(self, html):
+    def set_html(self, html: str) -> None:
         """Property setter for self.html."""
         self._html = html
 
@@ -148,7 +121,7 @@ class BaseParser:
         return [r for r in findall(template, self.html)]
 
     @property
-    def links(self) -> List[str]:
+    def links(self) -> Set[str]:
         """All found links on page, in as–is form."""
         def gen():
             for link in self.find('a'):
@@ -164,7 +137,7 @@ class BaseParser:
         return set(g for g in gen())
 
     @property
-    def absolute_links(self) -> List[str]:
+    def absolute_links(self) -> Set[str]:
         """All found links on page, in absolute form."""
         def gen():
             for link in self.links:
@@ -275,6 +248,31 @@ class HTML(BaseParser):
         return self
 
 
+class HTMLResponse(requests.Response):
+    """An HTML-enabled :class:`Response <Response>` object.
+    Same as Requests class:`Response <Response>` object, but with an
+    intelligent ``.html`` property added.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(HTMLResponse, self).__init__(*args, **kwargs)
+        self._html = None
+
+    @property
+    def html(self) -> HTML:
+        if self._html:
+            return self._html
+
+        self._html = HTML(url=self.url, html=self.text, default_encoding=self.encoding)
+        return self._html
+
+    @classmethod
+    def _from_response(cls, response):
+        html_r = cls()
+        html_r.__dict__.update(response.__dict__)
+        return html_r
+
+
 def user_agent(style='chrome') -> str:
     """Returns a random user-agent, if not requested one of a specific
     style. Defaults to a Chrome-style User-Agent.
@@ -301,7 +299,7 @@ class HTMLSession(requests.Session):
         self.hooks = {'response': self._handle_response}
 
     @staticmethod
-    def _handle_response(response, **kwargs) -> requests.Response:
+    def _handle_response(response, **kwargs) -> HTMLResponse:
         """Requests HTTP Response handler. Attaches .html property to Response
         objects.
         """
