@@ -1,12 +1,15 @@
 import asyncio
 from urllib.parse import urlparse, urlunparse
 from concurrent.futures._base import TimeoutError
+from typing import List
+
 import pyppeteer
 import requests
 from pyquery import PyQuery
 
 from fake_useragent import UserAgent
 from lxml import etree
+from lxml.html import HtmlElement
 from lxml.html.soupparser import fromstring
 from parse import search as parse_search
 from parse import findall
@@ -30,7 +33,7 @@ class HTMLResponse(requests.Response):
         self._html = None
 
     @property
-    def html(self):
+    def html(self) -> str:
         if self._html:
             return self._html
 
@@ -49,7 +52,7 @@ class HTMLResponse(requests.Response):
 class BaseParser:
     """A basic HTML/Element Parser, for Humans."""
 
-    def __init__(self, *, element, default_encoding=None, html=None, url):
+    def __init__(self, *, element, default_encoding: str = None, html: str = None, url: str):
         self.element = element
         self.url = url
         self.skip_anchors = True
@@ -58,7 +61,7 @@ class BaseParser:
         self._html = html
 
     @property
-    def html(self):
+    def html(self) -> str:
         """Unicode representation of the HTML content."""
         if self._html:
             return self._html
@@ -71,7 +74,7 @@ class BaseParser:
         self._html = html
 
     @property
-    def encoding(self):
+    def encoding(self) -> str:
         """The encoding string to be used, extracted from the HTML and
         :class:`HTMLResponse <HTMLResponse>` headers.
         """
@@ -85,25 +88,25 @@ class BaseParser:
         return self._encoding if self._encoding else self.default_encoding
 
     @property
-    def pq(self):
+    def pq(self) -> PyQuery:
         """PyQuery representation of the :class:`Element <Element>` or :class:`HTML <HTML>`."""
         return PyQuery(self.element)
 
     @property
-    def lxml(self):
+    def lxml(self) -> HtmlElement:
         return fromstring(self.html)
 
     @property
-    def text(self):
+    def text(self) -> str:
         """The text content of the :class:`Element <Element>` or :class:`HTML <HTML>`."""
         return self.pq.text()
 
     @property
-    def full_text(self):
+    def full_text(self) -> str:
         """The full text content (including links) of the :class:`Element <Element>` or :class:`HTML <HTML>`.."""
         return self.lxml.text_content()
 
-    def find(self, selector, first=False, _encoding=None):
+    def find(self, selector: str, first: bool = False, _encoding: str = None):
         """Given a jQuery selector, returns a list of :class:`Element <Element>` objects.
 
         If ``first`` is ``True``, only returns the first :class:`Element <Element>` found."""
@@ -121,7 +124,7 @@ class BaseParser:
         else:
             return c
 
-    def xpath(self, selector, first=False, _encoding=None):
+    def xpath(self, selector: str, first: bool = False, _encoding: str = None):
         """Given an XPath selector, returns a list of :class:`Element <Element>` objects.
 
         If ``first`` is ``True``, only returns the first :class:`Element <Element>` found."""
@@ -134,18 +137,18 @@ class BaseParser:
         else:
             return c
 
-    def search(self, template):
+    def search(self, template: str):
         """Searches the :class:`Element <Element>` for the given parse template."""
         return parse_search(template, self.html)
 
-    def search_all(self, template):
+    def search_all(self, template: str):
         """Searches the :class:`Element <Element>` (multiple times) for the given parse
         template.
         """
         return [r for r in findall(template, self.html)]
 
     @property
-    def links(self):
+    def links(self) -> List[str]:
         """All found links on page, in as–is form."""
         def gen():
             for link in self.find('a'):
@@ -161,7 +164,7 @@ class BaseParser:
         return set(g for g in gen())
 
     @property
-    def absolute_links(self):
+    def absolute_links(self) -> List[str]:
         """All found links on page, in absolute form."""
         def gen():
             for link in self.links:
@@ -183,7 +186,7 @@ class BaseParser:
         return set(g for g in gen())
 
     @property
-    def base_url(self):
+    def base_url(self) -> str:
         """The base URL for the page. Supports the ``<base>`` tag."""
 
         # Support for <base> tag.
@@ -214,7 +217,7 @@ class Element(BaseParser):
         return "<Element {} {}>".format(repr(self.element.tag), ' '.join(attrs))
 
     @property
-    def attrs(self):
+    def attrs(self) -> dict:
         """Returns a dictionary of the attributes of the class:`Element <Element>`."""
         attrs = {k: self.pq.attr[k].strip() for k in self.element.keys()}
 
@@ -236,16 +239,16 @@ class HTML(BaseParser):
             default_encoding=default_encoding
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<HTML url={}>".format(repr(self.url))
 
-    def render(self, retries=8):
+    def render(self, retries: int = 8):
         """Loads the response in Chromium, and replaces HTML content
         with an updated version, JavaScript executed.
         """
-        async def _async_render(url):
+        async def _async_render(url: str):
             try:
-                browser = pyppeteer.launch()
+                browser = pyppeteer.launch(headless=True)
                 page = await browser.newPage()
 
                 # Load the given page (GET request, obviously.)
@@ -262,15 +265,17 @@ class HTML(BaseParser):
         for i in range(retries):
             if not content:
                 try:
-                    content = loop.run_until_complete(_async_render(self.url))
+                    content = loop.run_until_complete(_async_render(url=self.url))
                 except TimeoutError:
                     pass
 
         html = HTML(url=self.url, html=content, default_encoding=DEFAULT_ENCODING)
         self.__dict__.update(html.__dict__)
 
+        return self
 
-def user_agent(style='chrome'):
+
+def user_agent(style='chrome') -> str:
     """Returns a random user-agent, if not requested one of a specific
     style. Defaults to a Chrome-style User-Agent.
     """
@@ -296,7 +301,7 @@ class HTMLSession(requests.Session):
         self.hooks = {'response': self._handle_response}
 
     @staticmethod
-    def _handle_response(response, **kwargs):
+    def _handle_response(response, **kwargs) -> requests.Response:
         """Requests HTTP Response handler. Attaches .html property to Response
         objects.
         """
@@ -305,7 +310,7 @@ class HTMLSession(requests.Session):
 
         return response
 
-    def request(self, *args, **kwargs):
+    def request(self, *args, **kwargs) -> HTMLResponse:
         # Convert Request object into HTTPRequest object.
         r = super(HTMLSession, self).request(*args, **kwargs)
         html_r = HTMLResponse._from_response(r)
