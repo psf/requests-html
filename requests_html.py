@@ -105,7 +105,9 @@ class BaseParser:
         return self.lxml.text_content()
 
     def find(self, selector, first=False, _encoding=None):
-        """Given a jQuery selector, returns a list of :class:`Element <Element>` objects."""
+        """Given a jQuery selector, returns a list of :class:`Element <Element>` objects.
+
+        If ``first`` is ``True``, only returns the first :class:`Element <Element>` found."""
         def gen():
             for found in self.pq(selector):
                 yield Element(element=found, url=self.url, default_encoding=_encoding or self.encoding)
@@ -121,7 +123,9 @@ class BaseParser:
             return c
 
     def xpath(self, selector, first=False, _encoding=None):
-        """Given an XPath selector, returns a list of :class:`Element <Element>` objects."""
+        """Given an XPath selector, returns a list of :class:`Element <Element>` objects.
+
+        If ``first`` is ``True``, only returns the first :class:`Element <Element>` found."""
         c = [Element(element=e, url=self.url, default_encoding=_encoding or self.encoding) for e in self.lxml.xpath(selector)]
         if first:
             try:
