@@ -47,7 +47,7 @@ Or, if you want access to :class:`BrowserHTMLSession <BrowserHTMLSession>`:
 
     $ pipenv install requests-html[browser]
 
-Only  later version of **Python 3** are supported.
+Only later version of **Python 3** are supported.
 
 
 Tutorial & Usage
