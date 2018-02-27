@@ -199,7 +199,7 @@ class HTML(BaseParser):
 
     def __init__(self, *, url, html, default_encoding=DEFAULT_ENCODING):
         super(HTML, self).__init__(
-            element=fromstring(html),
+            element=PyQuery(html)('html'),
             html=html,
             url=url,
             default_encoding=default_encoding
