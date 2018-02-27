@@ -180,7 +180,7 @@ class BaseParser:
 
     @property
     def base_url(self):
-        """The base URL for the page. Supports the <base> tag."""
+        """The base URL for the page. Supports the ``<base>`` tag."""
 
         # Support for <base> tag.
         base = self.find('base', first=True)
