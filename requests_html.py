@@ -96,7 +96,7 @@ class BaseParser:
 
     @property
     def text(self):
-        """The text content of the :class:`Element <Element>` or :class:`HTML <HTML>`.."""
+        """The text content of the :class:`Element <Element>` or :class:`HTML <HTML>`."""
         return self.pq.text()
 
     @property
