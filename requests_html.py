@@ -35,7 +35,7 @@ class BaseParser:
         self._html = html
 
     @property
-    def raw_html(self):
+    def raw_html(self) -> bytes:
         """Bytes representation of the HTML content (`learn more <http://www.diveintopython3.net/strings.html>`_)."""
         if self._html:
             return self._html
@@ -43,7 +43,7 @@ class BaseParser:
             return etree.tostring(self.element, encoding='unicode').strip().encode(self.encoding)
 
     @property
-    def html(self) -> bytes:
+    def html(self) -> str:
         """Unicode representation of the HTML content (`learn more <http://www.diveintopython3.net/strings.html>`_)."""
         if self._html:
             return self._html.decode(self.encoding)
