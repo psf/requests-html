@@ -245,7 +245,7 @@ class HTML(BaseParser):
 
         .. code-block:: python
 
-            script = '''
+            script = \"\"\"
                 () => {
                     return {
                         width: document.documentElement.clientWidth,
@@ -253,7 +253,7 @@ class HTML(BaseParser):
                         deviceScaleFactor: window.devicePixelRatio,
                     }
                 }
-            '''
+            \"\"\"
 
         Returns the return value of'the executed  ``script``, if any is provided.
 
