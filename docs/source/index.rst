@@ -183,13 +183,13 @@ You can also render JavaScript pages without Requests:
 
     # ^^ proceeding from above ^^
     >>> script = """
-                () => {
-            return {
-                width: document.documentElement.clientWidth,
-                height: document.documentElement.clientHeight,
-                deviceScaleFactor: window.devicePixelRatio,
+            () => {
+                return {
+                    width: document.documentElement.clientWidth,
+                    height: document.documentElement.clientHeight,
+                    deviceScaleFactor: window.devicePixelRatio,
+                }
             }
-        }
         """
     >>> val = html.render(script=script, reload=False)
 
