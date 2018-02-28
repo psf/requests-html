@@ -69,6 +69,13 @@ def test_html_loading():
     assert isinstance(html.html, str)
 
 
+def test_links():
+    assert not("#test".startswith('#') and True) is True
+    assert not("test".startswith('#') and True) is True
+
+    assert not("#test".startswith('#') and False) is True
+    assert not("test".startswith('#') and False) is True
+
+
 if __name__ == '__main__':
     test_html_loading()
-
