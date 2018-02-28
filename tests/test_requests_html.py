@@ -1,6 +1,6 @@
 import os
 
-from requests_html import HTMLSession
+from requests_html import HTMLSession, HTML
 from requests_file import FileAdapter
 
 session = HTMLSession()
@@ -59,6 +59,14 @@ def test_xpath():
     html = r.html.xpath('/html', first=True)
     assert 'no-js' in html.attrs['class']
 
+
+def test_html_loading():
+    doc = """<a href='https://httpbin.org'>"""
+    html = HTML(html=doc)
+
+    assert 'https://httpbin.org' in html.links
+
+
 if __name__ == '__main__':
-    test_css_selector()
+    test_html_loading()
 

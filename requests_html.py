@@ -214,8 +214,14 @@ class HTML(BaseParser):
     """An HTML document, ready for parsing."""
 
     def __init__(self, *, url=DEFAULT_URL, html, default_encoding=DEFAULT_ENCODING) -> None:
+
+        # Convert incoming unicode HTML into bytes.
+        if isinstance(html, str):
+            html = html.encode(DEFAULT_ENCODING)
+
         super(HTML, self).__init__(
-            element=PyQuery(html)('html'),
+            # Convert unicode HTML to bytes.
+            element=PyQuery(html)('html') or PyQuery('<html>{}</html>'.format(html))('html'),
             html=html,
             url=url,
             default_encoding=default_encoding
