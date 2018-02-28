@@ -105,7 +105,6 @@ class BaseParser:
 
         See W3School's `CSS Selectors Reference <https://www.w3schools.com/cssref/css_selectors.asp>`_ for more details.
 
-
         If ``first`` is ``True``, only returns the first :class:`Element <Element>` found."""
 
         encoding = _encoding or self.encoding
