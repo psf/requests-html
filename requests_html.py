@@ -183,7 +183,7 @@ class BaseParser:
 
     @property
     def base_url(self) -> str:
-        """The base URL for the page. Supports the ```<base>`` tag
+        """The base URL for the page. Supports the ``<base>`` tag
         (`learn more <https://www.w3schools.com/tags/tag_base.asp>`_)."""
 
         # Support for <base> tag.
