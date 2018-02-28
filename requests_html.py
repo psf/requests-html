@@ -220,7 +220,9 @@ class Element(BaseParser):
 
     @property
     def attrs(self) -> dict:
-        """Returns a dictionary of the attributes of the :class:`Element <Element>`."""
+        """Returns a dictionary of the attributes of the :class:`Element <Element>`
+        (`learn more <https://www.w3schools.com/tags/ref_attributes.asp>`_).
+        """
         attrs = {k: self.pq.attr[k].strip() for k in self.element.keys()}
 
         # Split class up, as there are ussually many of them:
