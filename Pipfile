@@ -28,4 +28,4 @@ mypy = "*"
 
 [scripts]
 
-tests = "pytest"
+tests = "pytest -v -m ok"
