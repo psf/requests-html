@@ -91,6 +91,16 @@ class BaseParser:
     def find(self, selector: str, first: bool = False, _encoding: str = None):
         """Given a CSS Selector, returns a list of :class:`Element <Element>` objects.
 
+        Examples:
+
+        - ``a``
+        - ``a.someClass``
+        - ``a#someID``
+        - ``a[target=_blank]``
+
+        See W3 School's `CSS Selectors Reference <https://www.w3schools.com/cssref/css_selectors.asp>`_ for more details.
+
+
         If ``first`` is ``True``, only returns the first :class:`Element <Element>` found."""
         def gen():
             for found in self.pq(selector):
