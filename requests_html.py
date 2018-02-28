@@ -243,6 +243,8 @@ class HTML(BaseParser):
         If ``script`` is specified, it will execute the provided JavaScript at
         runtime. Example:
 
+        .. code-block:: python
+
             script = '''
                 () => {
                     return {
