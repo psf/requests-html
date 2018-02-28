@@ -60,7 +60,7 @@ def test_xpath():
     assert 'no-js' in html.attrs['class']
 
     a_hrefs = r.html.xpath('//a/@href')
-    print(a_hrefs)
+    assert '#site-map' in a_hrefs
 
 
 def test_html_loading():
