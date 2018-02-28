@@ -181,7 +181,7 @@ class BaseParser:
             for selection in selected
         ]
 
-        return _get_first_or_list(c, first)
+        return _get_first_or_list(elements, first)
 
     def search(self, template: str) -> Result:
         """Searches the :class:`Element <Element>` for the given Parse template.
