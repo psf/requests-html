@@ -62,16 +62,13 @@ class BaseParser:
         self.skip_anchors = True
         self.default_encoding = default_encoding
         self._encoding = None
-
-        # Encode incoming unicode HTML into bytes.
-        if isinstance(html, str):
-            html = html.encode(DEFAULT_ENCODING)
-
-        self._html = html
+        self._html = html.encode(DEFAULT_ENCODING) if isinstance(html, str) else html
 
     @property
     def raw_html(self) -> _RawHTML:
-        """Bytes representation of the HTML content (`learn more <http://www.diveintopython3.net/strings.html>`_)."""
+        """Bytes representation of the HTML content.
+        (`learn more <http://www.diveintopython3.net/strings.html>`_).
+        """
         if self._html:
             return self._html
         else:
@@ -79,7 +76,9 @@ class BaseParser:
 
     @property
     def html(self) -> _BaseHTML:
-        """Unicode representation of the HTML content (`learn more <http://www.diveintopython3.net/strings.html>`_)."""
+        """Unicode representation of the HTML content
+        (`learn more <http://www.diveintopython3.net/strings.html>`_).
+        """
         if self._html:
             return self._html.decode(self.encoding)
         else:
@@ -98,7 +97,7 @@ class BaseParser:
         if self._encoding:
             return self._encoding
 
-        # Scan meta tags for chaset.
+        # Scan meta tags for charset.
         if self._html:
             self._encoding = html_to_unicode(self.default_encoding, self._html)[0]
 
@@ -120,12 +119,16 @@ class BaseParser:
 
     @property
     def text(self) -> _Text:
-        """The text content of the :class:`Element <Element>` or :class:`HTML <HTML>`."""
+        """The text content of the
+        :class:`Element <Element>` or :class:`HTML <HTML>`.
+        """
         return self.pq.text()
 
     @property
     def full_text(self) -> _Text:
-        """The full text content (including links) of the :class:`Element <Element>` or :class:`HTML <HTML>`.."""
+        """The full text content (including links) of the
+        :class:`Element <Element>` or :class:`HTML <HTML>`.
+        """
         return self.lxml.text_content()
 
     def find(self, selector: str, first: bool = False, _encoding: str = None) -> _Find:
@@ -133,6 +136,7 @@ class BaseParser:
 
         :param selector: CSS Selector to use.
         :param first: Whether or not to return just the first result.
+        :param _encoding: The encoding format.
 
         Example CSS Selectors:
 
@@ -165,6 +169,7 @@ class BaseParser:
 
         :param selector: XPath Selector to use.
         :param first: Whether or not to return just the first result.
+        :param _encoding: The encoding format.
 
         If a sub-selector is specified (e.g. ``//a/@href``), a simple
         list of results is returned.
@@ -177,21 +182,20 @@ class BaseParser:
         :class:`Element <Element>` found.
         """
         selected = self.lxml.xpath(selector)
-        c = []
-        for selection in selected:
-            if not isinstance(selection, etree._ElementUnicodeResult):
-                element = Element(element=selection, url=self.url, default_encoding=_encoding or self.encoding)
-            else:
-                element = str(selection)
-            c.append(element)
+
+        elements = [
+            Element(element=selection, url=self.url, default_encoding=_encoding or self.encoding)
+            if not isinstance(selection, etree._ElementUnicodeResult) else str(selection)
+            for selection in selected
+        ]
 
         if first:
             try:
-                return c[0]
+                return elements[0]
             except IndexError:
                 return None
         else:
-            return c
+            return elements
 
     def search(self, template: str) -> Result:
         """Searches the :class:`Element <Element>` for the given Parse template.
