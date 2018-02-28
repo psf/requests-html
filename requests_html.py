@@ -1,7 +1,7 @@
 import asyncio
 from urllib.parse import urlparse, urlunparse
 from concurrent.futures._base import TimeoutError
-from typing import Set, Union, List
+from typing import Set, Union, List, MutableMapping
 
 import pyppeteer
 import requests
@@ -25,6 +25,17 @@ useragent = UserAgent()
 _Find = Union[List['Element'], 'Element']
 _XPath = Union[List[str], List['Element'], str, 'Element']
 _HTML = Union[str, bytes]
+_BaseHTML = str
+_UserAgent = str
+_DefaultEncoding = str
+_URL = str
+_RawHTML = bytes
+_Encoding = str
+_LXML = HtmlElement
+_Text = str
+_Search = Result
+_Links = Set[str]
+_Attrs = MutableMapping
 
 
 class BaseParser:
@@ -37,7 +48,7 @@ class BaseParser:
 
     """
 
-    def __init__(self, *, element, default_encoding: str = None, html: _HTML = None, url: str) -> None:
+    def __init__(self, *, element, default_encoding: _DefaultEncoding = None, html: _HTML = None, url: _URL) -> None:
         self.element = element
         self.url = url
         self.skip_anchors = True
@@ -51,7 +62,7 @@ class BaseParser:
         self._html = html
 
     @property
-    def raw_html(self) -> bytes:
+    def raw_html(self) -> _RawHTML:
         """Bytes representation of the HTML content (`learn more <http://www.diveintopython3.net/strings.html>`_)."""
         if self._html:
             return self._html
@@ -59,7 +70,7 @@ class BaseParser:
             return etree.tostring(self.element, encoding='unicode').strip().encode(self.encoding)
 
     @property
-    def html(self) -> str:
+    def html(self) -> _BaseHTML:
         """Unicode representation of the HTML content (`learn more <http://www.diveintopython3.net/strings.html>`_)."""
         if self._html:
             return self._html.decode(self.encoding)
@@ -72,7 +83,7 @@ class BaseParser:
         self._html = html
 
     @property
-    def encoding(self) -> str:
+    def encoding(self) -> _Encoding:
         """The encoding string to be used, extracted from the HTML and
         :class:`HTMLResponse <HTMLResponse>` headers.
         """
@@ -100,12 +111,12 @@ class BaseParser:
         return fromstring(self.html)
 
     @property
-    def text(self) -> str:
+    def text(self) -> _Text:
         """The text content of the :class:`Element <Element>` or :class:`HTML <HTML>`."""
         return self.pq.text()
 
     @property
-    def full_text(self) -> str:
+    def full_text(self) -> _Text:
         """The full text content (including links) of the :class:`Element <Element>` or :class:`HTML <HTML>`.."""
         return self.lxml.text_content()
 
@@ -191,7 +202,7 @@ class BaseParser:
         return [r for r in findall(template, self.html)]
 
     @property
-    def links(self) -> Set[str]:
+    def links(self) -> _Links:
         """All found links on page, in as–is form."""
         def gen():
             for link in self.find('a'):
@@ -207,7 +218,7 @@ class BaseParser:
         return set(gen())
 
     @property
-    def absolute_links(self) -> Set[str]:
+    def absolute_links(self) -> _Links:
         """All found links on page, in absolute form
         (`learn more <https://www.navegabem.com/absolute-or-relative-links.html>`_).
         """
@@ -231,7 +242,7 @@ class BaseParser:
         return set(gen())
 
     @property
-    def base_url(self) -> str:
+    def base_url(self) -> _URL:
         """The base URL for the page. Supports the ``<base>`` tag
         (`learn more <https://www.w3schools.com/tags/tag_base.asp>`_)."""
 
@@ -268,7 +279,7 @@ class Element(BaseParser):
         return "<Element {} {}>".format(repr(self.element.tag), ' '.join(attrs))
 
     @property
-    def attrs(self) -> dict:
+    def attrs(self) -> _Attrs:
         """Returns a dictionary of the attributes of the :class:`Element <Element>`
         (`learn more <https://www.w3schools.com/tags/ref_attributes.asp>`_).
         """
@@ -386,9 +397,8 @@ class HTML(BaseParser):
 
 
 class HTMLResponse(requests.Response):
-    """An HTML-enabled :class:`Response <Response>` object.
-    Same as Requests class:`Response <Response>` object, but with an
-    intelligent ``.html`` property added.
+    """An HTML-enabled :class:`requests.Response <requests.Response>` object.
+    Effectively the same, but with an intelligent ``.html`` property added.
     """
 
     def __init__(self) -> None:
@@ -410,7 +420,7 @@ class HTMLResponse(requests.Response):
         return html_r
 
 
-def user_agent(style='chrome') -> str:
+def user_agent(style='chrome') -> _UserAgent:
     """Returns a random user-agent, if not requested one of a specific
     style. Defaults to a Chrome-style User-Agent.
     """
@@ -437,8 +447,8 @@ class HTMLSession(requests.Session):
 
     @staticmethod
     def _handle_response(response, **kwargs) -> HTMLResponse:
-        """Requests HTTP Response handler. Attaches .html property to Response
-        objects.
+        """Requests HTTP Response handler. Attaches .html property to
+        class:`requests.Response <requests.Response>` objects.
         """
         if not response.encoding:
             response.encoding = DEFAULT_ENCODING
@@ -446,6 +456,9 @@ class HTMLSession(requests.Session):
         return response
 
     def request(self, *args, **kwargs) -> HTMLResponse:
+        """Makes an HTTP Request, with mocked User–Agent headers.
+        Returns a class:`HTTPResponse <HTTPResponse>`.
+        """
         # Convert Request object into HTTPRequest object.
         r = super(HTMLSession, self).request(*args, **kwargs)
         html_r = HTMLResponse._from_response(r)
