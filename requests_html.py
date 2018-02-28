@@ -255,7 +255,12 @@ class HTML(BaseParser):
                 }
             \"\"\"
 
-        Returns the return value of'the executed  ``script``, if any is provided.
+        Returns the return value of'the executed  ``script``, if any is provided:
+
+        .. code-block:: python
+
+            >>> r.html.render(script=script)
+            {'width': 800, 'height': 600, 'deviceScaleFactor': 1}
 
         Warning: the first time you run this method, it will download
         Chromium into your home directory (``~/.pyppeteer``).
