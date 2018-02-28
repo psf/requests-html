@@ -44,8 +44,8 @@ def test_links():
     r = get()
     about = r.html.find('#about', first=True)
 
-    len(about.links) == 6
-    len(about.absolute_links) == 6
+    assert len(about.links) == 6
+    assert len(about.absolute_links) == 6
 
 
 def test_search():
@@ -77,6 +77,45 @@ def test_anchor_links():
     r.html.skip_anchors = False
 
     assert '#site-map' in r.html.links
+
+
+def test_render():
+    r = get()
+    script = """
+    () => {
+        return {
+            width: document.documentElement.clientWidth,
+            height: document.documentElement.clientHeight,
+            deviceScaleFactor: window.devicePixelRatio,
+        }
+    }
+    """
+    val = r.html.render(script=script)
+    for value in ('width', 'height', 'deviceScaleFactor'):
+        assert value in val
+
+    about = r.html.find('#about', first=True)
+    assert len(about.links) == 6
+
+
+def test_bare_render():
+    doc = """<a href='https://httpbin.org'>"""
+    html = HTML(html=doc)
+    script = """
+        () => {
+            return {
+                width: document.documentElement.clientWidth,
+                height: document.documentElement.clientHeight,
+                deviceScaleFactor: window.devicePixelRatio,
+            }
+        }
+    """
+    val = html.render(script=script, reload=False)
+    for value in ('width', 'height', 'deviceScaleFactor'):
+        assert value in val
+
+    assert html.find('html')
+    assert 'https://httpbin.org' in html.links
 
 
 if __name__ == '__main__':
