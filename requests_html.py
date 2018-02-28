@@ -2,7 +2,7 @@ import sys
 import asyncio
 from urllib.parse import urlparse, urlunparse
 from concurrent.futures._base import TimeoutError
-from typing import Set, Union, List, MutableMapping
+from typing import Set, Union, List, MutableMapping, Optional
 
 import pyppeteer
 import requests
@@ -325,7 +325,7 @@ class HTML(BaseParser):
     def __repr__(self) -> str:
         return "<HTML url={}>".format(repr(self.url))
 
-    def render(self, retries: int = 8, script: str = None, scrolldown=False, sleep: int = 0):
+    def render(self, retries: int = 8, script: str = None, scrolldown=False, sleep: int = 0, reload: bool = True):
         """Reloads the response in Chromium, and replaces HTML content
         with an updated version, with JavaScript executed.
 
@@ -361,13 +361,16 @@ class HTML(BaseParser):
         Warning: the first time you run this method, it will download
         Chromium into your home directory (``~/.pyppeteer``).
         """
-        async def _async_render(*, url: str, script: str = None, scrolldown, sleep: int):
+        async def _async_render(*, url: str, script: str = None, scrolldown, sleep: int, reload: bool = True, content: Optional[str]):
             try:
                 browser = pyppeteer.launch(headless=True)
                 page = await browser.newPage()
 
                 # Load the given page (GET request, obviously.)
-                await page.goto(url)
+                if reload:
+                    await page.goto(url)
+                else:
+                    await page.setContent(content)
 
                 result = None
                 if script:
@@ -395,7 +398,7 @@ class HTML(BaseParser):
         for i in range(retries):
             if not content:
                 try:
-                    content, result = loop.run_until_complete(_async_render(url=self.url, script=script, sleep=sleep, scrolldown=scrolldown))
+                    content, result = loop.run_until_complete(_async_render(url=self.url, script=script, sleep=sleep, content=self.html, reload=reload, scrolldown=scrolldown))
                 except TimeoutError:
                     pass
 
