@@ -69,12 +69,12 @@ def test_html_loading():
     assert isinstance(html.html, str)
 
 
-def test_links():
-    assert not("#test".startswith('#') and True) is False
-    assert not("test".startswith('#') and True) is True
-    assert not("#test".startswith('#') and False) is True
-    assert not("test".startswith('#') and False) is True
+def test_anchor_links():
+    r = get()
+    r.html.skip_anchors = False
+
+    assert '#site-map' in r.html.links
 
 
 if __name__ == '__main__':
-    test_html_loading()
+    test_anchor_links()
