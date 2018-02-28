@@ -155,13 +155,13 @@ class BaseParser:
 
                 try:
                     href = link.attrs['href'].strip()
-                    if not href.startswith('#') and self.skip_anchors and href not in ['javascript:;']:
+                    if not(href.startswith('#') and self.skip_anchors) and href not in ['javascript:;']:
                         if href:
                             yield href
                 except KeyError:
                     pass
 
-        return set(g for g in gen())
+        return set(gen())
 
     @property
     def absolute_links(self) -> Set[str]:
@@ -185,7 +185,7 @@ class BaseParser:
 
                 yield href
 
-        return set(g for g in gen())
+        return set(gen())
 
     @property
     def base_url(self) -> str:
