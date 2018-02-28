@@ -237,6 +237,9 @@ class HTML(BaseParser):
         If ``scrolldown`` is specified, the page will scrolldown the specified
         number of times, after sleeping the specified amount of time.
 
+        If just ``sleep`` is provided, the rendering will wait *n* seconds, before
+        returning.
+
         If ``script`` is specified, it will execute the provided JavaScript at
         runtime. Example:
 
