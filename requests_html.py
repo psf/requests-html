@@ -15,12 +15,10 @@ from parse import search as parse_search
 from parse import findall, Result
 from w3lib.encoding import html_to_unicode
 
-
 DEFAULT_ENCODING = 'utf-8'
 DEFAULT_URL = 'https://example.org/'
 
 useragent = UserAgent()
-
 
 
 class BaseParser:
@@ -114,13 +112,7 @@ class BaseParser:
             for found in self.pq(selector)
         ]
 
-        if first:
-            try:
-                return elements[0]
-            except IndexError:
-                return None
-        else:
-            return elements
+        return _get_first_or_list(elements, first)
 
     def xpath(self, selector: str, first: bool = False, _encoding: str = None):
         """Given an XPath selector, returns a list of :class:`Element <Element>` objects.
@@ -129,13 +121,8 @@ class BaseParser:
 
         If ``first`` is ``True``, only returns the first :class:`Element <Element>` found."""
         c = [Element(element=e, url=self.url, default_encoding=_encoding or self.encoding) for e in self.lxml.xpath(selector)]
-        if first:
-            try:
-                return c[0]
-            except IndexError:
-                return None
-        else:
-            return c
+
+        return _get_first_or_list(c, first)
 
     def search(self, template: str) -> Result:
         """Searches the :class:`Element <Element>` for the given parse template."""
@@ -150,14 +137,14 @@ class BaseParser:
     @property
     def links(self) -> Set[str]:
         """All found links on page, in as–is form."""
+
         def gen():
             for link in self.find('a'):
 
                 try:
                     href = link.attrs['href'].strip()
-                    if not(href.startswith('#') and self.skip_anchors) and href not in ['javascript:;']:
-                        if href:
-                            yield href
+                    if href and not (href.startswith('#') and self.skip_anchors and href in ['javascript:;']):
+                        yield href
                 except KeyError:
                     pass
 
@@ -168,6 +155,7 @@ class BaseParser:
         """All found links on page, in absolute form
         (`learn more <https://www.navegabem.com/absolute-or-relative-links.html>`_).
         """
+
         def gen():
             for link in self.links:
                 # Parse the link with stdlib.
@@ -197,12 +185,11 @@ class BaseParser:
         if base:
             return base.attrs['href'].strip()
 
-        else:
-            url = '/'.join(self.url.split('/')[:-1])
-            if url.endswith('/'):
-                url = url[:-1]
+        url = '/'.join(self.url.split('/')[:-1])
+        if url.endswith('/'):
+            url = url[:-1]
 
-            return url
+        return url
 
 
 class Element(BaseParser):
@@ -213,10 +200,7 @@ class Element(BaseParser):
         self.element = element
 
     def __repr__(self) -> str:
-        attrs = []
-        for attr in self.attrs:
-            attrs.append('{}={}'.format(attr, repr(self.attrs[attr])))
-
+        attrs = ['{}={}'.format(attr, repr(self.attrs[attr])) for attr in self.attrs]
         return "<Element {} {}>".format(repr(self.element.tag), ' '.join(attrs))
 
     @property
@@ -289,6 +273,7 @@ class HTML(BaseParser):
         Warning: the first time you run this method, it will download
         Chromium into your home directory (``~/.pyppeteer``).
         """
+
         async def _async_render(*, url: str, script: str = None, scrolldown, sleep: int):
             try:
                 browser = pyppeteer.launch(headless=True)
@@ -344,10 +329,9 @@ class HTMLResponse(requests.Response):
 
     @property
     def html(self) -> HTML:
-        if self._html:
-            return self._html
+        if not self._html:
+            self._html = HTML(url=self.url, html=self.content, default_encoding=self.encoding)
 
-        self._html = HTML(url=self.url, html=self.content, default_encoding=self.encoding)
         return self._html
 
     @classmethod
@@ -362,10 +346,17 @@ def user_agent(style='chrome') -> str:
     style. Defaults to a Chrome-style User-Agent.
     """
 
-    if not style:
-        return useragent.random
+    return useragent[style] if style else useragent.random
+
+
+def _get_first_or_list(l, first=True):
+    if first:
+        try:
+            return l[0]
+        except IndexError:
+            return None
     else:
-        return useragent[style]
+        return l
 
 
 class HTMLSession(requests.Session):
@@ -395,6 +386,5 @@ class HTMLSession(requests.Session):
     def request(self, *args, **kwargs) -> HTMLResponse:
         # Convert Request object into HTTPRequest object.
         r = super(HTMLSession, self).request(*args, **kwargs)
-        html_r = HTMLResponse._from_response(r)
 
-        return html_r
+        return HTMLResponse._from_response(r)
