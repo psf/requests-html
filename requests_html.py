@@ -11,7 +11,7 @@ from pyquery import PyQuery
 from fake_useragent import UserAgent
 from lxml import etree
 from lxml.html import HtmlElement
-from lxml.html.soupparser import fromstring
+from lxml.html.soupparser import fromstring as soup_parse
 from parse import search as parse_search
 from parse import findall, Result
 from w3lib.encoding import html_to_unicode
@@ -101,6 +101,10 @@ class BaseParser:
 
         return self._encoding if self._encoding else self.default_encoding
 
+    @encoding.setter
+    def encoding(self, enc):
+        self._encoding = enc
+
     @property
     def pq(self) -> PyQuery:
         """`PyQuery <https://pythonhosted.org/pyquery/>`_ representation
@@ -113,7 +117,7 @@ class BaseParser:
         """`lxml <http://lxml.de>`_ representation of the
         :class:`Element <Element>` or :class:`HTML <HTML>`.
         """
-        return fromstring(self.html)
+        return soup_parse(self.html)
 
     @property
     def text(self) -> _Text:
