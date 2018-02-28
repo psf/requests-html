@@ -71,11 +71,16 @@ class BaseParser:
 
     @property
     def pq(self) -> PyQuery:
-        """PyQuery representation of the :class:`Element <Element>` or :class:`HTML <HTML>`."""
+        """`PyQuery <https://pythonhosted.org/pyquery/>`_ representation
+        of the :class:`Element <Element>` or :class:`HTML <HTML>`.
+        """
         return PyQuery(self.element)
 
     @property
     def lxml(self) -> HtmlElement:
+        """`lxml <http://lxml.de>`_ representation of the
+        :class:`Element <Element>` or :class:`HTML <HTML>`.
+        """
         return fromstring(self.html)
 
     @property
