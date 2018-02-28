@@ -59,6 +59,9 @@ def test_xpath():
     html = r.html.xpath('/html', first=True)
     assert 'no-js' in html.attrs['class']
 
+    a_hrefs = r.html.xpath('//a/@href')
+    assert '#site-map' in a_hrefs
+
 
 def test_html_loading():
     doc = """<a href='https://httpbin.org'>"""
@@ -77,4 +80,4 @@ def test_anchor_links():
 
 
 if __name__ == '__main__':
-    test_anchor_links()
+    test_xpath()

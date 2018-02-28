@@ -103,7 +103,6 @@ class BaseParser:
 
         See W3School's `CSS Selectors Reference <https://www.w3schools.com/cssref/css_selectors.asp>`_ for more details.
 
-
         If ``first`` is ``True``, only returns the first :class:`Element <Element>` found."""
 
         encoding = _encoding or self.encoding
@@ -115,12 +114,27 @@ class BaseParser:
         return _get_first_or_list(elements, first)
 
     def xpath(self, selector: str, first: bool = False, _encoding: str = None):
-        """Given an XPath selector, returns a list of :class:`Element <Element>` objects.
+        """Given an XPath selector, returns a list of
+        :class:`Element <Element>` objects.
 
-        See W3School's `XPath Examples <https://www.w3schools.com/xml/xpath_examples.asp>`_ for more details.
+        If a sub-selector is specified (e.g. ``//a/@href``), a simple
+        list of results is returned.
 
-        If ``first`` is ``True``, only returns the first :class:`Element <Element>` found."""
-        c = [Element(element=e, url=self.url, default_encoding=_encoding or self.encoding) for e in self.lxml.xpath(selector)]
+        See W3School's `XPath Examples
+        <https://www.w3schools.com/xml/xpath_examples.asp>`_
+        for more details.
+
+        If ``first`` is ``True``, only returns the first
+        :class:`Element <Element>` found.
+        """
+        selected = self.lxml.xpath(selector)
+        c = []
+        for selection in selected:
+            if not isinstance(selection, etree._ElementUnicodeResult):
+                element = Element(element=selection, url=self.url, default_encoding=_encoding or self.encoding)
+            else:
+                element = selection
+            c.append(element)
 
         return _get_first_or_list(c, first)
 
