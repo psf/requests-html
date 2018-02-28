@@ -136,12 +136,13 @@ class BaseParser:
         :class:`Element <Element>` found.
         """
         selected = self.lxml.xpath(selector)
-        try:
-            c = [Element(element=e, url=self.url, default_encoding=_encoding or self.encoding) for e in selected]
-            # Sanity check.
-            [e.keys for e in c]
-        except AttributeError:
-            c = selected
+        c = []
+        for selection in selected:
+            if not isinstance(selection, etree._ElementUnicodeResult):
+                element = Element(element=selection, url=self.url, default_encoding=_encoding or self.encoding)
+            else:
+                element = selection
+            c.append(element)
 
         if first:
             try:
