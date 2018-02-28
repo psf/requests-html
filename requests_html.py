@@ -107,19 +107,20 @@ class BaseParser:
 
 
         If ``first`` is ``True``, only returns the first :class:`Element <Element>` found."""
-        def gen():
-            for found in self.pq(selector):
-                yield Element(element=found, url=self.url, default_encoding=_encoding or self.encoding)
 
-        c = [g for g in gen()]
+        encoding = _encoding or self.encoding
+        elements = [
+            Element(element=found, url=self.url, default_encoding=encoding)
+            for found in self.pq(selector)
+        ]
 
         if first:
             try:
-                return c[0]
+                return elements[0]
             except IndexError:
                 return None
         else:
-            return c
+            return elements
 
     def xpath(self, selector: str, first: bool = False, _encoding: str = None):
         """Given an XPath selector, returns a list of :class:`Element <Element>` objects.
