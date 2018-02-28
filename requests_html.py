@@ -1,7 +1,8 @@
+import sys
 import asyncio
 from urllib.parse import urlparse, urlunparse
 from concurrent.futures._base import TimeoutError
-from typing import Set
+from typing import Set, Union, List, MutableMapping, Optional
 
 import pyppeteer
 import requests
@@ -20,20 +21,54 @@ DEFAULT_URL = 'https://example.org/'
 
 useragent = UserAgent()
 
+# Typing.
+_Find = Union[List['Element'], 'Element']
+_XPath = Union[List[str], List['Element'], str, 'Element']
+_HTML = Union[str, bytes]
+_BaseHTML = str
+_UserAgent = str
+_DefaultEncoding = str
+_URL = str
+_RawHTML = bytes
+_Encoding = str
+_LXML = HtmlElement
+_Text = str
+_Search = Result
+_Links = Set[str]
+_Attrs = MutableMapping
+
+# Sanity checking.
+try:
+    assert sys.version_info.major == 3
+    assert sys.version_info.minor > 5
+except AssertionError:
+    raise RuntimeError('Requests-HTML requires Python 3.6+!')
 
 class BaseParser:
-    """A basic HTML/Element Parser, for Humans."""
+    """A basic HTML/Element Parser, for Humans.
 
-    def __init__(self, *, element, default_encoding: str = None, html: str = None, url: str) -> None:
+    :param element: The element from which to base the parsing upon.
+    :param default_encoding: Which encoding to default to.
+    :param html: HTML from which to base the parsing upon (optional).
+    :param url: The URL from which the HTML originated, used for ``absolute_links``.
+
+    """
+
+    def __init__(self, *, element, default_encoding: _DefaultEncoding = None, html: _HTML = None, url: _URL) -> None:
         self.element = element
         self.url = url
         self.skip_anchors = True
         self.default_encoding = default_encoding
         self._encoding = None
+
+        # Encode incoming unicode HTML into bytes.
+        if isinstance(html, str):
+            html = html.encode(DEFAULT_ENCODING)
+
         self._html = html
 
     @property
-    def raw_html(self) -> bytes:
+    def raw_html(self) -> _RawHTML:
         """Bytes representation of the HTML content (`learn more <http://www.diveintopython3.net/strings.html>`_)."""
         if self._html:
             return self._html
@@ -41,7 +76,7 @@ class BaseParser:
             return etree.tostring(self.element, encoding='unicode').strip().encode(self.encoding)
 
     @property
-    def html(self) -> str:
+    def html(self) -> _BaseHTML:
         """Unicode representation of the HTML content (`learn more <http://www.diveintopython3.net/strings.html>`_)."""
         if self._html:
             return self._html.decode(self.encoding)
@@ -54,7 +89,7 @@ class BaseParser:
         self._html = html
 
     @property
-    def encoding(self) -> str:
+    def encoding(self) -> _Encoding:
         """The encoding string to be used, extracted from the HTML and
         :class:`HTMLResponse <HTMLResponse>` headers.
         """
@@ -82,17 +117,20 @@ class BaseParser:
         return fromstring(self.html)
 
     @property
-    def text(self) -> str:
+    def text(self) -> _Text:
         """The text content of the :class:`Element <Element>` or :class:`HTML <HTML>`."""
         return self.pq.text()
 
     @property
-    def full_text(self) -> str:
+    def full_text(self) -> _Text:
         """The full text content (including links) of the :class:`Element <Element>` or :class:`HTML <HTML>`.."""
         return self.lxml.text_content()
 
-    def find(self, selector: str, first: bool = False, _encoding: str = None):
+    def find(self, selector: str, first: bool = False, _encoding: str = None) -> _Find:
         """Given a CSS Selector, returns a list of :class:`Element <Element>` objects.
+
+        :param selector: CSS Selector to use.
+        :param first: Whether or not to return just the first result.
 
         Example CSS Selectors:
 
@@ -113,9 +151,12 @@ class BaseParser:
 
         return _get_first_or_list(elements, first)
 
-    def xpath(self, selector: str, first: bool = False, _encoding: str = None):
+    def xpath(self, selector: str, first: bool = False, _encoding: str = None) -> _XPath:
         """Given an XPath selector, returns a list of
         :class:`Element <Element>` objects.
+
+        :param selector: XPath Selector to use.
+        :param first: Whether or not to return just the first result.
 
         If a sub-selector is specified (e.g. ``//a/@href``), a simple
         list of results is returned.
@@ -133,23 +174,29 @@ class BaseParser:
             if not isinstance(selection, etree._ElementUnicodeResult):
                 element = Element(element=selection, url=self.url, default_encoding=_encoding or self.encoding)
             else:
-                element = selection
+                element = str(selection)
             c.append(element)
 
         return _get_first_or_list(c, first)
 
     def search(self, template: str) -> Result:
-        """Searches the :class:`Element <Element>` for the given parse template."""
+        """Searches the :class:`Element <Element>` for the given Parse template.
+
+        :param template: The Parse template to use.
+        """
+
         return parse_search(template, self.html)
 
     def search_all(self, template: str) -> Result:
         """Searches the :class:`Element <Element>` (multiple times) for the given parse
         template.
+
+        :param template: The Parse template to use.
         """
         return [r for r in findall(template, self.html)]
 
     @property
-    def links(self) -> Set[str]:
+    def links(self) -> _Links:
         """All found links on page, in as–is form."""
 
         def gen():
@@ -165,7 +212,7 @@ class BaseParser:
         return set(gen())
 
     @property
-    def absolute_links(self) -> Set[str]:
+    def absolute_links(self) -> _Links:
         """All found links on page, in absolute form
         (`learn more <https://www.navegabem.com/absolute-or-relative-links.html>`_).
         """
@@ -190,7 +237,7 @@ class BaseParser:
         return set(gen())
 
     @property
-    def base_url(self) -> str:
+    def base_url(self) -> _URL:
         """The base URL for the page. Supports the ``<base>`` tag
         (`learn more <https://www.w3schools.com/tags/tag_base.asp>`_)."""
 
@@ -207,7 +254,12 @@ class BaseParser:
 
 
 class Element(BaseParser):
-    """An element of HTML."""
+    """An element of HTML.
+
+    :param element: The element from which to base the parsing upon.
+    :param url: The URL from which the HTML originated, used for ``absolute_links``.
+    :param default_encoding: Which encoding to default to.
+    """
 
     def __init__(self, *, element, url, default_encoding) -> None:
         super(Element, self).__init__(element=element, url=url, default_encoding=default_encoding)
@@ -218,7 +270,7 @@ class Element(BaseParser):
         return "<Element {} {}>".format(repr(self.element.tag), ' '.join(attrs))
 
     @property
-    def attrs(self) -> dict:
+    def attrs(self) -> _Attrs:
         """Returns a dictionary of the attributes of the :class:`Element <Element>`
         (`learn more <https://www.w3schools.com/tags/ref_attributes.asp>`_).
         """
@@ -232,9 +284,14 @@ class Element(BaseParser):
 
 
 class HTML(BaseParser):
-    """An HTML document, ready for parsing."""
+    """An HTML document, ready for parsing.
 
-    def __init__(self, *, url=DEFAULT_URL, html, default_encoding=DEFAULT_ENCODING) -> None:
+    :param url: The URL from which the HTML originated, used for ``absolute_links``.
+    :param html: HTML from which to base the parsing upon (optional).
+    :param default_encoding: Which encoding to default to.
+    """
+
+    def __init__(self, *, url: str = DEFAULT_URL, html: _HTML, default_encoding: str =DEFAULT_ENCODING) -> None:
 
         # Convert incoming unicode HTML into bytes.
         if isinstance(html, str):
@@ -251,9 +308,15 @@ class HTML(BaseParser):
     def __repr__(self) -> str:
         return "<HTML url={}>".format(repr(self.url))
 
-    def render(self, retries: int = 8, script: str = None, scrolldown=False, sleep: int = 0):
+    def render(self, retries: int = 8, script: str = None, scrolldown=False, sleep: int = 0, reload: bool = True):
         """Reloads the response in Chromium, and replaces HTML content
         with an updated version, with JavaScript executed.
+
+        :param retries: The number of times to retry loading the page in Chromium.
+        :param script: JavaScript to execute upon page load (optional).
+        :param scrolldown: Integer, if provided, of how many times to page down.
+        :param sleep: Integer, if provided, of how many long to sleep after initial render.
+        :param reload: If ``False``, content will not be loaded from the browser, but will be provided from memory.
 
         If ``scrolldown`` is specified, the page will scrolldown the specified
         number of times, after sleeping the specified amount of time
@@ -287,14 +350,16 @@ class HTML(BaseParser):
         Warning: the first time you run this method, it will download
         Chromium into your home directory (``~/.pyppeteer``).
         """
-
-        async def _async_render(*, url: str, script: str = None, scrolldown, sleep: int):
+        async def _async_render(*, url: str, script: str = None, scrolldown, sleep: int, reload: bool = True, content: Optional[str]):
             try:
                 browser = pyppeteer.launch(headless=True)
                 page = await browser.newPage()
 
                 # Load the given page (GET request, obviously.)
-                await page.goto(url)
+                if reload:
+                    await page.goto(url)
+                else:
+                    await page.setContent(content)
 
                 result = None
                 if script:
@@ -322,7 +387,7 @@ class HTML(BaseParser):
         for i in range(retries):
             if not content:
                 try:
-                    content, result = loop.run_until_complete(_async_render(url=self.url, script=script, sleep=sleep, scrolldown=scrolldown))
+                    content, result = loop.run_until_complete(_async_render(url=self.url, script=script, sleep=sleep, content=self.html, reload=reload, scrolldown=scrolldown))
                 except TimeoutError:
                     pass
 
@@ -332,14 +397,13 @@ class HTML(BaseParser):
 
 
 class HTMLResponse(requests.Response):
-    """An HTML-enabled :class:`Response <Response>` object.
-    Same as Requests class:`Response <Response>` object, but with an
-    intelligent ``.html`` property added.
+    """An HTML-enabled :class:`requests.Response <requests.Response>` object.
+    Effectively the same, but with an intelligent ``.html`` property added.
     """
 
-    def __init__(self, *args, **kwargs) -> None:
-        super(HTMLResponse, self).__init__(*args, **kwargs)
-        self._html = None
+    def __init__(self) -> None:
+        super(HTMLResponse, self).__init__()
+        self._html = None  # type: HTML
 
     @property
     def html(self) -> HTML:
@@ -355,7 +419,7 @@ class HTMLResponse(requests.Response):
         return html_r
 
 
-def user_agent(style='chrome') -> str:
+def user_agent(style='chrome') -> _UserAgent:
     """Returns a random user-agent, if not requested one of a specific
     style. Defaults to a Chrome-style User-Agent.
     """
@@ -389,8 +453,8 @@ class HTMLSession(requests.Session):
 
     @staticmethod
     def _handle_response(response, **kwargs) -> HTMLResponse:
-        """Requests HTTP Response handler. Attaches .html property to Response
-        objects.
+        """Requests HTTP Response handler. Attaches .html property to
+        class:`requests.Response <requests.Response>` objects.
         """
         if not response.encoding:
             response.encoding = DEFAULT_ENCODING
@@ -398,6 +462,9 @@ class HTMLSession(requests.Session):
         return response
 
     def request(self, *args, **kwargs) -> HTMLResponse:
+        """Makes an HTTP Request, with mocked User–Agent headers.
+        Returns a class:`HTTPResponse <HTTPResponse>`.
+        """
         # Convert Request object into HTTPRequest object.
         r = super(HTMLSession, self).request(*args, **kwargs)
 
