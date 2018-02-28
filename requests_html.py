@@ -329,6 +329,12 @@ class HTML(BaseParser):
         """Reloads the response in Chromium, and replaces HTML content
         with an updated version, with JavaScript executed.
 
+        :param retries: The number of times to retry loading the page in Chromium.
+        :param script: JavaScript to execute upon page load (optional).
+        :param scrolldown: Integer, if provided, of how many times to page down.
+        :param sleep: Integer, if provided, of how many long to sleep after initial render.
+        :param reload: If ``False``, content will not be loaded from the browser, but will be provided from memory.
+
         If ``scrolldown`` is specified, the page will scrolldown the specified
         number of times, after sleeping the specified amount of time
         (e.g. ``scrolldown=10, sleep=1``).
