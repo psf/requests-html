@@ -160,7 +160,7 @@ class BaseParser:
                 except KeyError:
                     pass
 
-        return set(g for g in gen())
+        return set(gen())
 
     @property
     def absolute_links(self) -> Set[str]:
@@ -184,7 +184,7 @@ class BaseParser:
 
                 yield href
 
-        return set(g for g in gen())
+        return set(gen())
 
     @property
     def base_url(self) -> str:
