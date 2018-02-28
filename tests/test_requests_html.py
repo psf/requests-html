@@ -70,9 +70,8 @@ def test_html_loading():
 
 
 def test_links():
-    assert not("#test".startswith('#') and True) is True
+    assert not("#test".startswith('#') and True) is False
     assert not("test".startswith('#') and True) is True
-
     assert not("#test".startswith('#') and False) is True
     assert not("test".startswith('#') and False) is True
 
