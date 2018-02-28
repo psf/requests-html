@@ -177,6 +177,28 @@ You can also use this library without Requests:
     >>> html.links
     {'https://httpbin.org'}
 
+You can also render JavaScript pages without Requests:
+
+.. code-block:: pycon
+
+    # ^^ proceeding from above ^^
+    >>> script = """
+            () => {
+                return {
+                    width: document.documentElement.clientWidth,
+                    height: document.documentElement.clientHeight,
+                    deviceScaleFactor: window.devicePixelRatio,
+                }
+            }
+        """
+    >>> val = html.render(script=script, reload=False)
+
+    >>> print(val)
+    {'width': 800, 'height': 600, 'deviceScaleFactor': 1}
+
+    >>> print(html.html)
+    <html><head></head><body><a href="https://httpbin.org"></a></body></html>
+
 
 API Documentation
 =================

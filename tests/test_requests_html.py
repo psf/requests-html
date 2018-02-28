@@ -1,5 +1,6 @@
 import os
 
+import pytest
 from requests_html import HTMLSession, HTML
 from requests_file import FileAdapter
 
@@ -14,11 +15,13 @@ def get():
     return session.get(url)
 
 
+@pytest.mark.ok
 def test_file_get():
     r = get()
     assert r.status_code == 200
 
 
+@pytest.mark.ok
 def test_css_selector():
     r = get()
 
@@ -32,6 +35,7 @@ def test_css_selector():
         assert menu_item in about.full_text.split('\n')
 
 
+@pytest.mark.ok
 def test_attrs():
     r = get()
     about = r.html.find('#about', first=True)
@@ -40,20 +44,23 @@ def test_attrs():
     assert len(about.attrs['class']) == 2
 
 
+@pytest.mark.ok
 def test_links():
     r = get()
     about = r.html.find('#about', first=True)
 
-    len(about.links) == 6
-    len(about.absolute_links) == 6
+    assert len(about.links) == 6
+    assert len(about.absolute_links) == 6
 
 
+@pytest.mark.ok
 def test_search():
     r = get()
     style = r.html.search('Python is a {} language')[0]
     assert style == 'programming'
 
 
+@pytest.mark.ok
 def test_xpath():
     r = get()
     html = r.html.xpath('/html', first=True)
@@ -63,6 +70,7 @@ def test_xpath():
     assert '#site-map' in a_hrefs
 
 
+@pytest.mark.ok
 def test_html_loading():
     doc = """<a href='https://httpbin.org'>"""
     html = HTML(html=doc)
@@ -72,11 +80,53 @@ def test_html_loading():
     assert isinstance(html.html, str)
 
 
+@pytest.mark.ok
 def test_anchor_links():
     r = get()
     r.html.skip_anchors = False
 
     assert '#site-map' in r.html.links
+
+
+@pytest.mark.render
+def test_render():
+    r = get()
+    script = """
+    () => {
+        return {
+            width: document.documentElement.clientWidth,
+            height: document.documentElement.clientHeight,
+            deviceScaleFactor: window.devicePixelRatio,
+        }
+    }
+    """
+    val = r.html.render(script=script)
+    for value in ('width', 'height', 'deviceScaleFactor'):
+        assert value in val
+
+    about = r.html.find('#about', first=True)
+    assert len(about.links) == 6
+
+
+@pytest.mark.render
+def test_bare_render():
+    doc = """<a href='https://httpbin.org'>"""
+    html = HTML(html=doc)
+    script = """
+        () => {
+            return {
+                width: document.documentElement.clientWidth,
+                height: document.documentElement.clientHeight,
+                deviceScaleFactor: window.devicePixelRatio,
+            }
+        }
+    """
+    val = html.render(script=script, reload=False)
+    for value in ('width', 'height', 'deviceScaleFactor'):
+        assert value in val
+
+    assert html.find('html')
+    assert 'https://httpbin.org' in html.links
 
 
 if __name__ == '__main__':
