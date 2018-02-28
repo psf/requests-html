@@ -91,7 +91,7 @@ class BaseParser:
     def find(self, selector: str, first: bool = False, _encoding: str = None):
         """Given a CSS Selector, returns a list of :class:`Element <Element>` objects.
 
-        Examples:
+        Example CSS Selectors:
 
         - ``a``
         - ``a.someClass``
