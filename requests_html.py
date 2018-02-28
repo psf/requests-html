@@ -255,7 +255,7 @@ class HTML(BaseParser):
                 }
             \"\"\"
 
-        Returns the return value of'the executed  ``script``, if any is provided:
+        Returns the return value of the executed  ``script``, if any is provided:
 
         .. code-block:: python
 
