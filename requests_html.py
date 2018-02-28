@@ -159,7 +159,9 @@ class BaseParser:
 
     @property
     def absolute_links(self) -> Set[str]:
-        """All found links on page, in `absolute form <https://www.navegabem.com/absolute-or-relative-links.html>`_."""
+        """All found links on page, in absolute form
+        (`learn more <https://www.navegabem.com/absolute-or-relative-links.html>`_).
+        """
         def gen():
             for link in self.links:
                 # Parse the link with stdlib.
