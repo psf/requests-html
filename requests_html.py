@@ -374,7 +374,7 @@ class HTML(BaseParser):
                     result = await page.evaluate(script)
 
                 if scrolldown:
-                    for _ in range(scrolldown):
+                    for _ in range(scrolldown - 1):
                         await page._keyboard.down('PageDown')
                         await asyncio.sleep(sleep)
                 else:
