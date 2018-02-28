@@ -12,8 +12,8 @@ pyquery = "*"
 fake-useragent = "*"
 parse = "*"
 "bs4" = "*"
-"pyqt5" = "*"
 "w3lib" = "*"
+pyppeteer = "*"
 
 
 [dev-packages]
@@ -22,6 +22,8 @@ twine = "*"
 requests-file = "*"
 pytest = "*"
 "e1839a8" = {path = ".", editable = true}
+sphinx = "*"
+mypy = "*"
 
 
 [scripts]
