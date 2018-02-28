@@ -199,6 +199,7 @@ You can also render JavaScript pages without Requests:
     >>> print(html.html)
     <html><head></head><body><a href="https://httpbin.org"></a></body></html>
 
+
 API Documentation
 =================
 
