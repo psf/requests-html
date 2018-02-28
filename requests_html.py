@@ -89,7 +89,7 @@ class BaseParser:
         return self.lxml.text_content()
 
     def find(self, selector: str, first: bool = False, _encoding: str = None):
-        """Given a jQuery selector, returns a list of :class:`Element <Element>` objects.
+        """Given a CSS Selector, returns a list of :class:`Element <Element>` objects.
 
         If ``first`` is ``True``, only returns the first :class:`Element <Element>` found."""
         def gen():
