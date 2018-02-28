@@ -238,9 +238,19 @@ class HTML(BaseParser):
         number of times, after sleeping the specified amount of time.
 
         If ``script`` is specified, it will execute the provided JavaScript at
-        runtime.
+        runtime. Example:
 
-        Returns the return value of ``script``, if any is provided.
+            script = '''
+                () => {
+                    return {
+                        width: document.documentElement.clientWidth,
+                        height: document.documentElement.clientHeight,
+                        deviceScaleFactor: window.devicePixelRatio,
+                    }
+                }
+            '''
+
+        Returns the return value of'the executed  ``script``, if any is provided.
 
         Warning: the first time you run this method, it will download
         Chromium into your home directory (``~/.pyppeteer``).
