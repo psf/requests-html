@@ -83,7 +83,7 @@ class BaseParser:
             return etree.tostring(self.element, encoding='unicode').strip()
 
     @html.setter
-    def set_html(self, html: bytes) -> None:
+    def html(self, html: bytes) -> None:
         """Property setter for self.html."""
         self._html = html
 
