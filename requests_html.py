@@ -24,7 +24,14 @@ useragent = UserAgent()
 
 
 class BaseParser:
-    """A basic HTML/Element Parser, for Humans."""
+    """A basic HTML/Element Parser, for Humans.
+
+    :param element: The element from which to base the parsing upon.
+    :param default_encoding: Which encoding to default to.
+    :param html: HTML from which to base the parsing upon (optional).
+    :param url: The URL from which the HTML originated, used for ``absolute_links``.
+
+    """
 
     def __init__(self, *, element, default_encoding: str = None, html: str = None, url: str) -> None:
         self.element = element
@@ -96,6 +103,9 @@ class BaseParser:
     def find(self, selector: str, first: bool = False, _encoding: str = None):
         """Given a CSS Selector, returns a list of :class:`Element <Element>` objects.
 
+        :param selector: CSS Selector to use.
+        :param first: Whether or not to return just the first result.
+
         Example CSS Selectors:
 
         - ``a``
@@ -125,6 +135,9 @@ class BaseParser:
         """Given an XPath selector, returns a list of
         :class:`Element <Element>` objects.
 
+        :param selector: XPath Selector to use.
+        :param first: Whether or not to return just the first result.
+
         If a sub-selector is specified (e.g. ``//a/@href``), a simple
         list of results is returned.
 
@@ -153,12 +166,18 @@ class BaseParser:
             return c
 
     def search(self, template: str) -> Result:
-        """Searches the :class:`Element <Element>` for the given parse template."""
+        """Searches the :class:`Element <Element>` for the given Parse template.
+
+        :param template: The Parse template to use.
+        """
+
         return parse_search(template, self.html)
 
     def search_all(self, template: str) -> Result:
         """Searches the :class:`Element <Element>` (multiple times) for the given parse
         template.
+
+        :param template: The Parse template to use.
         """
         return [r for r in findall(template, self.html)]
 
@@ -221,7 +240,12 @@ class BaseParser:
 
 
 class Element(BaseParser):
-    """An element of HTML."""
+    """An element of HTML.
+
+    :param element: The element from which to base the parsing upon.
+    :param url: The URL from which the HTML originated, used for ``absolute_links``.
+    :param default_encoding: Which encoding to default to.
+    """
 
     def __init__(self, *, element, url, default_encoding) -> None:
         super(Element, self).__init__(element=element, url=url, default_encoding=default_encoding)
@@ -249,7 +273,12 @@ class Element(BaseParser):
 
 
 class HTML(BaseParser):
-    """An HTML document, ready for parsing."""
+    """An HTML document, ready for parsing.
+
+    :param url: The URL from which the HTML originated, used for ``absolute_links``.
+    :param html: HTML from which to base the parsing upon (optional).
+    :param default_encoding: Which encoding to default to.
+    """
 
     def __init__(self, *, url=DEFAULT_URL, html, default_encoding=DEFAULT_ENCODING) -> None:
 
