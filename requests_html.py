@@ -1,3 +1,4 @@
+import sys
 import asyncio
 from urllib.parse import urlparse, urlunparse
 from concurrent.futures._base import TimeoutError
@@ -36,6 +37,13 @@ _Text = str
 _Search = Result
 _Links = Set[str]
 _Attrs = MutableMapping
+
+# Sanity checking.
+try:
+    assert sys.version_info.major == 3
+    assert sys.version_info.minor > 5
+except AssertionError:
+    raise RuntimeError('Requests-HTML requires Python 3.6+!')
 
 
 class BaseParser:
