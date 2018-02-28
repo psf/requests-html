@@ -65,6 +65,8 @@ def test_html_loading():
     html = HTML(html=doc)
 
     assert 'https://httpbin.org' in html.links
+    assert isinstance(html.raw_html, bytes)
+    assert isinstance(html.html, str)
 
 
 if __name__ == '__main__':
