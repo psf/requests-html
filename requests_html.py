@@ -36,7 +36,7 @@ class BaseParser:
 
     @property
     def raw_html(self):
-        """Bytes representation of the HTML content (`learn more <http://www.diveintopython3.net/strings.html>`_."""
+        """Bytes representation of the HTML content (`learn more <http://www.diveintopython3.net/strings.html>`_)."""
         if self._html:
             return self._html
         else:
