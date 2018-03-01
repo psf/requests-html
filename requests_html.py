@@ -405,9 +405,14 @@ class HTML(BaseParser):
         loop = asyncio.get_event_loop()
         content = None
 
+        # Automatically set Reload to False, if example URL is being used.
+        if self.url == DEFAULT_URL:
+            reload = False
+
         for i in range(retries):
             if not content:
                 try:
+
                     content, result = loop.run_until_complete(_async_render(url=self.url, script=script, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout))
                 except TimeoutError:
                     pass
