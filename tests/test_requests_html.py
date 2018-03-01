@@ -135,16 +135,11 @@ def test_bare_js_eval():
     <!DOCTYPE html>
     <html>
     <body>
-    <div id="replace">This get's replaced</div>
-    <div id="add">This get's added to:</div>
+    <div id="replace">This gets replaced</div>
 
     <script type="text/javascript">
-      function addText() {
-        document.getElementById("add").append(" Text");
-      }
-
       document.getElementById("replace").innerHTML = "yolo";
-      </script>
+    </script>
     </body>
     </html>
     """
