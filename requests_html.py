@@ -309,6 +309,10 @@ class HTML(BaseParser):
 
     def __init__(self, *, url: str = DEFAULT_URL, html: _HTML, default_encoding: str = DEFAULT_ENCODING) -> None:
 
+        # Convert incoming unicode HTML into bytes.
+        if isinstance(html, str):
+            html = html.encode(DEFAULT_ENCODING)
+
         super(HTML, self).__init__(
             # Convert unicode HTML to bytes.
             element=PyQuery(html)('html') or PyQuery('<html>{}</html>'.format(html))('html'),
