@@ -20,7 +20,7 @@ DEFAULT_ENCODING = 'utf-8'
 DEFAULT_URL = 'https://example.org/'
 DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.1.2 Safari/603.3.8'
 
-useragent = UserAgent()
+useragent = None
 
 # Typing.
 _Find = Union[List['Element'], 'Element']
@@ -118,7 +118,7 @@ class BaseParser:
         """`lxml <http://lxml.de>`_ representation of the
         :class:`Element <Element>` or :class:`HTML <HTML>`.
         """
-        return soup_parse(self.html)
+        return soup_parse(self.html, features='html.parser')
 
     @property
     def text(self) -> _Text:
@@ -213,7 +213,7 @@ class BaseParser:
 
                 try:
                     href = link.attrs['href'].strip()
-                    if href and not (href.startswith('#') and self.skip_anchors and href in ['javascript:;']):
+                    if href and not (href.startswith('#') and self.skip_anchors) and not href.startswith('javascript:'):
                         yield href
                 except KeyError:
                     pass
@@ -432,6 +432,9 @@ def user_agent(style='chrome') -> _UserAgent:
     """Returns a random user-agent, if not requested one of a specific
     style. Defaults to a Chrome-style User-Agent.
     """
+    global useragent
+    if not useragent:
+        useragent = UserAgent()
 
     return useragent[style] if style else useragent.random
 
