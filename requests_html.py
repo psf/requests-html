@@ -317,7 +317,7 @@ class HTML(BaseParser):
     def __repr__(self) -> str:
         return "<HTML url={}>".format(repr(self.url))
 
-    def render(self, retries: int = 8, script: str = None, scrolldown=False, sleep: int = 0, reload: bool = True):
+    def render(self, retries: int = 8, script: str = None, wait: float = 0.1, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: int = 12):
         """Reloads the response in Chromium, and replaces HTML content
         with an updated version, with JavaScript executed.
 
@@ -359,14 +359,17 @@ class HTML(BaseParser):
         Warning: the first time you run this method, it will download
         Chromium into your home directory (``~/.pyppeteer``).
         """
-        async def _async_render(*, url: str, script: str = None, scrolldown, sleep: int, reload: bool = True, content: Optional[str]):
+        async def _async_render(*, url: str, script: str = None, scrolldown, sleep: int, wait: float = 0.1, reload: bool = True, content: Optional[str], timeout: int = 8):
             try:
                 browser = pyppeteer.launch(headless=True)
                 page = await browser.newPage()
 
+                # Wait before rendering the page, to prevent timeouts.
+                await asyncio.sleep(wait)
+
                 # Load the given page (GET request, obviously.)
                 if reload:
-                    await page.goto(url)
+                    await page.goto(url, options={'timeout': int(timeout * 1000)})
                 else:
                     await page.setContent(content)
 
@@ -396,7 +399,7 @@ class HTML(BaseParser):
         for i in range(retries):
             if not content:
                 try:
-                    content, result = loop.run_until_complete(_async_render(url=self.url, script=script, sleep=sleep, content=self.html, reload=reload, scrolldown=scrolldown))
+                    content, result = loop.run_until_complete(_async_render(url=self.url, script=script, sleep=sleep, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout))
                 except TimeoutError:
                     pass
 
@@ -428,15 +431,16 @@ class HTMLResponse(requests.Response):
         return html_r
 
 
-def user_agent(style='chrome') -> _UserAgent:
+def user_agent(style=None) -> _UserAgent:
     """Returns a random user-agent, if not requested one of a specific
     style. Defaults to a Chrome-style User-Agent.
     """
     global useragent
-    if not useragent:
-        useragent = UserAgent()
+    if style:
+        if not useragent:
+            useragent = UserAgent()
 
-    return useragent[style] if style else useragent.random
+    return useragent[style] if style else DEFAULT_USER_AGENT
 
 
 def _get_first_or_list(l, first=True):
