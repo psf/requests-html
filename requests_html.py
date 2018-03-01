@@ -24,6 +24,7 @@ useragent = None
 # Typing.
 _Find = Union[List['Element'], 'Element']
 _XPath = Union[List[str], List['Element'], str, 'Element']
+_Result = Union[List['Result'], 'Result']
 _HTML = Union[str, bytes]
 _BaseHTML = str
 _UserAgent = str
@@ -43,6 +44,7 @@ try:
     assert sys.version_info.minor > 5
 except AssertionError:
     raise RuntimeError('Requests-HTML requires Python 3.6+!')
+
 
 class BaseParser:
     """A basic HTML/Element Parser, for Humans.
@@ -102,7 +104,8 @@ class BaseParser:
         return self._encoding if self._encoding else self.default_encoding
 
     @encoding.setter
-    def encoding(self, enc):
+    def encoding(self, enc: str) -> None:
+        """Property setter for self.encoding."""
         self._encoding = enc
 
     @property
@@ -134,7 +137,8 @@ class BaseParser:
         return self.lxml.text_content()
 
     def find(self, selector: str, first: bool = False, _encoding: str = None) -> _Find:
-        """Given a CSS Selector, returns a list of :class:`Element <Element>` objects.
+        """Given a CSS Selector, returns a list of
+        :class:`Element <Element>` objects or a single one.
 
         :param selector: CSS Selector to use.
         :param first: Whether or not to return just the first result.
@@ -147,9 +151,13 @@ class BaseParser:
         - ``a#someID``
         - ``a[target=_blank]``
 
-        See W3School's `CSS Selectors Reference <https://www.w3schools.com/cssref/css_selectors.asp>`_ for more details.
+        See W3School's `CSS Selectors Reference
+        <https://www.w3schools.com/cssref/css_selectors.asp>`_
+        for more details.
 
-        If ``first`` is ``True``, only returns the first :class:`Element <Element>` found."""
+        If ``first`` is ``True``, only returns the first
+        :class:`Element <Element>` found.
+        """
 
         encoding = _encoding or self.encoding
         elements = [
@@ -161,7 +169,7 @@ class BaseParser:
 
     def xpath(self, selector: str, first: bool = False, _encoding: str = None) -> _XPath:
         """Given an XPath selector, returns a list of
-        :class:`Element <Element>` objects.
+        :class:`Element <Element>` objects or a single one.
 
         :param selector: XPath Selector to use.
         :param first: Whether or not to return just the first result.
@@ -188,15 +196,15 @@ class BaseParser:
         return _get_first_or_list(elements, first)
 
     def search(self, template: str) -> Result:
-        """Searches the :class:`Element <Element>` for the given Parse template.
+        """Search the :class:`Element <Element>` for the given Parse template.
 
         :param template: The Parse template to use.
         """
 
         return parse_search(template, self.html)
 
-    def search_all(self, template: str) -> Result:
-        """Searches the :class:`Element <Element>` (multiple times) for the given parse
+    def search_all(self, template: str) -> _Result:
+        """Search the :class:`Element <Element>` (multiple times) for the given parse
         template.
 
         :param template: The Parse template to use.
@@ -269,7 +277,7 @@ class Element(BaseParser):
     :param default_encoding: Which encoding to default to.
     """
 
-    def __init__(self, *, element, url, default_encoding) -> None:
+    def __init__(self, *, element, url: _URL, default_encoding: _DefaultEncoding = None) -> None:
         super(Element, self).__init__(element=element, url=url, default_encoding=default_encoding)
         self.element = element
 
@@ -299,11 +307,7 @@ class HTML(BaseParser):
     :param default_encoding: Which encoding to default to.
     """
 
-    def __init__(self, *, url: str = DEFAULT_URL, html: _HTML, default_encoding: str =DEFAULT_ENCODING) -> None:
-
-        # Convert incoming unicode HTML into bytes.
-        if isinstance(html, str):
-            html = html.encode(DEFAULT_ENCODING)
+    def __init__(self, *, url: str = DEFAULT_URL, html: _HTML, default_encoding: str = DEFAULT_ENCODING) -> None:
 
         super(HTML, self).__init__(
             # Convert unicode HTML to bytes.
@@ -438,7 +442,7 @@ def user_agent(style='chrome') -> _UserAgent:
     return useragent[style] if style else useragent.random
 
 
-def _get_first_or_list(l, first=True):
+def _get_first_or_list(l, first=False):
     if first:
         try:
             return l[0]
@@ -453,8 +457,8 @@ class HTMLSession(requests.Session):
     amongst other things.
     """
 
-    def __init__(self, mock_browser=True, *args, **kwargs):
-        super(HTMLSession, self).__init__(*args, **kwargs)
+    def __init__(self, mock_browser=True):
+        super(HTMLSession, self).__init__()
 
         # Mock a web browser's user agent.
         if mock_browser:
