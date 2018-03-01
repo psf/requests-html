@@ -446,7 +446,7 @@ class HTMLResponse(requests.Response):
 
 
 def user_agent(style=None) -> _UserAgent:
-    """Returns a random user-agent, if not requested one of a specific
+    """Returns an apparently legit user-agent, if not requested one of a specific
     style. Defaults to a Chrome-style User-Agent.
     """
     global useragent
