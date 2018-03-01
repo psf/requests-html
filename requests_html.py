@@ -117,7 +117,7 @@ class BaseParser:
         """`lxml <http://lxml.de>`_ representation of the
         :class:`Element <Element>` or :class:`HTML <HTML>`.
         """
-        return soup_parse(self.html)
+        return soup_parse(self.html, features='html.parser')
 
     @property
     def text(self) -> _Text:
