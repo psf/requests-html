@@ -31,8 +31,8 @@ Make a GET request to 'python.org', using Requests:
 
 .. code-block:: pycon
 
-    >>> from requests_html import HTMLSession
-    >>> session = HTMLSession()
+    >>> from requests_html import Session
+    >>> session = Session()
 
     >>> r = session.get('https://python.org/')
 
