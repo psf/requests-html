@@ -48,7 +48,7 @@ Only later versions of **Python 3** are supported.
 Tutorial & Usage
 ================
 
-Make a GET request to 'python.org', using `Requests <https://docs.python-requests.org/>`_:
+Make a GET request to `python.org <https://python.org/>`_, using `Requests <https://docs.python-requests.org/>`_:
 
 .. code-block:: pycon
 
