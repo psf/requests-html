@@ -129,5 +129,31 @@ def test_bare_render():
     assert 'https://httpbin.org' in html.links
 
 
+@pytest.mark.render
+def test_bare_js_eval():
+    doc = """
+    <!DOCTYPE html>
+    <html>
+    <body>
+    <div id="replace">This get's replaced</div>
+    <div id="add">This get's added to:</div>
+
+    <script type="text/javascript">
+      function addText() {
+        document.getElementById("add").append(" Text");
+      }
+
+      document.getElementById("replace").innerHTML = "yolo";
+      </script>
+    </body>
+    </html>
+    """
+
+    html = HTML(html=doc)
+    html.render()
+
+    assert html.find('#replace', first=True).text == 'yolo'
+
+
 if __name__ == '__main__':
     test_xpath()
