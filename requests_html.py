@@ -449,10 +449,9 @@ def user_agent(style=None) -> _UserAgent:
     """Returns a random user-agent, if not requested one of a specific
     style. Defaults to a Chrome-style User-Agent.
     """
-    global useragent
-    if style:
-        if not useragent:
-            useragent = UserAgent()
+    if (not useragent) and style:
+        global useragent
+        useragent = UserAgent()
 
     return useragent[style] if style else DEFAULT_USER_AGENT
 
