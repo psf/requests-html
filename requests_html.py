@@ -380,19 +380,7 @@ class HTML(BaseParser):
                 if reload:
                     await page.goto(url, options={'timeout': int(timeout * 1000)})
                 else:
-                    await page.setContent(content)
-                    await page.setJavaScriptEnabled(True)
-                    try:
-                        await page.evaluate("""
-                            () => {
-                                var scripts = document.getElementsByTagName("script");
-                                for (var i = 0; i < scripts.length; i++) {
-                                    eval(scripts[i].innerHTML);
-                                }
-                            }
-                        """)
-                    except pyppeteer.errors.BrowserError:
-                        pass
+                    await page.goto('data:text/html,{}'.format(self.html), options={'timeout': int(timeout * 1000)})
 
                 result = None
                 if script:
