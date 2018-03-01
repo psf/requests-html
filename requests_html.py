@@ -19,7 +19,7 @@ from w3lib.encoding import html_to_unicode
 DEFAULT_ENCODING = 'utf-8'
 DEFAULT_URL = 'https://example.org/'
 
-useragent = UserAgent()
+useragent = None
 
 # Typing.
 _Find = Union[List['Element'], 'Element']
@@ -431,6 +431,9 @@ def user_agent(style='chrome') -> _UserAgent:
     """Returns a random user-agent, if not requested one of a specific
     style. Defaults to a Chrome-style User-Agent.
     """
+    global useragent
+    if not useragent:
+        useragent = UserAgent()
 
     return useragent[style] if style else useragent.random
 
