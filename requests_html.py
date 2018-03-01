@@ -317,7 +317,7 @@ class HTML(BaseParser):
     def __repr__(self) -> str:
         return "<HTML url={}>".format(repr(self.url))
 
-    def render(self, retries: int = 8, script: str = None, wait: float = 0.1, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: int = 8):
+    def render(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0):
         """Reloads the response in Chromium, and replaces HTML content
         with an updated version, with JavaScript executed.
 
@@ -359,7 +359,7 @@ class HTML(BaseParser):
         Warning: the first time you run this method, it will download
         Chromium into your home directory (``~/.pyppeteer``).
         """
-        async def _async_render(*, url: str, script: str = None, scrolldown, sleep: int, wait: float, reload, content: Optional[str], timeout: int):
+        async def _async_render(*, url: str, script: str = None, scrolldown, sleep: int, wait: float, reload, content: Optional[str], timeout: Union[float, int]):
             try:
                 browser = pyppeteer.launch(headless=True)
                 page = await browser.newPage()
