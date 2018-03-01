@@ -323,6 +323,7 @@ class HTML(BaseParser):
 
         :param retries: The number of times to retry loading the page in Chromium.
         :param script: JavaScript to execute upon page load (optional).
+        :param wait: The number of seconds to wait before loading the page, preventing timeouts (optional).
         :param scrolldown: Integer, if provided, of how many times to page down.
         :param sleep: Integer, if provided, of how many long to sleep after initial render.
         :param reload: If ``False``, content will not be loaded from the browser, but will be provided from memory.
