@@ -144,6 +144,15 @@ XPath is also supported (`learn more <https://msdn.microsoft.com/en-us/library/m
    >>> r.html.xpath('a')
    [<Element 'a' class='btn' href='https://help.github.com/articles/supported-browsers'>]
 
+You can also select only elements containing certian text:
+
+.. code-block:: pycon
+
+    >>> r = session.get('http://python-requests.org/')
+    >>> r.html.find('a', containing=('kenneth',))
+    [<Element 'a' href='http://kennethreitz.com/pages/open-projects.html'>, <Element 'a' href='http://kennethreitz.org/'>, <Element 'a' href='https://twitter.com/kennethreitz' class=('twitter-follow-button',) data-show-count='false'>, <Element 'a' class=('reference', 'internal') href='dev/contributing/#kenneth-reitz-s-code-style'>]
+
+
 JavaScript Support
 ==================
 
@@ -162,6 +171,32 @@ Note, the first time you ever run the ``render()`` method, it will download
 Chromium into your home directory (e.g. ``~/.pyppeteer/``). This only happens
 once.
 
+Pagination
+==========
+
+There's also intelligent pagination support (always improving):
+
+.. code-block:: pycon
+
+    >>> r = session.get('https://reddit.com')
+    >>> for html in r.html:
+    ...     print(html)
+    <HTML url='https://www.reddit.com/'>
+    <HTML url='https://www.reddit.com/?count=25&after=t3_81puu5'>
+    <HTML url='https://www.reddit.com/?count=50&after=t3_81nevg'>
+    <HTML url='https://www.reddit.com/?count=75&after=t3_81lqtp'>
+    <HTML url='https://www.reddit.com/?count=100&after=t3_81k1c8'>
+    <HTML url='https://www.reddit.com/?count=125&after=t3_81p438'>
+    <HTML url='https://www.reddit.com/?count=150&after=t3_81nrcd'>
+    …
+
+You can also just request the next URL easily:
+
+.. code-block:: pycon
+
+    >>> r = session.get('https://reddit.com')
+    >>> r.html.next()
+    'https://www.reddit.com/?count=25&after=t3_81pm82'
 
 Using without Requests
 ======================

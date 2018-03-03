@@ -37,6 +37,7 @@ _Encoding = str
 _LXML = HtmlElement
 _Text = str
 _Search = Result
+_Containing = Union[str, List[str]]
 _Links = Set[str]
 _Attrs = MutableMapping
 _Next = Union['HTML', List[str]]
@@ -58,11 +59,6 @@ class BaseParser:
     :param url: The URL from which the HTML originated, used for ``absolute_links``.
 
     """
-
-    __slots__ = [
-        'element', 'url', 'skip_anchors', 'default_encoding', '_encoding',
-        '_encoding', '_html', '_lxml', '_pq', 'session'
-    ]
 
     def __init__(self, *, element, session: 'HTTPSession' = None, default_encoding: _DefaultEncoding = None, html: _HTML = None, url: _URL) -> None:
         self.element = element
@@ -156,7 +152,7 @@ class BaseParser:
         """
         return self.lxml.text_content()
 
-    def next(self, fetch: bool = True) -> _Next:
+    def next(self, fetch: bool = False) -> _Next:
         """Attempts to find the next page, if there is one. If ``fetch``
         is ``True`` (default), returns :class:`HTML <HTML>` object of
         next page. If ``fetch`` is ``False``, simply returns the next URL.
@@ -186,7 +182,6 @@ class BaseParser:
             except IndexError:
                 return None
 
-
         next = get_next()
         if next:
             url = self._make_absolute(next)
@@ -198,8 +193,7 @@ class BaseParser:
         else:
             return url
 
-
-    def find(self, selector: str = "*", containing: Optional[str] = None, first: bool = False, _encoding: str = None) -> _Find:
+    def find(self, selector: str = "*", containing: _Containing = None, first: bool = False, _encoding: str = None) -> _Find:
         """Given a CSS Selector, returns a list of
         :class:`Element <Element>` objects or a single one.
 
@@ -222,6 +216,10 @@ class BaseParser:
         If ``first`` is ``True``, only returns the first
         :class:`Element <Element>` found.
         """
+
+        # Convert a single containing into a list.
+        if isinstance(containing, str):
+            containing = [containing]
 
         encoding = _encoding or self.encoding
         elements = [
@@ -357,7 +355,10 @@ class Element(BaseParser):
     :param default_encoding: Which encoding to default to.
     """
 
-    __slots__ = BaseParser.__slots__
+    __slots__ = [
+        'element', 'url', 'skip_anchors', 'default_encoding', '_encoding',
+        '_encoding', '_html', '_lxml', '_pq', 'session'
+    ]
 
     def __init__(self, *, element, url: _URL, default_encoding: _DefaultEncoding = None) -> None:
         super(Element, self).__init__(element=element, url=url, default_encoding=default_encoding)
