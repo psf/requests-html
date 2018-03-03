@@ -22,6 +22,14 @@ def test_file_get():
 
 
 @pytest.mark.ok
+def test_class_seperation():
+    r = get()
+
+    about = r.html.find('#about', first=True)
+    assert len(about.attrs['class']) == 2
+
+
+@pytest.mark.ok
 def test_css_selector():
     r = get()
 
@@ -151,4 +159,4 @@ def test_bare_js_eval():
 
 
 if __name__ == '__main__':
-    test_anchor_links()
+    test_class_seperation()

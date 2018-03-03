@@ -302,8 +302,9 @@ class Element(BaseParser):
         attrs = {k: v for k, v in self.element.items()}
 
         # Split class up, as there are ussually many of them:
-        if 'class' in attrs:
-            attrs['class'] = tuple(attrs['class'].split())
+        for attr in ['class']:
+            if attr in attrs:
+                attrs[attr] = tuple(attrs[attr].split())
 
         return attrs
 
