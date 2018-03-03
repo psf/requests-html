@@ -12,7 +12,6 @@ from pyquery.pyquery import fromstring
 from fake_useragent import UserAgent
 from lxml import etree
 from lxml.html import HtmlElement
-from lxml.html.soupparser import fromstring as soup_parse
 from parse import search as parse_search
 from parse import findall, Result
 from w3lib.encoding import html_to_unicode
@@ -128,7 +127,7 @@ class BaseParser:
         :class:`Element <Element>` or :class:`HTML <HTML>`.
         """
         if self._lxml is None:
-            self._lxml = soup_parse(self.html, features='html.parser')
+            self._lxml = fromstring(self.html, parser='soup')[0]
 
         return self._lxml
 
