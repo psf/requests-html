@@ -128,7 +128,7 @@ simple and intuitive as possible.</p>
 </div>
 <p>You can also select only elements containing certian text:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://python-requests.org/&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">containing</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;kenneth&#39;</span><span class="p">,))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">containing</span><span class="o">=</span><span class="s1">&#39;kenneth&#39;</span><span class="p">)</span>
 <span class="go">[&lt;Element &#39;a&#39; href=&#39;http://kennethreitz.com/pages/open-projects.html&#39;&gt;, &lt;Element &#39;a&#39; href=&#39;http://kennethreitz.org/&#39;&gt;, &lt;Element &#39;a&#39; href=&#39;https://twitter.com/kennethreitz&#39; class=(&#39;twitter-follow-button&#39;,) data-show-count=&#39;false&#39;&gt;, &lt;Element &#39;a&#39; class=(&#39;reference&#39;, &#39;internal&#39;) href=&#39;dev/contributing/#kenneth-reitz-s-code-style&#39;&gt;]</span>
 </pre></div>
 </div>

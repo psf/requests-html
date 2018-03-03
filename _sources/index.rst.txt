@@ -149,7 +149,7 @@ You can also select only elements containing certian text:
 .. code-block:: pycon
 
     >>> r = session.get('http://python-requests.org/')
-    >>> r.html.find('a', containing=('kenneth',))
+    >>> r.html.find('a', containing='kenneth')
     [<Element 'a' href='http://kennethreitz.com/pages/open-projects.html'>, <Element 'a' href='http://kennethreitz.org/'>, <Element 'a' href='https://twitter.com/kennethreitz' class=('twitter-follow-button',) data-show-count='false'>, <Element 'a' class=('reference', 'internal') href='dev/contributing/#kenneth-reitz-s-code-style'>]
 
 
