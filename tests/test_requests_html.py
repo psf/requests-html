@@ -151,4 +151,4 @@ def test_bare_js_eval():
 
 
 if __name__ == '__main__':
-    test_xpath()
+    test_anchor_links()

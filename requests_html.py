@@ -7,6 +7,7 @@ from typing import Set, Union, List, MutableMapping, Optional
 import pyppeteer
 import requests
 from pyquery import PyQuery
+from pyquery.pyquery import fromstring
 
 from fake_useragent import UserAgent
 from lxml import etree
@@ -64,6 +65,8 @@ class BaseParser:
         self.default_encoding = default_encoding
         self._encoding = None
         self._html = html.encode(DEFAULT_ENCODING) if isinstance(html, str) else html
+        self._lxml = None
+        self._pq = None
 
     @property
     def raw_html(self) -> _RawHTML:
@@ -81,7 +84,7 @@ class BaseParser:
         (`learn more <http://www.diveintopython3.net/strings.html>`_).
         """
         if self._html:
-            return self._html.decode(self.encoding)
+            return self.raw_html.decode(self.encoding)
         else:
             return etree.tostring(self.element, encoding='unicode').strip()
 
@@ -114,14 +117,20 @@ class BaseParser:
         """`PyQuery <https://pythonhosted.org/pyquery/>`_ representation
         of the :class:`Element <Element>` or :class:`HTML <HTML>`.
         """
-        return PyQuery(self.element)
+        if self._pq is None:
+            self._pq = PyQuery(self.html)
+
+        return self._pq
 
     @property
     def lxml(self) -> HtmlElement:
         """`lxml <http://lxml.de>`_ representation of the
         :class:`Element <Element>` or :class:`HTML <HTML>`.
         """
-        return soup_parse(self.html, features='html.parser')
+        if self._lxml is None:
+            self._lxml = soup_parse(self.html, features='html.parser')
+
+        return self._lxml
 
     @property
     def text(self) -> _Text:
@@ -291,7 +300,7 @@ class Element(BaseParser):
         """Returns a dictionary of the attributes of the :class:`Element <Element>`
         (`learn more <https://www.w3schools.com/tags/ref_attributes.asp>`_).
         """
-        attrs = {k: self.pq.attr[k].strip() for k in self.element.keys()}
+        attrs = {k: v for k, v in self.element.items()}
 
         # Split class up, as there are ussually many of them:
         if 'class' in attrs:
