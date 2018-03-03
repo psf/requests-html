@@ -44,6 +44,13 @@ def test_css_selector():
 
 
 @pytest.mark.ok
+def test_containing():
+    r = get()
+
+    python = r.html.find(containing='python')
+    assert len(python) == 191
+
+@pytest.mark.ok
 def test_attrs():
     r = get()
     about = r.html.find('#about', first=True)
@@ -159,4 +166,4 @@ def test_bare_js_eval():
 
 
 if __name__ == '__main__':
-    test_class_seperation()
+    test_containing()
