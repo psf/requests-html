@@ -50,6 +50,9 @@ def test_containing():
     python = r.html.find(containing='python')
     assert len(python) == 191
 
+    for e in python:
+        assert 'python' in e.full_text.lower()
+
 @pytest.mark.ok
 def test_attrs():
     r = get()
