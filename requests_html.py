@@ -316,14 +316,14 @@ class HTML(BaseParser):
 
         super(HTML, self).__init__(
             # Convert unicode HTML to bytes.
-            element=PyQuery(html)('html') or PyQuery('<html>{}</html>'.format(html))('html'),
+            element=PyQuery(html)('html') or PyQuery(f'<html>{html}</html>')('html'),
             html=html,
             url=url,
             default_encoding=default_encoding
         )
 
     def __repr__(self) -> str:
-        return "<HTML url={}>".format(repr(self.url))
+        return f"<HTML url={self.url!r}>"
 
     def render(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0):
         """Reloads the response in Chromium, and replaces HTML content
@@ -380,7 +380,7 @@ class HTML(BaseParser):
                 if reload:
                     await page.goto(url, options={'timeout': int(timeout * 1000)})
                 else:
-                    await page.goto('data:text/html,{}'.format(self.html), options={'timeout': int(timeout * 1000)})
+                    await page.goto(f'data:text/html,{self.html}', options={'timeout': int(timeout * 1000)})
 
                 result = None
                 if script:
