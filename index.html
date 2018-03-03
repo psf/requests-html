@@ -1,0 +1,1066 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Requests-HTML: HTML Parsing for Humans (writing Python 3)! &#8212; requests-HTML v0.3.4 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="requests-html-html-parsing-for-humans-writing-python-3">
+<h1>Requests-HTML: HTML Parsing for Humans (writing Python 3)!<a class="headerlink" href="#requests-html-html-parsing-for-humans-writing-python-3" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<a class="reference external image-reference" href="https://travis-ci.org/kennethreitz/requests-html"><img alt="https://travis-ci.org/kennethreitz/requests-html.svg?branch=master" src="https://travis-ci.org/kennethreitz/requests-html.svg?branch=master" /></a>
+<p>This library intends to make parsing HTML (e.g. scraping the web) as
+simple and intuitive as possible.</p>
+<p>When using this library you automatically get:</p>
+<ul class="simple">
+<li><strong>Full JavaScript support</strong>!</li>
+<li><em>CSS Selectors</em> (a.k.a jQuery-style, thanks to PyQuery).</li>
+<li><em>XPath Selectors</em>, for the faint at heart.</li>
+<li>Mocked user-agent (like a real web browser).</li>
+<li>Automatic following of redirects.</li>
+<li>Connection–pooling and cookie persistence.</li>
+<li>The Requests experience you know and love, with magical parsing abilities.</li>
+</ul>
+</div>
+<div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ pipenv install requests-html
+✨🍰✨
+</pre></div>
+</div>
+<p>Only <strong>Python 3.6</strong> is supported.</p>
+</div>
+<div class="section" id="tutorial-usage">
+<h1>Tutorial &amp; Usage<a class="headerlink" href="#tutorial-usage" title="Permalink to this headline">¶</a></h1>
+<p>Make a GET request to <a class="reference external" href="https://python.org/">python.org</a>, using <a class="reference external" href="https://docs.python-requests.org/">Requests</a>:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">requests_html</span> <span class="kn">import</span> <span class="n">HTMLSession</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">session</span> <span class="o">=</span> <span class="n">HTMLSession</span><span class="p">()</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://python.org/&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Grab a list of all links on the page, as–is (anchors excluded):</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">links</span>
+<span class="go">{&#39;//docs.python.org/3/tutorial/&#39;, &#39;/about/apps/&#39;, &#39;https://github.com/python/pythondotorg/issues&#39;, &#39;/accounts/login/&#39;, &#39;/dev/peps/&#39;, &#39;/about/legal/&#39;, &#39;//docs.python.org/3/tutorial/introduction.html#lists&#39;, &#39;/download/alternatives&#39;, &#39;http://feedproxy.google.com/~r/PythonInsider/~3/kihd2DW98YY/python-370a4-is-available-for-testing.html&#39;, &#39;/download/other/&#39;, &#39;/downloads/windows/&#39;, &#39;https://mail.python.org/mailman/listinfo/python-dev&#39;, &#39;/doc/av&#39;, &#39;https://devguide.python.org/&#39;, &#39;/about/success/#engineering&#39;, &#39;https://wiki.python.org/moin/PythonEventsCalendar#Submitting_an_Event&#39;, &#39;https://www.openstack.org&#39;, &#39;/about/gettingstarted/&#39;, &#39;http://feedproxy.google.com/~r/PythonInsider/~3/AMoBel8b8Mc/python-3.html&#39;, &#39;/success-stories/industrial-light-magic-runs-python/&#39;, &#39;http://docs.python.org/3/tutorial/introduction.html#using-python-as-a-calculator&#39;, &#39;/&#39;, &#39;http://pyfound.blogspot.com/&#39;, &#39;/events/python-events/past/&#39;, &#39;/downloads/release/python-2714/&#39;, &#39;https://wiki.python.org/moin/PythonBooks&#39;, &#39;http://plus.google.com/+Python&#39;, &#39;https://wiki.python.org/moin/&#39;, &#39;https://status.python.org/&#39;, &#39;/community/workshops/&#39;, &#39;/community/lists/&#39;, &#39;http://buildbot.net/&#39;, &#39;/community/awards&#39;, &#39;http://twitter.com/ThePSF&#39;, &#39;https://docs.python.org/3/license.html&#39;, &#39;/psf/donations/&#39;, &#39;http://wiki.python.org/moin/Languages&#39;, &#39;/dev/&#39;, &#39;/events/python-user-group/&#39;, &#39;https://wiki.qt.io/PySide&#39;, &#39;/community/sigs/&#39;, &#39;https://wiki.gnome.org/Projects/PyGObject&#39;, &#39;http://www.ansible.com&#39;, &#39;http://www.saltstack.com&#39;, &#39;http://planetpython.org/&#39;, &#39;/events/python-events&#39;, &#39;/about/help/&#39;, &#39;/events/python-user-group/past/&#39;, &#39;/about/success/&#39;, &#39;/psf-landing/&#39;, &#39;/about/apps&#39;, &#39;/about/&#39;, &#39;http://www.wxpython.org/&#39;, &#39;/events/python-user-group/665/&#39;, &#39;https://www.python.org/psf/codeofconduct/&#39;, &#39;/dev/peps/peps.rss&#39;, &#39;/downloads/source/&#39;, &#39;/psf/sponsorship/sponsors/&#39;, &#39;http://bottlepy.org&#39;, &#39;http://roundup.sourceforge.net/&#39;, &#39;http://pandas.pydata.org/&#39;, &#39;http://brochure.getpython.info/&#39;, &#39;https://bugs.python.org/&#39;, &#39;/community/merchandise/&#39;, &#39;http://tornadoweb.org&#39;, &#39;/events/python-user-group/650/&#39;, &#39;http://flask.pocoo.org/&#39;, &#39;/downloads/release/python-364/&#39;, &#39;/events/python-user-group/660/&#39;, &#39;/events/python-user-group/638/&#39;, &#39;/psf/&#39;, &#39;/doc/&#39;, &#39;http://blog.python.org&#39;, &#39;/events/python-events/604/&#39;, &#39;/about/success/#government&#39;, &#39;http://python.org/dev/peps/&#39;, &#39;https://docs.python.org&#39;, &#39;http://feedproxy.google.com/~r/PythonInsider/~3/zVC80sq9s00/python-364-is-now-available.html&#39;, &#39;/users/membership/&#39;, &#39;/about/success/#arts&#39;, &#39;https://wiki.python.org/moin/Python2orPython3&#39;, &#39;/downloads/&#39;, &#39;/jobs/&#39;, &#39;http://trac.edgewall.org/&#39;, &#39;http://feedproxy.google.com/~r/PythonInsider/~3/wh73_1A-N7Q/python-355rc1-and-python-348rc1-are-now.html&#39;, &#39;/privacy/&#39;, &#39;https://pypi.python.org/&#39;, &#39;http://www.riverbankcomputing.co.uk/software/pyqt/intro&#39;, &#39;http://www.scipy.org&#39;, &#39;/community/forums/&#39;, &#39;/about/success/#scientific&#39;, &#39;/about/success/#software-development&#39;, &#39;/shell/&#39;, &#39;/accounts/signup/&#39;, &#39;http://www.facebook.com/pythonlang?fref=ts&#39;, &#39;/community/&#39;, &#39;https://kivy.org/&#39;, &#39;/about/quotes/&#39;, &#39;http://www.web2py.com/&#39;, &#39;/community/logos/&#39;, &#39;/community/diversity/&#39;, &#39;/events/calendars/&#39;, &#39;https://wiki.python.org/moin/BeginnersGuide&#39;, &#39;/success-stories/&#39;, &#39;/doc/essays/&#39;, &#39;/dev/core-mentorship/&#39;, &#39;http://ipython.org&#39;, &#39;/events/&#39;, &#39;//docs.python.org/3/tutorial/controlflow.html&#39;, &#39;/about/success/#education&#39;, &#39;/blogs/&#39;, &#39;/community/irc/&#39;, &#39;http://pycon.blogspot.com/&#39;, &#39;//jobs.python.org&#39;, &#39;http://www.pylonsproject.org/&#39;, &#39;http://www.djangoproject.com/&#39;, &#39;/downloads/mac-osx/&#39;, &#39;/about/success/#business&#39;, &#39;http://feedproxy.google.com/~r/PythonInsider/~3/x_c9D0S-4C4/python-370b1-is-now-available-for.html&#39;, &#39;http://wiki.python.org/moin/TkInter&#39;, &#39;https://docs.python.org/faq/&#39;, &#39;//docs.python.org/3/tutorial/controlflow.html#defining-functions&#39;}</span>
+</pre></div>
+</div>
+<p>Grab a list of all links on the page, in <a class="reference external" href="https://www.navegabem.com/absolute-or-relative-links.html">absolute form</a> (anchors excluded):</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">absolute_links</span>
+<span class="go">{&#39;https://github.com/python/pythondotorg/issues&#39;, &#39;https://docs.python.org/3/tutorial/&#39;, &#39;https://www.python.org/about/success/&#39;, &#39;http://feedproxy.google.com/~r/PythonInsider/~3/kihd2DW98YY/python-370a4-is-available-for-testing.html&#39;, &#39;https://www.python.org/dev/peps/&#39;, &#39;https://mail.python.org/mailman/listinfo/python-dev&#39;, &#39;https://www.python.org/doc/&#39;, &#39;https://www.python.org/&#39;, &#39;https://www.python.org/about/&#39;, &#39;https://www.python.org/events/python-events/past/&#39;, &#39;https://devguide.python.org/&#39;, &#39;https://wiki.python.org/moin/PythonEventsCalendar#Submitting_an_Event&#39;, &#39;https://www.openstack.org&#39;, &#39;http://feedproxy.google.com/~r/PythonInsider/~3/AMoBel8b8Mc/python-3.html&#39;, &#39;https://docs.python.org/3/tutorial/introduction.html#lists&#39;, &#39;http://docs.python.org/3/tutorial/introduction.html#using-python-as-a-calculator&#39;, &#39;http://pyfound.blogspot.com/&#39;, &#39;https://wiki.python.org/moin/PythonBooks&#39;, &#39;http://plus.google.com/+Python&#39;, &#39;https://wiki.python.org/moin/&#39;, &#39;https://www.python.org/events/python-events&#39;, &#39;https://status.python.org/&#39;, &#39;https://www.python.org/about/apps&#39;, &#39;https://www.python.org/downloads/release/python-2714/&#39;, &#39;https://www.python.org/psf/donations/&#39;, &#39;http://buildbot.net/&#39;, &#39;http://twitter.com/ThePSF&#39;, &#39;https://docs.python.org/3/license.html&#39;, &#39;http://wiki.python.org/moin/Languages&#39;, &#39;https://docs.python.org/faq/&#39;, &#39;https://jobs.python.org&#39;, &#39;https://www.python.org/about/success/#software-development&#39;, &#39;https://www.python.org/about/success/#education&#39;, &#39;https://www.python.org/community/logos/&#39;, &#39;https://www.python.org/doc/av&#39;, &#39;https://wiki.qt.io/PySide&#39;, &#39;https://www.python.org/events/python-user-group/660/&#39;, &#39;https://wiki.gnome.org/Projects/PyGObject&#39;, &#39;http://www.ansible.com&#39;, &#39;http://www.saltstack.com&#39;, &#39;https://www.python.org/dev/peps/peps.rss&#39;, &#39;http://planetpython.org/&#39;, &#39;https://www.python.org/events/python-user-group/past/&#39;, &#39;https://docs.python.org/3/tutorial/controlflow.html#defining-functions&#39;, &#39;https://www.python.org/community/diversity/&#39;, &#39;https://docs.python.org/3/tutorial/controlflow.html&#39;, &#39;https://www.python.org/community/awards&#39;, &#39;https://www.python.org/events/python-user-group/638/&#39;, &#39;https://www.python.org/about/legal/&#39;, &#39;https://www.python.org/dev/&#39;, &#39;https://www.python.org/download/alternatives&#39;, &#39;https://www.python.org/downloads/&#39;, &#39;https://www.python.org/community/lists/&#39;, &#39;http://www.wxpython.org/&#39;, &#39;https://www.python.org/about/success/#government&#39;, &#39;https://www.python.org/psf/&#39;, &#39;https://www.python.org/psf/codeofconduct/&#39;, &#39;http://bottlepy.org&#39;, &#39;http://roundup.sourceforge.net/&#39;, &#39;http://pandas.pydata.org/&#39;, &#39;http://brochure.getpython.info/&#39;, &#39;https://www.python.org/downloads/source/&#39;, &#39;https://bugs.python.org/&#39;, &#39;https://www.python.org/downloads/mac-osx/&#39;, &#39;https://www.python.org/about/help/&#39;, &#39;http://tornadoweb.org&#39;, &#39;http://flask.pocoo.org/&#39;, &#39;https://www.python.org/users/membership/&#39;, &#39;http://blog.python.org&#39;, &#39;https://www.python.org/privacy/&#39;, &#39;https://www.python.org/about/gettingstarted/&#39;, &#39;http://python.org/dev/peps/&#39;, &#39;https://www.python.org/about/apps/&#39;, &#39;https://docs.python.org&#39;, &#39;https://www.python.org/success-stories/&#39;, &#39;https://www.python.org/community/forums/&#39;, &#39;http://feedproxy.google.com/~r/PythonInsider/~3/zVC80sq9s00/python-364-is-now-available.html&#39;, &#39;https://www.python.org/community/merchandise/&#39;, &#39;https://www.python.org/about/success/#arts&#39;, &#39;https://wiki.python.org/moin/Python2orPython3&#39;, &#39;http://trac.edgewall.org/&#39;, &#39;http://feedproxy.google.com/~r/PythonInsider/~3/wh73_1A-N7Q/python-355rc1-and-python-348rc1-are-now.html&#39;, &#39;https://pypi.python.org/&#39;, &#39;https://www.python.org/events/python-user-group/650/&#39;, &#39;http://www.riverbankcomputing.co.uk/software/pyqt/intro&#39;, &#39;https://www.python.org/about/quotes/&#39;, &#39;https://www.python.org/downloads/windows/&#39;, &#39;https://www.python.org/events/calendars/&#39;, &#39;http://www.scipy.org&#39;, &#39;https://www.python.org/community/workshops/&#39;, &#39;https://www.python.org/blogs/&#39;, &#39;https://www.python.org/accounts/signup/&#39;, &#39;https://www.python.org/events/&#39;, &#39;https://kivy.org/&#39;, &#39;http://www.facebook.com/pythonlang?fref=ts&#39;, &#39;http://www.web2py.com/&#39;, &#39;https://www.python.org/psf/sponsorship/sponsors/&#39;, &#39;https://www.python.org/community/&#39;, &#39;https://www.python.org/download/other/&#39;, &#39;https://www.python.org/psf-landing/&#39;, &#39;https://www.python.org/events/python-user-group/665/&#39;, &#39;https://wiki.python.org/moin/BeginnersGuide&#39;, &#39;https://www.python.org/accounts/login/&#39;, &#39;https://www.python.org/downloads/release/python-364/&#39;, &#39;https://www.python.org/dev/core-mentorship/&#39;, &#39;https://www.python.org/about/success/#business&#39;, &#39;https://www.python.org/community/sigs/&#39;, &#39;https://www.python.org/events/python-user-group/&#39;, &#39;http://ipython.org&#39;, &#39;https://www.python.org/shell/&#39;, &#39;https://www.python.org/community/irc/&#39;, &#39;https://www.python.org/about/success/#engineering&#39;, &#39;http://www.pylonsproject.org/&#39;, &#39;http://pycon.blogspot.com/&#39;, &#39;https://www.python.org/about/success/#scientific&#39;, &#39;https://www.python.org/doc/essays/&#39;, &#39;http://www.djangoproject.com/&#39;, &#39;https://www.python.org/success-stories/industrial-light-magic-runs-python/&#39;, &#39;http://feedproxy.google.com/~r/PythonInsider/~3/x_c9D0S-4C4/python-370b1-is-now-available-for.html&#39;, &#39;http://wiki.python.org/moin/TkInter&#39;, &#39;https://www.python.org/jobs/&#39;, &#39;https://www.python.org/events/python-events/604/&#39;}</span>
+</pre></div>
+</div>
+<p>Select an <code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code> with a CSS Selector (<a class="reference external" href="https://www.w3schools.com/cssref/css_selectors.asp">learn more</a>):</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">about</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;#about&#39;</span><span class="p">,</span> <span class="n">first</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Grab an <code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code>’s text contents:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">about</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+<span class="go">About</span>
+<span class="go">Applications</span>
+<span class="go">Quotes</span>
+<span class="go">Getting Started</span>
+<span class="go">Help</span>
+<span class="go">Python Brochure</span>
+</pre></div>
+</div>
+<p>Introspect an <code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code>’s attributes (<a class="reference external" href="https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes">learn more</a>):</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">about</span><span class="o">.</span><span class="n">attrs</span>
+<span class="go">{&#39;id&#39;: &#39;about&#39;, &#39;class&#39;: (&#39;tier-1&#39;, &#39;element-1&#39;), &#39;aria-haspopup&#39;: &#39;true&#39;}</span>
+</pre></div>
+</div>
+<p>Render out an <code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code>’s HTML:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">about</span><span class="o">.</span><span class="n">html</span>
+<span class="go">&#39;&lt;li aria-haspopup=&quot;true&quot; class=&quot;tier-1 element-1 &quot; id=&quot;about&quot;&gt;\n&lt;a class=&quot;&quot; href=&quot;/about/&quot; title=&quot;&quot;&gt;About&lt;/a&gt;\n&lt;ul aria-hidden=&quot;true&quot; class=&quot;subnav menu&quot; role=&quot;menu&quot;&gt;\n&lt;li class=&quot;tier-2 element-1&quot; role=&quot;treeitem&quot;&gt;&lt;a href=&quot;/about/apps/&quot; title=&quot;&quot;&gt;Applications&lt;/a&gt;&lt;/li&gt;\n&lt;li class=&quot;tier-2 element-2&quot; role=&quot;treeitem&quot;&gt;&lt;a href=&quot;/about/quotes/&quot; title=&quot;&quot;&gt;Quotes&lt;/a&gt;&lt;/li&gt;\n&lt;li class=&quot;tier-2 element-3&quot; role=&quot;treeitem&quot;&gt;&lt;a href=&quot;/about/gettingstarted/&quot; title=&quot;&quot;&gt;Getting Started&lt;/a&gt;&lt;/li&gt;\n&lt;li class=&quot;tier-2 element-4&quot; role=&quot;treeitem&quot;&gt;&lt;a href=&quot;/about/help/&quot; title=&quot;&quot;&gt;Help&lt;/a&gt;&lt;/li&gt;\n&lt;li class=&quot;tier-2 element-5&quot; role=&quot;treeitem&quot;&gt;&lt;a href=&quot;http://brochure.getpython.info/&quot; title=&quot;&quot;&gt;Python Brochure&lt;/a&gt;&lt;/li&gt;\n&lt;/ul&gt;\n&lt;/li&gt;&#39;</span>
+</pre></div>
+</div>
+<p>Select an <code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code> list within an <code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code>:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">about</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>
+<span class="go">[&lt;Element &#39;a&#39; href=&#39;/about/&#39; title=&#39;&#39; class=&#39;&#39;&gt;, &lt;Element &#39;a&#39; href=&#39;/about/apps/&#39; title=&#39;&#39;&gt;, &lt;Element &#39;a&#39; href=&#39;/about/quotes/&#39; title=&#39;&#39;&gt;, &lt;Element &#39;a&#39; href=&#39;/about/gettingstarted/&#39; title=&#39;&#39;&gt;, &lt;Element &#39;a&#39; href=&#39;/about/help/&#39; title=&#39;&#39;&gt;, &lt;Element &#39;a&#39; href=&#39;http://brochure.getpython.info/&#39; title=&#39;&#39;&gt;]</span>
+</pre></div>
+</div>
+<p>Search for links within an element:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">about</span><span class="o">.</span><span class="n">absolute_links</span>
+<span class="go">{&#39;http://brochure.getpython.info/&#39;, &#39;https://www.python.org/about/gettingstarted/&#39;, &#39;https://www.python.org/about/&#39;, &#39;https://www.python.org/about/quotes/&#39;, &#39;https://www.python.org/about/help/&#39;, &#39;https://www.python.org/about/apps/&#39;}</span>
+</pre></div>
+</div>
+<p>Search for text on the page:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;Python is a {} language&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">programming</span>
+</pre></div>
+</div>
+<p>More complex CSS Selector example (copied from Chrome dev tools):</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://github.com/&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sel</span> <span class="o">=</span> <span class="s1">&#39;body &gt; div.application-main &gt; div.jumbotron.jumbotron-codelines &gt; div &gt; div &gt; div.col-md-7.text-center.text-md-left &gt; p&#39;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">sel</span><span class="p">,</span> <span class="n">first</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+<span class="go">GitHub is a development platform inspired by the way you work. From open source to business, you can host and review code, manage projects, and build software alongside millions of other developers.</span>
+</pre></div>
+</div>
+<p>XPath is also supported (<a class="reference external" href="https://msdn.microsoft.com/en-us/library/ms256086(v=vs.110).aspx">learn more</a>):</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>
+<span class="go">[&lt;Element &#39;a&#39; class=&#39;btn&#39; href=&#39;https://help.github.com/articles/supported-browsers&#39;&gt;]</span>
+</pre></div>
+</div>
+<p>You can also select only elements containing certian text:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://python-requests.org/&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">containing</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;kenneth&#39;</span><span class="p">,))</span>
+<span class="go">[&lt;Element &#39;a&#39; href=&#39;http://kennethreitz.com/pages/open-projects.html&#39;&gt;, &lt;Element &#39;a&#39; href=&#39;http://kennethreitz.org/&#39;&gt;, &lt;Element &#39;a&#39; href=&#39;https://twitter.com/kennethreitz&#39; class=(&#39;twitter-follow-button&#39;,) data-show-count=&#39;false&#39;&gt;, &lt;Element &#39;a&#39; class=(&#39;reference&#39;, &#39;internal&#39;) href=&#39;dev/contributing/#kenneth-reitz-s-code-style&#39;&gt;]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="javascript-support">
+<h1>JavaScript Support<a class="headerlink" href="#javascript-support" title="Permalink to this headline">¶</a></h1>
+<p>Let’s grab some text that’s rendered by JavaScript:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://python-requests.org/&#39;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;Python 2 will retire in only {months} months!&#39;</span><span class="p">)[</span><span class="s1">&#39;months&#39;</span><span class="p">]</span>
+<span class="go">&#39;&lt;time&gt;25&lt;/time&gt;&#39;</span>
+</pre></div>
+</div>
+<p>Note, the first time you ever run the <code class="docutils literal notranslate"><span class="pre">render()</span></code> method, it will download
+Chromium into your home directory (e.g. <code class="docutils literal notranslate"><span class="pre">~/.pyppeteer/</span></code>). This only happens
+once.</p>
+</div>
+<div class="section" id="pagination">
+<h1>Pagination<a class="headerlink" href="#pagination" title="Permalink to this headline">¶</a></h1>
+<p>There’s also intelligent pagination support (always improving):</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://reddit.com&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">html</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">html</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
+<span class="go">&lt;HTML url=&#39;https://www.reddit.com/&#39;&gt;</span>
+<span class="go">&lt;HTML url=&#39;https://www.reddit.com/?count=25&amp;after=t3_81puu5&#39;&gt;</span>
+<span class="go">&lt;HTML url=&#39;https://www.reddit.com/?count=50&amp;after=t3_81nevg&#39;&gt;</span>
+<span class="go">&lt;HTML url=&#39;https://www.reddit.com/?count=75&amp;after=t3_81lqtp&#39;&gt;</span>
+<span class="go">&lt;HTML url=&#39;https://www.reddit.com/?count=100&amp;after=t3_81k1c8&#39;&gt;</span>
+<span class="go">&lt;HTML url=&#39;https://www.reddit.com/?count=125&amp;after=t3_81p438&#39;&gt;</span>
+<span class="go">&lt;HTML url=&#39;https://www.reddit.com/?count=150&amp;after=t3_81nrcd&#39;&gt;</span>
+<span class="go">…</span>
+</pre></div>
+</div>
+<p>You can also just request the next URL easily:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://reddit.com&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+<span class="go">&#39;https://www.reddit.com/?count=25&amp;after=t3_81pm82&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-without-requests">
+<h1>Using without Requests<a class="headerlink" href="#using-without-requests" title="Permalink to this headline">¶</a></h1>
+<p>You can also use this library without Requests:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">requests_html</span> <span class="kn">import</span> <span class="n">HTML</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;&lt;a href=&#39;https://httpbin.org&#39;&gt;&quot;&quot;&quot;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">html</span> <span class="o">=</span> <span class="n">HTML</span><span class="p">(</span><span class="n">html</span><span class="o">=</span><span class="n">doc</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">html</span><span class="o">.</span><span class="n">links</span>
+<span class="go">{&#39;https://httpbin.org&#39;}</span>
+</pre></div>
+</div>
+<p>You can also render JavaScript pages without Requests:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="go"># ^^ proceeding from above ^^</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="go">        () =&gt; {</span>
+<span class="go">            return {</span>
+<span class="go">                width: document.documentElement.clientWidth,</span>
+<span class="go">                height: document.documentElement.clientHeight,</span>
+<span class="go">                deviceScaleFactor: window.devicePixelRatio,</span>
+<span class="go">            }</span>
+<span class="go">        }</span>
+<span class="go">    &quot;&quot;&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">val</span> <span class="o">=</span> <span class="n">html</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">script</span><span class="o">=</span><span class="n">script</span><span class="p">,</span> <span class="nb">reload</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+<span class="go">{&#39;width&#39;: 800, &#39;height&#39;: 600, &#39;deviceScaleFactor&#39;: 1}</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">html</span><span class="o">.</span><span class="n">html</span><span class="p">)</span>
+<span class="go">&lt;html&gt;&lt;head&gt;&lt;/head&gt;&lt;body&gt;&lt;a href=&quot;https://httpbin.org&quot;&gt;&lt;/a&gt;&lt;/body&gt;&lt;/html&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="api-documentation">
+<h1>API Documentation<a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-requests_html">
+<span id="main-classes"></span><h2>Main Classes<a class="headerlink" href="#module-requests_html" title="Permalink to this headline">¶</a></h2>
+<p>These classes are the main interface to <code class="docutils literal notranslate"><span class="pre">requests-html</span></code>:</p>
+<dl class="class">
+<dt id="requests_html.HTML">
+<em class="property">class </em><code class="descclassname">requests_html.</code><code class="descname">HTML</code><span class="sig-paren">(</span><em>*, url: str = 'https://example.org/', html: Union[str, bytes], default_encoding: str = 'utf-8'</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/requests_html.html#HTML"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#requests_html.HTML" title="Permalink to this definition">¶</a></dt>
+<dd><p>An HTML document, ready for parsing.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>url</strong> – The URL from which the HTML originated, used for <code class="docutils literal notranslate"><span class="pre">absolute_links</span></code>.</li>
+<li><strong>html</strong> – HTML from which to base the parsing upon (optional).</li>
+<li><strong>default_encoding</strong> – Which encoding to default to.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="requests_html.HTML.absolute_links">
+<code class="descname">absolute_links</code><a class="headerlink" href="#requests_html.HTML.absolute_links" title="Permalink to this definition">¶</a></dt>
+<dd><p>All found links on page, in absolute form
+(<a class="reference external" href="https://www.navegabem.com/absolute-or-relative-links.html">learn more</a>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="requests_html.HTML.base_url">
+<code class="descname">base_url</code><a class="headerlink" href="#requests_html.HTML.base_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>The base URL for the page. Supports the <code class="docutils literal notranslate"><span class="pre">&lt;base&gt;</span></code> tag
+(<a class="reference external" href="https://www.w3schools.com/tags/tag_base.asp">learn more</a>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="requests_html.HTML.encoding">
+<code class="descname">encoding</code><a class="headerlink" href="#requests_html.HTML.encoding" title="Permalink to this definition">¶</a></dt>
+<dd><p>The encoding string to be used, extracted from the HTML and
+<code class="xref py py-class docutils literal notranslate"><span class="pre">HTMLResponse</span></code> headers.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTML.find">
+<code class="descname">find</code><span class="sig-paren">(</span><em>selector: str = '*'</em>, <em>containing: Union[str</em>, <em>typing.List[str]] = None</em>, <em>first: bool = False</em>, <em>_encoding: str = None</em><span class="sig-paren">)</span> &#x2192; Union[typing.List[_ForwardRef('Element')], _ForwardRef('Element')]<a class="headerlink" href="#requests_html.HTML.find" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a CSS Selector, returns a list of
+<a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> objects or a single one.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>selector</strong> – CSS Selector to use.</li>
+<li><strong>containing</strong> – If specified, only return elements that contain the provided text.</li>
+<li><strong>first</strong> – Whether or not to return just the first result.</li>
+<li><strong>_encoding</strong> – The encoding format.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Example CSS Selectors:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">a</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">a.someClass</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">a#someID</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">a[target=_blank]</span></code></li>
+</ul>
+<p>See W3School’s <a class="reference external" href="https://www.w3schools.com/cssref/css_selectors.asp">CSS Selectors Reference</a>
+for more details.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">first</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, only returns the first
+<a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> found.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="requests_html.HTML.full_text">
+<code class="descname">full_text</code><a class="headerlink" href="#requests_html.HTML.full_text" title="Permalink to this definition">¶</a></dt>
+<dd><p>The full text content (including links) of the
+<a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> or <a class="reference internal" href="#requests_html.HTML" title="requests_html.HTML"><code class="xref py py-class docutils literal notranslate"><span class="pre">HTML</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="requests_html.HTML.html">
+<code class="descname">html</code><a class="headerlink" href="#requests_html.HTML.html" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unicode representation of the HTML content
+(<a class="reference external" href="http://www.diveintopython3.net/strings.html">learn more</a>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="requests_html.HTML.links">
+<code class="descname">links</code><a class="headerlink" href="#requests_html.HTML.links" title="Permalink to this definition">¶</a></dt>
+<dd><p>All found links on page, in as–is form.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="requests_html.HTML.lxml">
+<code class="descname">lxml</code><a class="headerlink" href="#requests_html.HTML.lxml" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="http://lxml.de">lxml</a> representation of the
+<a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> or <a class="reference internal" href="#requests_html.HTML" title="requests_html.HTML"><code class="xref py py-class docutils literal notranslate"><span class="pre">HTML</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTML.next">
+<code class="descname">next</code><span class="sig-paren">(</span><em>fetch: bool = False</em><span class="sig-paren">)</span> &#x2192; Union[_ForwardRef('HTML'), typing.List[str]]<a class="headerlink" href="#requests_html.HTML.next" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attempts to find the next page, if there is one. If <code class="docutils literal notranslate"><span class="pre">fetch</span></code>
+is <code class="docutils literal notranslate"><span class="pre">True</span></code> (default), returns <a class="reference internal" href="#requests_html.HTML" title="requests_html.HTML"><code class="xref py py-class docutils literal notranslate"><span class="pre">HTML</span></code></a> object of
+next page. If <code class="docutils literal notranslate"><span class="pre">fetch</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>, simply returns the next URL.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="requests_html.HTML.pq">
+<code class="descname">pq</code><a class="headerlink" href="#requests_html.HTML.pq" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="https://pythonhosted.org/pyquery/">PyQuery</a> representation
+of the <a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> or <a class="reference internal" href="#requests_html.HTML" title="requests_html.HTML"><code class="xref py py-class docutils literal notranslate"><span class="pre">HTML</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="requests_html.HTML.raw_html">
+<code class="descname">raw_html</code><a class="headerlink" href="#requests_html.HTML.raw_html" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bytes representation of the HTML content.
+(<a class="reference external" href="http://www.diveintopython3.net/strings.html">learn more</a>).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTML.render">
+<code class="descname">render</code><span class="sig-paren">(</span><em>retries: int = 8</em>, <em>script: str = None</em>, <em>wait: float = 0.2</em>, <em>scrolldown=False</em>, <em>sleep: int = 0</em>, <em>reload: bool = True</em>, <em>timeout: Union[float</em>, <em>int] = 8.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/requests_html.html#HTML.render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#requests_html.HTML.render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reloads the response in Chromium, and replaces HTML content
+with an updated version, with JavaScript executed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>retries</strong> – The number of times to retry loading the page in Chromium.</li>
+<li><strong>script</strong> – JavaScript to execute upon page load (optional).</li>
+<li><strong>wait</strong> – The number of seconds to wait before loading the page, preventing timeouts (optional).</li>
+<li><strong>scrolldown</strong> – Integer, if provided, of how many times to page down.</li>
+<li><strong>sleep</strong> – Integer, if provided, of how many long to sleep after initial render.</li>
+<li><strong>reload</strong> – If <code class="docutils literal notranslate"><span class="pre">False</span></code>, content will not be loaded from the browser, but will be provided from memory.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>If <code class="docutils literal notranslate"><span class="pre">scrolldown</span></code> is specified, the page will scrolldown the specified
+number of times, after sleeping the specified amount of time
+(e.g. <code class="docutils literal notranslate"><span class="pre">scrolldown=10,</span> <span class="pre">sleep=1</span></code>).</p>
+<p>If just <code class="docutils literal notranslate"><span class="pre">sleep</span></code> is provided, the rendering will wait <em>n</em> seconds, before
+returning.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">script</span></code> is specified, it will execute the provided JavaScript at
+runtime. Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    () =&gt; {</span>
+<span class="s2">        return {</span>
+<span class="s2">            width: document.documentElement.clientWidth,</span>
+<span class="s2">            height: document.documentElement.clientHeight,</span>
+<span class="s2">            deviceScaleFactor: window.devicePixelRatio,</span>
+<span class="s2">        }</span>
+<span class="s2">    }</span>
+<span class="s2">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>Returns the return value of the executed  <code class="docutils literal notranslate"><span class="pre">script</span></code>, if any is provided:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">script</span><span class="o">=</span><span class="n">script</span><span class="p">)</span>
+<span class="go">{&#39;width&#39;: 800, &#39;height&#39;: 600, &#39;deviceScaleFactor&#39;: 1}</span>
+</pre></div>
+</div>
+<p>Warning: the first time you run this method, it will download
+Chromium into your home directory (<code class="docutils literal notranslate"><span class="pre">~/.pyppeteer</span></code>).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTML.search">
+<code class="descname">search</code><span class="sig-paren">(</span><em>template: str</em><span class="sig-paren">)</span> &#x2192; parse.Result<a class="headerlink" href="#requests_html.HTML.search" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search the <a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> for the given Parse template.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>template</strong> – The Parse template to use.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTML.search_all">
+<code class="descname">search_all</code><span class="sig-paren">(</span><em>template: str</em><span class="sig-paren">)</span> &#x2192; Union[typing.List[_ForwardRef('Result')], _ForwardRef('Result')]<a class="headerlink" href="#requests_html.HTML.search_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search the <a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> (multiple times) for the given parse
+template.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>template</strong> – The Parse template to use.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="requests_html.HTML.text">
+<code class="descname">text</code><a class="headerlink" href="#requests_html.HTML.text" title="Permalink to this definition">¶</a></dt>
+<dd><p>The text content of the
+<a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> or <a class="reference internal" href="#requests_html.HTML" title="requests_html.HTML"><code class="xref py py-class docutils literal notranslate"><span class="pre">HTML</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTML.xpath">
+<code class="descname">xpath</code><span class="sig-paren">(</span><em>selector: str</em>, <em>first: bool = False</em>, <em>_encoding: str = None</em><span class="sig-paren">)</span> &#x2192; Union[typing.List[str], typing.List[_ForwardRef('Element')], str, _ForwardRef('Element')]<a class="headerlink" href="#requests_html.HTML.xpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an XPath selector, returns a list of
+<a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> objects or a single one.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>selector</strong> – XPath Selector to use.</li>
+<li><strong>first</strong> – Whether or not to return just the first result.</li>
+<li><strong>_encoding</strong> – The encoding format.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>If a sub-selector is specified (e.g. <code class="docutils literal notranslate"><span class="pre">//a/&#64;href</span></code>), a simple
+list of results is returned.</p>
+<p>See W3School’s <a class="reference external" href="https://www.w3schools.com/xml/xpath_examples.asp">XPath Examples</a>
+for more details.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">first</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, only returns the first
+<a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> found.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="requests_html.Element">
+<em class="property">class </em><code class="descclassname">requests_html.</code><code class="descname">Element</code><span class="sig-paren">(</span><em>*</em>, <em>element</em>, <em>url: str</em>, <em>default_encoding: str = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/requests_html.html#Element"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#requests_html.Element" title="Permalink to this definition">¶</a></dt>
+<dd><p>An element of HTML.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>element</strong> – The element from which to base the parsing upon.</li>
+<li><strong>url</strong> – The URL from which the HTML originated, used for <code class="docutils literal notranslate"><span class="pre">absolute_links</span></code>.</li>
+<li><strong>default_encoding</strong> – Which encoding to default to.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="requests_html.Element.absolute_links">
+<code class="descname">absolute_links</code><a class="headerlink" href="#requests_html.Element.absolute_links" title="Permalink to this definition">¶</a></dt>
+<dd><p>All found links on page, in absolute form
+(<a class="reference external" href="https://www.navegabem.com/absolute-or-relative-links.html">learn more</a>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="requests_html.Element.attrs">
+<code class="descname">attrs</code><a class="headerlink" href="#requests_html.Element.attrs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a dictionary of the attributes of the <a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>
+(<a class="reference external" href="https://www.w3schools.com/tags/ref_attributes.asp">learn more</a>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="requests_html.Element.base_url">
+<code class="descname">base_url</code><a class="headerlink" href="#requests_html.Element.base_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>The base URL for the page. Supports the <code class="docutils literal notranslate"><span class="pre">&lt;base&gt;</span></code> tag
+(<a class="reference external" href="https://www.w3schools.com/tags/tag_base.asp">learn more</a>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="requests_html.Element.encoding">
+<code class="descname">encoding</code><a class="headerlink" href="#requests_html.Element.encoding" title="Permalink to this definition">¶</a></dt>
+<dd><p>The encoding string to be used, extracted from the HTML and
+<code class="xref py py-class docutils literal notranslate"><span class="pre">HTMLResponse</span></code> headers.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.Element.find">
+<code class="descname">find</code><span class="sig-paren">(</span><em>selector: str = '*'</em>, <em>containing: Union[str</em>, <em>typing.List[str]] = None</em>, <em>first: bool = False</em>, <em>_encoding: str = None</em><span class="sig-paren">)</span> &#x2192; Union[typing.List[_ForwardRef('Element')], _ForwardRef('Element')]<a class="headerlink" href="#requests_html.Element.find" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a CSS Selector, returns a list of
+<a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> objects or a single one.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>selector</strong> – CSS Selector to use.</li>
+<li><strong>containing</strong> – If specified, only return elements that contain the provided text.</li>
+<li><strong>first</strong> – Whether or not to return just the first result.</li>
+<li><strong>_encoding</strong> – The encoding format.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Example CSS Selectors:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">a</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">a.someClass</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">a#someID</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">a[target=_blank]</span></code></li>
+</ul>
+<p>See W3School’s <a class="reference external" href="https://www.w3schools.com/cssref/css_selectors.asp">CSS Selectors Reference</a>
+for more details.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">first</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, only returns the first
+<a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> found.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="requests_html.Element.full_text">
+<code class="descname">full_text</code><a class="headerlink" href="#requests_html.Element.full_text" title="Permalink to this definition">¶</a></dt>
+<dd><p>The full text content (including links) of the
+<a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> or <a class="reference internal" href="#requests_html.HTML" title="requests_html.HTML"><code class="xref py py-class docutils literal notranslate"><span class="pre">HTML</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="requests_html.Element.html">
+<code class="descname">html</code><a class="headerlink" href="#requests_html.Element.html" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unicode representation of the HTML content
+(<a class="reference external" href="http://www.diveintopython3.net/strings.html">learn more</a>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="requests_html.Element.links">
+<code class="descname">links</code><a class="headerlink" href="#requests_html.Element.links" title="Permalink to this definition">¶</a></dt>
+<dd><p>All found links on page, in as–is form.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="requests_html.Element.lxml">
+<code class="descname">lxml</code><a class="headerlink" href="#requests_html.Element.lxml" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="http://lxml.de">lxml</a> representation of the
+<a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> or <a class="reference internal" href="#requests_html.HTML" title="requests_html.HTML"><code class="xref py py-class docutils literal notranslate"><span class="pre">HTML</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.Element.next">
+<code class="descname">next</code><span class="sig-paren">(</span><em>fetch: bool = False</em><span class="sig-paren">)</span> &#x2192; Union[_ForwardRef('HTML'), typing.List[str]]<a class="headerlink" href="#requests_html.Element.next" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attempts to find the next page, if there is one. If <code class="docutils literal notranslate"><span class="pre">fetch</span></code>
+is <code class="docutils literal notranslate"><span class="pre">True</span></code> (default), returns <a class="reference internal" href="#requests_html.HTML" title="requests_html.HTML"><code class="xref py py-class docutils literal notranslate"><span class="pre">HTML</span></code></a> object of
+next page. If <code class="docutils literal notranslate"><span class="pre">fetch</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>, simply returns the next URL.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="requests_html.Element.pq">
+<code class="descname">pq</code><a class="headerlink" href="#requests_html.Element.pq" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="https://pythonhosted.org/pyquery/">PyQuery</a> representation
+of the <a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> or <a class="reference internal" href="#requests_html.HTML" title="requests_html.HTML"><code class="xref py py-class docutils literal notranslate"><span class="pre">HTML</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="requests_html.Element.raw_html">
+<code class="descname">raw_html</code><a class="headerlink" href="#requests_html.Element.raw_html" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bytes representation of the HTML content.
+(<a class="reference external" href="http://www.diveintopython3.net/strings.html">learn more</a>).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.Element.search">
+<code class="descname">search</code><span class="sig-paren">(</span><em>template: str</em><span class="sig-paren">)</span> &#x2192; parse.Result<a class="headerlink" href="#requests_html.Element.search" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search the <a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> for the given Parse template.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>template</strong> – The Parse template to use.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.Element.search_all">
+<code class="descname">search_all</code><span class="sig-paren">(</span><em>template: str</em><span class="sig-paren">)</span> &#x2192; Union[typing.List[_ForwardRef('Result')], _ForwardRef('Result')]<a class="headerlink" href="#requests_html.Element.search_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search the <a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> (multiple times) for the given parse
+template.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>template</strong> – The Parse template to use.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="requests_html.Element.text">
+<code class="descname">text</code><a class="headerlink" href="#requests_html.Element.text" title="Permalink to this definition">¶</a></dt>
+<dd><p>The text content of the
+<a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> or <a class="reference internal" href="#requests_html.HTML" title="requests_html.HTML"><code class="xref py py-class docutils literal notranslate"><span class="pre">HTML</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.Element.xpath">
+<code class="descname">xpath</code><span class="sig-paren">(</span><em>selector: str</em>, <em>first: bool = False</em>, <em>_encoding: str = None</em><span class="sig-paren">)</span> &#x2192; Union[typing.List[str], typing.List[_ForwardRef('Element')], str, _ForwardRef('Element')]<a class="headerlink" href="#requests_html.Element.xpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an XPath selector, returns a list of
+<a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> objects or a single one.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>selector</strong> – XPath Selector to use.</li>
+<li><strong>first</strong> – Whether or not to return just the first result.</li>
+<li><strong>_encoding</strong> – The encoding format.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>If a sub-selector is specified (e.g. <code class="docutils literal notranslate"><span class="pre">//a/&#64;href</span></code>), a simple
+list of results is returned.</p>
+<p>See W3School’s <a class="reference external" href="https://www.w3schools.com/xml/xpath_examples.asp">XPath Examples</a>
+for more details.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">first</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, only returns the first
+<a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> found.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="utility-functions">
+<h2>Utility Functions<a class="headerlink" href="#utility-functions" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="requests_html.user_agent">
+<code class="descclassname">requests_html.</code><code class="descname">user_agent</code><span class="sig-paren">(</span><em>style=None</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/requests_html.html#user_agent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#requests_html.user_agent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an apparently legit user-agent, if not requested one of a specific
+style. Defaults to a Chrome-style User-Agent.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="html-sessions">
+<h2>HTML Sessions<a class="headerlink" href="#html-sessions" title="Permalink to this headline">¶</a></h2>
+<p>These sessions are for making HTTP requests:</p>
+<dl class="class">
+<dt id="requests_html.HTMLSession">
+<em class="property">class </em><code class="descclassname">requests_html.</code><code class="descname">HTMLSession</code><span class="sig-paren">(</span><em>mock_browser=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/requests_html.html#HTMLSession"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#requests_html.HTMLSession" title="Permalink to this definition">¶</a></dt>
+<dd><p>A consumable session, for cookie persistence and connection pooling,
+amongst other things.</p>
+<dl class="method">
+<dt id="requests_html.HTMLSession.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#requests_html.HTMLSession.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Closes all adapters and as such the session</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTMLSession.delete">
+<code class="descname">delete</code><span class="sig-paren">(</span><em>url</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#requests_html.HTMLSession.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a DELETE request. Returns <code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code> object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>url</strong> – URL for the new <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code> object.</li>
+<li><strong>**kwargs</strong> – Optional arguments that <code class="docutils literal notranslate"><span class="pre">request</span></code> takes.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">requests.Response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTMLSession.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>url</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#requests_html.HTMLSession.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a GET request. Returns <code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code> object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>url</strong> – URL for the new <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code> object.</li>
+<li><strong>**kwargs</strong> – Optional arguments that <code class="docutils literal notranslate"><span class="pre">request</span></code> takes.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">requests.Response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTMLSession.get_adapter">
+<code class="descname">get_adapter</code><span class="sig-paren">(</span><em>url</em><span class="sig-paren">)</span><a class="headerlink" href="#requests_html.HTMLSession.get_adapter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the appropriate connection adapter for the given URL.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">requests.adapters.BaseAdapter</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTMLSession.get_redirect_target">
+<code class="descname">get_redirect_target</code><span class="sig-paren">(</span><em>resp</em><span class="sig-paren">)</span><a class="headerlink" href="#requests_html.HTMLSession.get_redirect_target" title="Permalink to this definition">¶</a></dt>
+<dd><p>Receives a Response. Returns a redirect URI or <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTMLSession.head">
+<code class="descname">head</code><span class="sig-paren">(</span><em>url</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#requests_html.HTMLSession.head" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a HEAD request. Returns <code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code> object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>url</strong> – URL for the new <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code> object.</li>
+<li><strong>**kwargs</strong> – Optional arguments that <code class="docutils literal notranslate"><span class="pre">request</span></code> takes.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">requests.Response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTMLSession.merge_environment_settings">
+<code class="descname">merge_environment_settings</code><span class="sig-paren">(</span><em>url</em>, <em>proxies</em>, <em>stream</em>, <em>verify</em>, <em>cert</em><span class="sig-paren">)</span><a class="headerlink" href="#requests_html.HTMLSession.merge_environment_settings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check the environment and merge it with some settings.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.6)">dict</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTMLSession.mount">
+<code class="descname">mount</code><span class="sig-paren">(</span><em>prefix</em>, <em>adapter</em><span class="sig-paren">)</span><a class="headerlink" href="#requests_html.HTMLSession.mount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Registers a connection adapter to a prefix.</p>
+<p>Adapters are sorted in descending order by prefix length.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTMLSession.options">
+<code class="descname">options</code><span class="sig-paren">(</span><em>url</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#requests_html.HTMLSession.options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a OPTIONS request. Returns <code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code> object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>url</strong> – URL for the new <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code> object.</li>
+<li><strong>**kwargs</strong> – Optional arguments that <code class="docutils literal notranslate"><span class="pre">request</span></code> takes.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">requests.Response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTMLSession.patch">
+<code class="descname">patch</code><span class="sig-paren">(</span><em>url</em>, <em>data=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#requests_html.HTMLSession.patch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a PATCH request. Returns <code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code> object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>url</strong> – URL for the new <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code> object.</li>
+<li><strong>data</strong> – (optional) Dictionary, bytes, or file-like object to send in the body of the <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>.</li>
+<li><strong>**kwargs</strong> – Optional arguments that <code class="docutils literal notranslate"><span class="pre">request</span></code> takes.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">requests.Response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTMLSession.post">
+<code class="descname">post</code><span class="sig-paren">(</span><em>url</em>, <em>data=None</em>, <em>json=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#requests_html.HTMLSession.post" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a POST request. Returns <code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code> object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>url</strong> – URL for the new <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code> object.</li>
+<li><strong>data</strong> – (optional) Dictionary, bytes, or file-like object to send in the body of the <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>.</li>
+<li><strong>json</strong> – (optional) json to send in the body of the <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>.</li>
+<li><strong>**kwargs</strong> – Optional arguments that <code class="docutils literal notranslate"><span class="pre">request</span></code> takes.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">requests.Response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTMLSession.prepare_request">
+<code class="descname">prepare_request</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="headerlink" href="#requests_html.HTMLSession.prepare_request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs a <code class="xref py py-class docutils literal notranslate"><span class="pre">PreparedRequest</span></code> for
+transmission and returns it. The <code class="xref py py-class docutils literal notranslate"><span class="pre">PreparedRequest</span></code> has settings
+merged from the <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code> instance and those of the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Session</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> – <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code> instance to prepare with this
+session’s settings.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">requests.PreparedRequest</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTMLSession.put">
+<code class="descname">put</code><span class="sig-paren">(</span><em>url</em>, <em>data=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#requests_html.HTMLSession.put" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a PUT request. Returns <code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code> object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>url</strong> – URL for the new <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code> object.</li>
+<li><strong>data</strong> – (optional) Dictionary, bytes, or file-like object to send in the body of the <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>.</li>
+<li><strong>**kwargs</strong> – Optional arguments that <code class="docutils literal notranslate"><span class="pre">request</span></code> takes.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">requests.Response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTMLSession.rebuild_auth">
+<code class="descname">rebuild_auth</code><span class="sig-paren">(</span><em>prepared_request</em>, <em>response</em><span class="sig-paren">)</span><a class="headerlink" href="#requests_html.HTMLSession.rebuild_auth" title="Permalink to this definition">¶</a></dt>
+<dd><p>When being redirected we may want to strip authentication from the
+request to avoid leaking credentials. This method intelligently removes
+and reapplies authentication where possible to avoid credential loss.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTMLSession.rebuild_method">
+<code class="descname">rebuild_method</code><span class="sig-paren">(</span><em>prepared_request</em>, <em>response</em><span class="sig-paren">)</span><a class="headerlink" href="#requests_html.HTMLSession.rebuild_method" title="Permalink to this definition">¶</a></dt>
+<dd><p>When being redirected we may want to change the method of the request
+based on certain specs or browser behavior.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTMLSession.rebuild_proxies">
+<code class="descname">rebuild_proxies</code><span class="sig-paren">(</span><em>prepared_request</em>, <em>proxies</em><span class="sig-paren">)</span><a class="headerlink" href="#requests_html.HTMLSession.rebuild_proxies" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method re-evaluates the proxy configuration by considering the
+environment variables. If we are redirected to a URL covered by
+NO_PROXY, we strip the proxy configuration. Otherwise, we set missing
+proxy keys for this URL (in case they were stripped by a previous
+redirect).</p>
+<p>This method also replaces the Proxy-Authorization header where
+necessary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.6)">dict</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTMLSession.request">
+<code class="descname">request</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span> &#x2192; requests_html.HTMLResponse<a class="reference internal" href="_modules/requests_html.html#HTMLSession.request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#requests_html.HTMLSession.request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes an HTTP Request, with mocked User–Agent headers.
+Returns a class:<cite>HTTPResponse &lt;HTTPResponse&gt;</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTMLSession.resolve_redirects">
+<code class="descname">resolve_redirects</code><span class="sig-paren">(</span><em>resp</em>, <em>req</em>, <em>stream=False</em>, <em>timeout=None</em>, <em>verify=True</em>, <em>cert=None</em>, <em>proxies=None</em>, <em>yield_requests=False</em>, <em>**adapter_kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#requests_html.HTMLSession.resolve_redirects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Receives a Response. Returns a generator of Responses or Requests.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="requests_html.HTMLSession.send">
+<code class="descname">send</code><span class="sig-paren">(</span><em>request</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#requests_html.HTMLSession.send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send a given PreparedRequest.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">requests.Response</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p class="logo">
+  <a href="#">
+    <img class="logo" src="_static/requests-html-logo.png" title="https://kennethreitz.org/tattoos"/>
+  </a>
+</p>
+
+<p>
+  <iframe src="https://ghbtns.com/github-btn.html?user=kennethreitz&repo=requests-html&type=watch&count=true&size=large"
+    allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+<p>
+  <strong>Requests-HTML</strong> intends to make parsing HTML (e.g. scraping the web) as
+simple and intuitive as possible.
+</p>
+
+<h3>Stay Informed</h3>
+<p>Receive updates on new releases and upcoming projects.</p>
+
+<p><iframe src="https://ghbtns.com/github-btn.html?user=kennethreitz&type=follow&count=false"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200" height="20"></iframe></p>
+
+<p><a href="https://twitter.com/kennethreitz" class="twitter-follow-button" data-show-count="false">Follow @kennethreitz</a> <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script></p>
+<p><a href="https://saythanks.io/to/kennethreitz">Say Thanks!</a></p>
+<p><a href="http://tinyletter.com/kennethreitz">Join Mailing List</a>.</p>
+
+<h3>Other Projects</h3>
+
+<p>More <a href="http://kennethreitz.org/">Kenneth Reitz</a> projects:</p>
+<ul>
+    <li><a href="https://python-requests.org/">python-requests.org</a></li>
+    <li><a href="http://howtopython.org/">howtopython.org</a></li>
+    <li><a href="http://pipenv.org/">pipenv</a></li>
+    <li><a href="http://pep8.org/">pep8.org</a></li>
+    <li><a href="http://httpbin.org/">httpbin.org</a></li>
+    <li><a href="http://python-guide.org">The Python Guide</a></li>
+    <li><a href="https://github.com/kennethreitz/maya">Maya: Datetimes for Humans</a></li>
+    <li><a href="https://github.com/kennethreitz/records">Records: SQL for Humans</a></li>
+    <li><a href="http://www.git-legit.org">Legit: Git for Humans</a></li>
+    <li><a href="http://docs.python-tablib.org/en/latest/">Tablib: Tabular Datasets</a></li>
+</ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><!-- Alabaster (krTheme++) Hacks -->
+
+
+<!-- CSS Adjustments (I'm very picky.) -->
+<style type="text/css">
+
+  /* Rezzy requires precise alignment. */
+  img.logo {margin-left: -20px!important;}
+
+  /* "Quick Search" should be capitalized. */
+  div#searchbox h3 {text-transform: capitalize;}
+
+  /* Make the document a little wider, less code is cut-off. */
+  div.document {width: 1008px;}
+
+  /* Much-improved spacing around code blocks. */
+  div.highlight pre {padding: 11px 14px;}
+
+  /* Remain Responsive! */
+  @media screen and (max-width: 1008px) {
+    div.sphinxsidebar {display: none;}
+    div.document {width: 100%!important;}
+
+    /* Have code blocks escape the document right-margin. */
+    div.highlight pre {margin-right: -30px;}
+  }
+
+</style>
+
+
+<!-- Analytics tracking for Kenneth. -->
+<script type="text/javascript">
+  var _gauges = _gauges || [];
+  (function() {
+    var t   = document.createElement('script');
+    t.type  = 'text/javascript';
+    t.async = true;
+    t.id    = 'gauges-tracker';
+    t.setAttribute('data-site-id', '5a956183ba4ae36e18000033');
+    t.setAttribute('data-track-path', 'https://track.gaug.es/track.gif');
+    t.src = 'https://d2fuc4clr7gvcn.cloudfront.net/track.js';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(t, s);
+  })();
+</script>
+
+
+<!-- That was not a hack. That was art. -->
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;MMXVIII. A <a href="http://kennethreitz.com/pages/open-projects.html">Kenneth Reitz</a> Project.
+      
+    </div>
+
+    
+    <a href="https://github.com/kennethreitz/requests-html" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>
