@@ -313,6 +313,7 @@ class HTML(BaseParser):
         # Convert incoming unicode HTML into bytes.
         if isinstance(html, str):
             html = html.encode(DEFAULT_ENCODING)
+        html = html.decode(default_encoding)
 
         super(HTML, self).__init__(
             # Convert unicode HTML to bytes.
