@@ -7,7 +7,6 @@ from typing import Set, Union, List, MutableMapping, Optional
 import pyppeteer
 import requests
 from pyquery import PyQuery
-from pyquery.pyquery import fromstring
 
 from fake_useragent import UserAgent
 import lxml
@@ -40,6 +39,7 @@ _Text = str
 _Search = Result
 _Links = Set[str]
 _Attrs = MutableMapping
+_Next = Union['HTML', List[str]]
 
 # Sanity checking.
 try:
@@ -156,8 +156,12 @@ class BaseParser:
         """
         return self.lxml.text_content()
 
-    def next(self, fetch=True):
-        """Attempts to find the next page, if there is one."""
+    def next(self, fetch: bool = True) -> _Next:
+        """Attempts to find the next page, if there is one. If ``fetch``
+        is ``True`` (default), returns :class:`HTML <HTML>` object of
+        next page. If ``fetch`` is ``False``, simply returns the next URL.
+
+        """
 
         def get_next():
             candidates = self.find('a', containing=('next', 'more', 'older'))
