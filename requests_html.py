@@ -10,8 +10,10 @@ from pyquery import PyQuery
 from pyquery.pyquery import fromstring
 
 from fake_useragent import UserAgent
+import lxml
 from lxml import etree
 from lxml.html import HtmlElement
+from lxml.html.soupparser import fromstring as soup_parse
 from parse import search as parse_search
 from parse import findall, Result
 from w3lib.encoding import html_to_unicode
@@ -57,8 +59,14 @@ class BaseParser:
 
     """
 
-    def __init__(self, *, element, default_encoding: _DefaultEncoding = None, html: _HTML = None, url: _URL) -> None:
+    __slots__ = [
+        'element', 'url', 'skip_anchors', 'default_encoding', '_encoding',
+        '_encoding', '_html', '_lxml', '_pq', 'session'
+    ]
+
+    def __init__(self, *, element, session: 'HTTPSession' = None, default_encoding: _DefaultEncoding = None, html: _HTML = None, url: _URL) -> None:
         self.element = element
+        self.session = session or HTMLSession()
         self.url = url
         self.skip_anchors = True
         self.default_encoding = default_encoding
@@ -127,7 +135,10 @@ class BaseParser:
         :class:`Element <Element>` or :class:`HTML <HTML>`.
         """
         if self._lxml is None:
-            self._lxml = fromstring(self.html, parser='soup')[0]
+            try:
+                self._lxml = soup_parse(self.html, features='html.parser')
+            except ValueError:
+                self._lxml = lxml.html.fromstring(self.html)
 
         return self._lxml
 
@@ -145,11 +156,51 @@ class BaseParser:
         """
         return self.lxml.text_content()
 
-    def find(self, selector: str, first: bool = False, _encoding: str = None) -> _Find:
+    def next(self, fetch=True):
+        """Attempts to find the next page, if there is one."""
+
+        def get_next():
+            candidates = self.find('a', containing=('next', 'more', 'older'))
+
+            for candidate in candidates:
+                if candidate.attrs.get('href'):
+                    # Support 'next' rel (e.g. reddit).
+                    if 'next' in candidate.attrs.get('rel', []):
+                        return candidate.attrs['href']
+
+                    # Support 'next' in classnames.
+                    for _class in candidate.attrs.get('class', []):
+                        if 'next' in _class:
+                            return candidate.attrs['href']
+
+                    if 'page' in candidate.attrs['href']:
+                        return candidate.attrs['href']
+
+            try:
+                # Resort to the last candidate.
+                return candidates[-1].attrs['href']
+            except IndexError:
+                return None
+
+
+        next = get_next()
+        if next:
+            url = self._make_absolute(next)
+        else:
+            return None
+
+        if fetch:
+            return self.session.get(url)
+        else:
+            return url
+
+
+    def find(self, selector: str = "*", containing: Optional[str] = None, first: bool = False, _encoding: str = None) -> _Find:
         """Given a CSS Selector, returns a list of
         :class:`Element <Element>` objects or a single one.
 
         :param selector: CSS Selector to use.
+        :param containing: If specified, only return elements that contain the provided text.
         :param first: Whether or not to return just the first result.
         :param _encoding: The encoding format.
 
@@ -173,6 +224,16 @@ class BaseParser:
             Element(element=found, url=self.url, default_encoding=encoding)
             for found in self.pq(selector)
         ]
+
+        if containing:
+            elements_copy = elements.copy()
+            elements = []
+
+            for element in elements_copy:
+                if any([c.lower() in element.full_text.lower() for c in containing]):
+                    elements.append(element)
+
+            elements.reverse()
 
         return _get_first_or_list(elements, first)
 
@@ -236,6 +297,23 @@ class BaseParser:
 
         return set(gen())
 
+    def _make_absolute(self, link):
+        """Makes a given link absolute."""
+
+        # Parse the link with stdlib.
+        parsed = urlparse(link)._asdict()
+
+        # Appears to be a relative link:
+        if not parsed['netloc']:
+            parsed['netloc'] = urlparse(self.base_url).netloc
+        if not parsed['scheme']:
+            parsed['scheme'] = urlparse(self.base_url).scheme
+
+        # Re-construct URL, with new data.
+        parsed = (v for v in parsed.values())
+        return urlunparse(parsed)
+
+
     @property
     def absolute_links(self) -> _Links:
         """All found links on page, in absolute form
@@ -244,20 +322,7 @@ class BaseParser:
 
         def gen():
             for link in self.links:
-                # Parse the link with stdlib.
-                parsed = urlparse(link)._asdict()
-
-                # Appears to be a relative link:
-                if not parsed['netloc']:
-                    parsed['netloc'] = urlparse(self.base_url).netloc
-                if not parsed['scheme']:
-                    parsed['scheme'] = urlparse(self.base_url).scheme
-
-                # Re-construct URL, with new data.
-                parsed = (v for v in parsed.values())
-                href = urlunparse(parsed)
-
-                yield href
+                yield self._make_absolute(link)
 
         return set(gen())
 
@@ -269,7 +334,9 @@ class BaseParser:
         # Support for <base> tag.
         base = self.find('base', first=True)
         if base:
-            return base.attrs['href'].strip()
+            result = base.attrs['href'].strip()
+            if result:
+                return result
 
         url = '/'.join(self.url.split('/')[:-1])
         if url.endswith('/'):
@@ -286,6 +353,8 @@ class Element(BaseParser):
     :param default_encoding: Which encoding to default to.
     """
 
+    __slots__ = BaseParser.__slots__
+
     def __init__(self, *, element, url: _URL, default_encoding: _DefaultEncoding = None) -> None:
         super(Element, self).__init__(element=element, url=url, default_encoding=default_encoding)
         self.element = element
@@ -301,8 +370,8 @@ class Element(BaseParser):
         """
         attrs = {k: v for k, v in self.element.items()}
 
-        # Split class up, as there are ussually many of them:
-        for attr in ['class']:
+        # Split class and rel up, as there are ussually many of them:
+        for attr in ['class', 'rel']:
             if attr in attrs:
                 attrs[attr] = tuple(attrs[attr].split())
 
@@ -333,6 +402,17 @@ class HTML(BaseParser):
 
     def __repr__(self) -> str:
         return f"<HTML url={self.url!r}>"
+
+    def __iter__(self):
+
+        next = self
+
+        while True:
+            yield next
+            try:
+                next = next.next(fetch=True).html
+            except AttributeError:
+                break
 
     def render(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0):
         """Reloads the response in Chromium, and replaces HTML content
