@@ -1,7 +1,9 @@
 import sys
 import asyncio
 from urllib.parse import urlparse, urlunparse
+from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures._base import TimeoutError
+from functools import partial
 from typing import Set, Union, List, MutableMapping, Optional
 
 import pyppeteer
@@ -599,3 +601,19 @@ class HTMLSession(requests.Session):
         r = super(HTMLSession, self).request(*args, **kwargs)
 
         return HTMLResponse._from_response(r)
+
+
+class AsyncHTMLSession(requests.Session):
+    """ """
+
+    def __init__(self, *args, **kwargs):
+        """ Create loop and thread pool. """
+        self.loop = asyncio.get_event_loop()
+        self.thread_pool = ThreadPoolExecutor()
+
+        super().__init__(*args, **kwargs)
+
+    def request(self, *args, **kwargs):
+        """ Partial original request func and run it in a thread. """
+        func = partial(super().request, *args, **kwargs)
+        return self.loop.run_in_executor(self.thread_pool, func)

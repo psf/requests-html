@@ -1,7 +1,7 @@
 import os
 
 import pytest
-from requests_html import HTMLSession, HTML
+from requests_html import HTMLSession, AsyncHTMLSession, HTML
 from requests_file import FileAdapter
 
 session = HTMLSession()
@@ -15,9 +15,28 @@ def get():
     return session.get(url)
 
 
+@pytest.fixture
+def async_get(event_loop):
+    """ AsyncSession cannot be created global since it will create
+        a different loop from pytest-asyncio. """
+    async_session = AsyncHTMLSession()
+    async_session.mount('file://', FileAdapter())
+    path = os.path.sep.join((os.path.dirname(os.path.abspath(__file__)), 'python.html'))
+    url = 'file://{}'.format(path)
+
+    return async_session.get(url)
+
+
 @pytest.mark.ok
 def test_file_get():
     r = get()
+    assert r.status_code == 200
+
+
+@pytest.mark.ok
+@pytest.mark.asyncio
+async def test_async_file_get(async_get):
+    r = await async_get
     assert r.status_code == 200
 
 
