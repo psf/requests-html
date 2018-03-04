@@ -357,12 +357,13 @@ class Element(BaseParser):
 
     __slots__ = [
         'element', 'url', 'skip_anchors', 'default_encoding', '_encoding',
-        '_encoding', '_html', '_lxml', '_pq', 'session'
+        '_encoding', '_html', '_lxml', '_pq', '_attrs', 'session'
     ]
 
     def __init__(self, *, element, url: _URL, default_encoding: _DefaultEncoding = None) -> None:
         super(Element, self).__init__(element=element, url=url, default_encoding=default_encoding)
         self.element = element
+        self._attrs = None
 
     def __repr__(self) -> str:
         attrs = ['{}={}'.format(attr, repr(self.attrs[attr])) for attr in self.attrs]
@@ -373,14 +374,15 @@ class Element(BaseParser):
         """Returns a dictionary of the attributes of the :class:`Element <Element>`
         (`learn more <https://www.w3schools.com/tags/ref_attributes.asp>`_).
         """
-        attrs = {k: v for k, v in self.element.items()}
+        if self._attrs is None:
+            self._attrs = {k: v for k, v in self.element.items()}
 
-        # Split class and rel up, as there are ussually many of them:
-        for attr in ['class', 'rel']:
-            if attr in attrs:
-                attrs[attr] = tuple(attrs[attr].split())
+            # Split class and rel up, as there are ussually many of them:
+            for attr in ['class', 'rel']:
+                if attr in self._attrs:
+                    self._attrs[attr] = tuple(self._attrs[attr].split())
 
-        return attrs
+        return self._attrs
 
 
 class HTML(BaseParser):
@@ -465,7 +467,7 @@ class HTML(BaseParser):
         """
         async def _async_render(*, url: str, script: str = None, scrolldown, sleep: int, wait: float, reload, content: Optional[str], timeout: Union[float, int]):
             try:
-                browser = pyppeteer.launch(headless=True)
+                browser = pyppeteer.launch(headless=True, args=['--no-sandbox'])
                 page = await browser.newPage()
 
                 # Wait before rendering the page, to prevent timeouts.
