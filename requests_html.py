@@ -418,7 +418,7 @@ class HTML(BaseParser):
         while True:
             yield next
             try:
-                next = next(next)
+                next = self.next(fetch=True).html
             except AttributeError:
                 break
 
