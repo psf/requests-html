@@ -404,6 +404,7 @@ class HTML(BaseParser):
             url=url,
             default_encoding=default_encoding
         )
+        self.page = None
 
     def __repr__(self) -> str:
         return f"<HTML url={self.url!r}>"
