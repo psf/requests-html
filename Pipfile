@@ -24,6 +24,7 @@ pytest = "*"
 "e1839a8" = {path = ".", editable = true}
 sphinx = "*"
 mypy = "*"
+wheel = "*"
 
 
 [scripts]
