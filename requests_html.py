@@ -513,7 +513,8 @@ class HTML(BaseParser):
 
         html = HTML(url=self.url, html=content.encode(DEFAULT_ENCODING), default_encoding=DEFAULT_ENCODING)
         self.__dict__.update(html.__dict__)
-        return page
+        self.page = page
+        return result
 
 
 class HTMLResponse(requests.Response):
