@@ -418,9 +418,12 @@ class HTML(BaseParser):
         while True:
             yield next
             try:
-                next = next.next(fetch=True).html
+                next = next(next)
             except AttributeError:
                 break
+
+    def __next__(self):
+        return self.next(fetch=True).html
 
     def render(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0):
         """Reloads the response in Chromium, and replaces HTML content
