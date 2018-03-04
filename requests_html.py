@@ -492,7 +492,7 @@ class HTML(BaseParser):
 
                 # Return the content of the page, JavaScript evaluated.
                 content = await page.content()
-                return content, result
+                return content, result, page
             except TimeoutError:
                 return None
 
@@ -507,13 +507,13 @@ class HTML(BaseParser):
             if not content:
                 try:
 
-                    content, result = loop.run_until_complete(_async_render(url=self.url, script=script, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout))
+                    content, result, page = loop.run_until_complete(_async_render(url=self.url, script=script, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout))
                 except TimeoutError:
                     pass
 
         html = HTML(url=self.url, html=content.encode(DEFAULT_ENCODING), default_encoding=DEFAULT_ENCODING)
         self.__dict__.update(html.__dict__)
-        return result
+        return page
 
 
 class HTMLResponse(requests.Response):
