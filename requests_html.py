@@ -604,19 +604,26 @@ class HTMLSession(requests.Session):
 
 
 class AsyncHTMLSession(requests.Session):
-    """ """
+    """ An async consumable session. """
 
-    def __init__(self, mock_browser: bool = True, *args, **kwargs):
-        """ Create loop and thread pool. """
+    def __init__(self, loop=None, workers=None,
+                 mock_browser: bool = True, *args, **kwargs):
+        """ Set or create an event loop and a thread pool.
+
+            :param loop: Asyncio lopp to use.
+            :param workers: Amount of threads to use for executing async calls.
+                If not pass it will default to the number of processors on the
+                machine, multiplied by 5. """
         super().__init__(*args, **kwargs)
 
+        # Mock a web browser's user agent.
         if mock_browser:
             self.headers['User-Agent'] = user_agent()
 
         self.hooks["response"].append(self.response_hook)
 
-        self.loop = asyncio.get_event_loop()
-        self.thread_pool = ThreadPoolExecutor()
+        self.loop = loop or asyncio.get_event_loop()
+        self.thread_pool = ThreadPoolExecutor(max_workers=workers)
 
     @staticmethod
     def response_hook(response, **kwargs) -> HTMLResponse:
