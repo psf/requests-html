@@ -1,4 +1,5 @@
 import os
+from functools import partial
 
 import pytest
 from requests_html import HTMLSession, AsyncHTMLSession, HTML
@@ -24,7 +25,7 @@ def async_get(event_loop):
     path = os.path.sep.join((os.path.dirname(os.path.abspath(__file__)), 'python.html'))
     url = 'file://{}'.format(path)
 
-    return async_session.get(url)
+    return partial(async_session.get, url)
 
 
 @pytest.mark.ok
@@ -36,7 +37,7 @@ def test_file_get():
 @pytest.mark.ok
 @pytest.mark.asyncio
 async def test_async_file_get(async_get):
-    r = await async_get
+    r = await async_get()
     assert r.status_code == 200
 
 
@@ -72,6 +73,7 @@ def test_containing():
     for e in python:
         assert 'python' in e.full_text.lower()
 
+
 @pytest.mark.ok
 def test_attrs():
     r = get()
@@ -84,6 +86,16 @@ def test_attrs():
 @pytest.mark.ok
 def test_links():
     r = get()
+    about = r.html.find('#about', first=True)
+
+    assert len(about.links) == 6
+    assert len(about.absolute_links) == 6
+
+
+@pytest.mark.ok
+@pytest.mark.asyncio
+async def test_async_links(async_get):
+    r = await async_get()
     about = r.html.find('#about', first=True)
 
     assert len(about.links) == 6

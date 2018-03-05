@@ -606,12 +606,23 @@ class HTMLSession(requests.Session):
 class AsyncHTMLSession(requests.Session):
     """ """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, mock_browser: bool = True, *args, **kwargs):
         """ Create loop and thread pool. """
+        super().__init__(*args, **kwargs)
+
+        if mock_browser:
+            self.headers['User-Agent'] = user_agent()
+
+        self.hooks["response"].append(self.response_hook)
+
         self.loop = asyncio.get_event_loop()
         self.thread_pool = ThreadPoolExecutor()
 
-        super().__init__(*args, **kwargs)
+    @staticmethod
+    def response_hook(response, **kwargs) -> HTMLResponse:
+        """ Change response enconding and replace it by a HTMLResponse. """
+        response.encoding = DEFAULT_ENCODING
+        return HTMLResponse._from_response(response)
 
     def request(self, *args, **kwargs):
         """ Partial original request func and run it in a thread. """
