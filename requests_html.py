@@ -1,7 +1,9 @@
 import sys
 import asyncio
 from urllib.parse import urlparse, urlunparse
+from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures._base import TimeoutError
+from functools import partial
 from typing import Set, Union, List, MutableMapping, Optional
 
 import pyppeteer
@@ -599,3 +601,37 @@ class HTMLSession(requests.Session):
         r = super(HTMLSession, self).request(*args, **kwargs)
 
         return HTMLResponse._from_response(r)
+
+
+class AsyncHTMLSession(requests.Session):
+    """ An async consumable session. """
+
+    def __init__(self, loop=None, workers=None,
+                 mock_browser: bool = True, *args, **kwargs):
+        """ Set or create an event loop and a thread pool.
+
+            :param loop: Asyncio lopp to use.
+            :param workers: Amount of threads to use for executing async calls.
+                If not pass it will default to the number of processors on the
+                machine, multiplied by 5. """
+        super().__init__(*args, **kwargs)
+
+        # Mock a web browser's user agent.
+        if mock_browser:
+            self.headers['User-Agent'] = user_agent()
+
+        self.hooks["response"].append(self.response_hook)
+
+        self.loop = loop or asyncio.get_event_loop()
+        self.thread_pool = ThreadPoolExecutor(max_workers=workers)
+
+    @staticmethod
+    def response_hook(response, **kwargs) -> HTMLResponse:
+        """ Change response enconding and replace it by a HTMLResponse. """
+        response.encoding = DEFAULT_ENCODING
+        return HTMLResponse._from_response(response)
+
+    def request(self, *args, **kwargs):
+        """ Partial original request func and run it in a thread. """
+        func = partial(super().request, *args, **kwargs)
+        return self.loop.run_in_executor(self.thread_pool, func)
