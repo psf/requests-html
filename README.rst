@@ -6,10 +6,9 @@ Requests-HTML: HTML Parsing for Humans™
 .. image:: https://travis-ci.org/kennethreitz/requests-html.svg?branch=master
     :target: https://travis-ci.org/kennethreitz/requests-html
 
-This library intends to make parsing HTML (e.g. scraping the web) as
-simple and intuitive as possible.
+Requests-HTML library is designed to make parsing HTML (e.g. scraping the web) simple and intuitive.
 
-When using this library you automatically get:
+The library automatically provides user the following features:
 
 - **Full JavaScript support**!
 - *CSS Selectors* (a.k.a jQuery-style, thanks to PyQuery).
