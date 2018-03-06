@@ -357,7 +357,7 @@ class Element(BaseParser):
 
     __slots__ = [
         'element', 'url', 'skip_anchors', 'default_encoding', '_encoding',
-        '_encoding', '_html', '_lxml', '_pq', '_attrs', 'session'
+        '_html', '_lxml', '_pq', '_attrs', 'session'
     ]
 
     def __init__(self, *, element, url: _URL, default_encoding: _DefaultEncoding = None) -> None:
