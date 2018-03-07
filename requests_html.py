@@ -1,7 +1,9 @@
 import sys
 import asyncio
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse, urljoin
+from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures._base import TimeoutError
+from functools import partial
 from typing import Set, Union, List, MutableMapping, Optional
 
 import pyppeteer
@@ -305,15 +307,20 @@ class BaseParser:
         # Parse the link with stdlib.
         parsed = urlparse(link)._asdict()
 
-        # Appears to be a relative link:
+        # If link is relative, then join it with base_url.
         if not parsed['netloc']:
-            parsed['netloc'] = urlparse(self.base_url).netloc
+            return urljoin(self.base_url, link)
+
+        # Link is absolute; if it lacks a scheme, add one from base_url.
         if not parsed['scheme']:
             parsed['scheme'] = urlparse(self.base_url).scheme
 
-        # Re-construct URL, with new data.
-        parsed = (v for v in parsed.values())
-        return urlunparse(parsed)
+            # Reconstruct the URL to incorporate the new scheme.
+            parsed = (v for v in parsed.values())
+            return urlunparse(parsed)
+
+        # Link is absolute and complete with scheme; nothing to be done here.
+        return link
 
 
     @property
@@ -340,9 +347,15 @@ class BaseParser:
             if result:
                 return result
 
-        url = '/'.join(self.url.split('/')[:-1])
-        if url.endswith('/'):
-            url = url[:-1]
+        # Parse the url to separate out the path
+        parsed = urlparse(self.url)._asdict()
+
+        # Remove any part of the path after the last '/'
+        path = '/'.join(parsed['path'].split('/')[:-1])
+
+        # Reconstruct the url with the modified path
+        parsed = (v for v in parsed.values())
+        url = urlunparse(parsed)
 
         return url
 
@@ -418,7 +431,7 @@ class HTML(BaseParser):
         while True:
             yield next
             try:
-                next = self.next(fetch=True).html
+                next = next.next(fetch=True).html
             except AttributeError:
                 break
 
@@ -599,3 +612,37 @@ class HTMLSession(requests.Session):
         r = super(HTMLSession, self).request(*args, **kwargs)
 
         return HTMLResponse._from_response(r)
+
+
+class AsyncHTMLSession(requests.Session):
+    """ An async consumable session. """
+
+    def __init__(self, loop=None, workers=None,
+                 mock_browser: bool = True, *args, **kwargs):
+        """ Set or create an event loop and a thread pool.
+
+            :param loop: Asyncio lopp to use.
+            :param workers: Amount of threads to use for executing async calls.
+                If not pass it will default to the number of processors on the
+                machine, multiplied by 5. """
+        super().__init__(*args, **kwargs)
+
+        # Mock a web browser's user agent.
+        if mock_browser:
+            self.headers['User-Agent'] = user_agent()
+
+        self.hooks["response"].append(self.response_hook)
+
+        self.loop = loop or asyncio.get_event_loop()
+        self.thread_pool = ThreadPoolExecutor(max_workers=workers)
+
+    @staticmethod
+    def response_hook(response, **kwargs) -> HTMLResponse:
+        """ Change response enconding and replace it by a HTMLResponse. """
+        response.encoding = DEFAULT_ENCODING
+        return HTMLResponse._from_response(response)
+
+    def request(self, *args, **kwargs):
+        """ Partial original request func and run it in a thread. """
+        func = partial(super().request, *args, **kwargs)
+        return self.loop.run_in_executor(self.thread_pool, func)
