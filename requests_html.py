@@ -11,9 +11,11 @@ import requests
 from pyquery import PyQuery
 
 from fake_useragent import UserAgent
+from lxml.html.clean import Cleaner
 import lxml
 from lxml import etree
 from lxml.html import HtmlElement
+from lxml.html import tostring as lxml_html_tostring
 from lxml.html.soupparser import fromstring as soup_parse
 from parse import search as parse_search
 from parse import findall, Result
@@ -22,6 +24,10 @@ from w3lib.encoding import html_to_unicode
 DEFAULT_ENCODING = 'utf-8'
 DEFAULT_URL = 'https://example.org/'
 DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.1.2 Safari/603.3.8'
+
+cleaner = Cleaner()
+cleaner.javascript = True
+cleaner.style = True
 
 useragent = None
 
@@ -94,7 +100,11 @@ class BaseParser:
             return etree.tostring(self.element, encoding='unicode').strip()
 
     @html.setter
-    def html(self, html: bytes) -> None:
+    def html(self, html: str) -> None:
+        self._html = html.encode(self.encoding)
+
+    @raw_html.setter
+    def raw_html(self, html: bytes) -> None:
         """Property setter for self.html."""
         self._html = html
 
@@ -195,11 +205,12 @@ class BaseParser:
         else:
             return url
 
-    def find(self, selector: str = "*", containing: _Containing = None, first: bool = False, _encoding: str = None) -> _Find:
+    def find(self, selector: str = "*", *, containing: _Containing = None, clean: bool = False, first: bool = False, _encoding: str = None) -> _Find:
         """Given a CSS Selector, returns a list of
         :class:`Element <Element>` objects or a single one.
 
         :param selector: CSS Selector to use.
+        :param clean: Whether or not to sanitize the found HTML of ``<script>`` and ``<style>`` tags.
         :param containing: If specified, only return elements that contain the provided text.
         :param first: Whether or not to return just the first result.
         :param _encoding: The encoding format.
@@ -239,13 +250,23 @@ class BaseParser:
 
             elements.reverse()
 
+        # Sanitize the found HTML.
+        if clean:
+            elements_copy = elements.copy()
+            elements = []
+
+            for element in elements_copy:
+                element.raw_html = lxml_html_tostring(cleaner.clean_html(element.lxml))
+                elements.append(element)
+
         return _get_first_or_list(elements, first)
 
-    def xpath(self, selector: str, first: bool = False, _encoding: str = None) -> _XPath:
+    def xpath(self, selector: str, *, clean: bool = False, first: bool = False, _encoding: str = None) -> _XPath:
         """Given an XPath selector, returns a list of
         :class:`Element <Element>` objects or a single one.
 
         :param selector: XPath Selector to use.
+        :param clean: Whether or not to sanitize the found HTML of ``<script>`` and ``<style>`` tags.
         :param first: Whether or not to return just the first result.
         :param _encoding: The encoding format.
 
@@ -266,6 +287,15 @@ class BaseParser:
             if not isinstance(selection, etree._ElementUnicodeResult) else str(selection)
             for selection in selected
         ]
+
+        # Sanitize the found HTML.
+        if clean:
+            elements_copy = elements.copy()
+            elements = []
+
+            for element in elements_copy:
+                element.raw_html = lxml_html_tostring(cleaner.clean_html(element.lxml))
+                elements.append(element)
 
         return _get_first_or_list(elements, first)
 
