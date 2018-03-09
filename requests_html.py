@@ -1,6 +1,6 @@
 import sys
 import asyncio
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse, urljoin
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures._base import TimeoutError
 from functools import partial
@@ -337,15 +337,20 @@ class BaseParser:
         # Parse the link with stdlib.
         parsed = urlparse(link)._asdict()
 
-        # Appears to be a relative link:
+        # If link is relative, then join it with base_url.
         if not parsed['netloc']:
-            parsed['netloc'] = urlparse(self.base_url).netloc
+            return urljoin(self.base_url, link)
+
+        # Link is absolute; if it lacks a scheme, add one from base_url.
         if not parsed['scheme']:
             parsed['scheme'] = urlparse(self.base_url).scheme
 
-        # Re-construct URL, with new data.
-        parsed = (v for v in parsed.values())
-        return urlunparse(parsed)
+            # Reconstruct the URL to incorporate the new scheme.
+            parsed = (v for v in parsed.values())
+            return urlunparse(parsed)
+
+        # Link is absolute and complete with scheme; nothing to be done here.
+        return link
 
 
     @property
@@ -372,9 +377,15 @@ class BaseParser:
             if result:
                 return result
 
-        url = '/'.join(self.url.split('/')[:-1])
-        if url.endswith('/'):
-            url = url[:-1]
+        # Parse the url to separate out the path
+        parsed = urlparse(self.url)._asdict()
+
+        # Remove any part of the path after the last '/'
+        path = '/'.join(parsed['path'].split('/')[:-1])
+
+        # Reconstruct the url with the modified path
+        parsed = (v for v in parsed.values())
+        url = urlunparse(parsed)
 
         return url
 

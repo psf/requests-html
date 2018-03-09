@@ -6,7 +6,7 @@ def test_pagination():
     pages = (
         'https://xkcd.com/1957/',
         'https://reddit.com/',
-        'https://pornhub.com/',
+        'https://smile.amazon.com/',
         'https://theverge.com/archives'
     )
 

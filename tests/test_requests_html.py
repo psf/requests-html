@@ -137,6 +137,31 @@ def test_anchor_links():
     assert '#site-map' in r.html.links
 
 
+@pytest.mark.ok
+@pytest.mark.parametrize('url,link,expected', [
+    ('http://example.com/', 'test.html', 'http://example.com/test.html'),
+    ('http://example.com', 'test.html', 'http://example.com/test.html'),
+    ('http://example.com/foo/', 'test.html', 'http://example.com/foo/test.html'),
+    ('http://example.com/foo/bar', 'test.html', 'http://example.com/foo/test.html'),
+    ('http://example.com/foo/', '/test.html', 'http://example.com/test.html'),
+    ('http://example.com/', 'http://xkcd.com/about/', 'http://xkcd.com/about/'),
+    ('http://example.com/', '//xkcd.com/about/', 'http://xkcd.com/about/'),
+])
+def test_absolute_links(url, link, expected):
+    head_template = """<head><base href='{}'></head>"""
+    body_template = """<body><a href='{}'>Next</a></body>"""
+
+    # Test without `<base>` tag (url is base)
+    html = HTML(html=body_template.format(link), url=url)
+    assert html.absolute_links.pop() == expected
+
+    # Test with `<base>` tag (url is other)
+    html = HTML(
+        html=head_template.format(url) + body_template.format(link),
+        url='http://example.com/foobar/')
+    assert html.absolute_links.pop() == expected
+
+
 @pytest.mark.render
 def test_render():
     r = get()
