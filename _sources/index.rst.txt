@@ -144,7 +144,7 @@ XPath is also supported (`learn more <https://msdn.microsoft.com/en-us/library/m
    >>> r.html.xpath('a')
    [<Element 'a' class='btn' href='https://help.github.com/articles/supported-browsers'>]
 
-You can also select only elements containing certian text:
+You can also select only elements containing certain text:
 
 .. code-block:: pycon
 

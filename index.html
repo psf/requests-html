@@ -126,7 +126,7 @@ simple and intuitive as possible.</p>
 <span class="go">[&lt;Element &#39;a&#39; class=&#39;btn&#39; href=&#39;https://help.github.com/articles/supported-browsers&#39;&gt;]</span>
 </pre></div>
 </div>
-<p>You can also select only elements containing certian text:</p>
+<p>You can also select only elements containing certain text:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://python-requests.org/&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">containing</span><span class="o">=</span><span class="s1">&#39;kenneth&#39;</span><span class="p">)</span>
 <span class="go">[&lt;Element &#39;a&#39; href=&#39;http://kennethreitz.com/pages/open-projects.html&#39;&gt;, &lt;Element &#39;a&#39; href=&#39;http://kennethreitz.org/&#39;&gt;, &lt;Element &#39;a&#39; href=&#39;https://twitter.com/kennethreitz&#39; class=(&#39;twitter-follow-button&#39;,) data-show-count=&#39;false&#39;&gt;, &lt;Element &#39;a&#39; class=(&#39;reference&#39;, &#39;internal&#39;) href=&#39;dev/contributing/#kenneth-reitz-s-code-style&#39;&gt;]</span>
@@ -248,7 +248,7 @@ once.</p>
 
 <dl class="method">
 <dt id="requests_html.HTML.find">
-<code class="descname">find</code><span class="sig-paren">(</span><em>selector: str = '*'</em>, <em>containing: Union[str</em>, <em>typing.List[str]] = None</em>, <em>first: bool = False</em>, <em>_encoding: str = None</em><span class="sig-paren">)</span> &#x2192; Union[typing.List[_ForwardRef('Element')], _ForwardRef('Element')]<a class="headerlink" href="#requests_html.HTML.find" title="Permalink to this definition">¶</a></dt>
+<code class="descname">find</code><span class="sig-paren">(</span><em>selector: str = '*'</em>, <em>*</em>, <em>containing: Union[str</em>, <em>typing.List[str]] = None</em>, <em>clean: bool = False</em>, <em>first: bool = False</em>, <em>_encoding: str = None</em><span class="sig-paren">)</span> &#x2192; Union[typing.List[_ForwardRef('Element')], _ForwardRef('Element')]<a class="headerlink" href="#requests_html.HTML.find" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given a CSS Selector, returns a list of
 <a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> objects or a single one.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -257,6 +257,7 @@ once.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>selector</strong> – CSS Selector to use.</li>
+<li><strong>clean</strong> – Whether or not to sanitize the found HTML of <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;style&gt;</span></code> tags.</li>
 <li><strong>containing</strong> – If specified, only return elements that contain the provided text.</li>
 <li><strong>first</strong> – Whether or not to return just the first result.</li>
 <li><strong>_encoding</strong> – The encoding format.</li>
@@ -413,7 +414,7 @@ template.</p>
 
 <dl class="method">
 <dt id="requests_html.HTML.xpath">
-<code class="descname">xpath</code><span class="sig-paren">(</span><em>selector: str</em>, <em>first: bool = False</em>, <em>_encoding: str = None</em><span class="sig-paren">)</span> &#x2192; Union[typing.List[str], typing.List[_ForwardRef('Element')], str, _ForwardRef('Element')]<a class="headerlink" href="#requests_html.HTML.xpath" title="Permalink to this definition">¶</a></dt>
+<code class="descname">xpath</code><span class="sig-paren">(</span><em>selector: str</em>, <em>*</em>, <em>clean: bool = False</em>, <em>first: bool = False</em>, <em>_encoding: str = None</em><span class="sig-paren">)</span> &#x2192; Union[typing.List[str], typing.List[_ForwardRef('Element')], str, _ForwardRef('Element')]<a class="headerlink" href="#requests_html.HTML.xpath" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given an XPath selector, returns a list of
 <a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> objects or a single one.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -422,6 +423,7 @@ template.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>selector</strong> – XPath Selector to use.</li>
+<li><strong>clean</strong> – Whether or not to sanitize the found HTML of <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;style&gt;</span></code> tags.</li>
 <li><strong>first</strong> – Whether or not to return just the first result.</li>
 <li><strong>_encoding</strong> – The encoding format.</li>
 </ul>
@@ -486,7 +488,7 @@ for more details.</p>
 
 <dl class="method">
 <dt id="requests_html.Element.find">
-<code class="descname">find</code><span class="sig-paren">(</span><em>selector: str = '*'</em>, <em>containing: Union[str</em>, <em>typing.List[str]] = None</em>, <em>first: bool = False</em>, <em>_encoding: str = None</em><span class="sig-paren">)</span> &#x2192; Union[typing.List[_ForwardRef('Element')], _ForwardRef('Element')]<a class="headerlink" href="#requests_html.Element.find" title="Permalink to this definition">¶</a></dt>
+<code class="descname">find</code><span class="sig-paren">(</span><em>selector: str = '*'</em>, <em>*</em>, <em>containing: Union[str</em>, <em>typing.List[str]] = None</em>, <em>clean: bool = False</em>, <em>first: bool = False</em>, <em>_encoding: str = None</em><span class="sig-paren">)</span> &#x2192; Union[typing.List[_ForwardRef('Element')], _ForwardRef('Element')]<a class="headerlink" href="#requests_html.Element.find" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given a CSS Selector, returns a list of
 <a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> objects or a single one.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -495,6 +497,7 @@ for more details.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>selector</strong> – CSS Selector to use.</li>
+<li><strong>clean</strong> – Whether or not to sanitize the found HTML of <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;style&gt;</span></code> tags.</li>
 <li><strong>containing</strong> – If specified, only return elements that contain the provided text.</li>
 <li><strong>first</strong> – Whether or not to return just the first result.</li>
 <li><strong>_encoding</strong> – The encoding format.</li>
@@ -603,7 +606,7 @@ template.</p>
 
 <dl class="method">
 <dt id="requests_html.Element.xpath">
-<code class="descname">xpath</code><span class="sig-paren">(</span><em>selector: str</em>, <em>first: bool = False</em>, <em>_encoding: str = None</em><span class="sig-paren">)</span> &#x2192; Union[typing.List[str], typing.List[_ForwardRef('Element')], str, _ForwardRef('Element')]<a class="headerlink" href="#requests_html.Element.xpath" title="Permalink to this definition">¶</a></dt>
+<code class="descname">xpath</code><span class="sig-paren">(</span><em>selector: str</em>, <em>*</em>, <em>clean: bool = False</em>, <em>first: bool = False</em>, <em>_encoding: str = None</em><span class="sig-paren">)</span> &#x2192; Union[typing.List[str], typing.List[_ForwardRef('Element')], str, _ForwardRef('Element')]<a class="headerlink" href="#requests_html.Element.xpath" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given an XPath selector, returns a list of
 <a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> objects or a single one.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -612,6 +615,7 @@ template.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>selector</strong> – XPath Selector to use.</li>
+<li><strong>clean</strong> – Whether or not to sanitize the found HTML of <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;style&gt;</span></code> tags.</li>
 <li><strong>first</strong> – Whether or not to return just the first result.</li>
 <li><strong>_encoding</strong> – The encoding format.</li>
 </ul>

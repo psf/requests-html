@@ -32,8 +32,10 @@
   <h1>Source code for requests_html</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">asyncio</span>
-<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="k">import</span> <span class="n">urlparse</span><span class="p">,</span> <span class="n">urlunparse</span>
+<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="k">import</span> <span class="n">urlparse</span><span class="p">,</span> <span class="n">urlunparse</span><span class="p">,</span> <span class="n">urljoin</span>
+<span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="k">import</span> <span class="n">ThreadPoolExecutor</span>
 <span class="kn">from</span> <span class="nn">concurrent.futures._base</span> <span class="k">import</span> <span class="ne">TimeoutError</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">import</span> <span class="nn">pyppeteer</span>
@@ -41,9 +43,11 @@
 <span class="kn">from</span> <span class="nn">pyquery</span> <span class="k">import</span> <span class="n">PyQuery</span>
 
 <span class="kn">from</span> <span class="nn">fake_useragent</span> <span class="k">import</span> <span class="n">UserAgent</span>
+<span class="kn">from</span> <span class="nn">lxml.html.clean</span> <span class="k">import</span> <span class="n">Cleaner</span>
 <span class="kn">import</span> <span class="nn">lxml</span>
 <span class="kn">from</span> <span class="nn">lxml</span> <span class="k">import</span> <span class="n">etree</span>
 <span class="kn">from</span> <span class="nn">lxml.html</span> <span class="k">import</span> <span class="n">HtmlElement</span>
+<span class="kn">from</span> <span class="nn">lxml.html</span> <span class="k">import</span> <span class="n">tostring</span> <span class="k">as</span> <span class="n">lxml_html_tostring</span>
 <span class="kn">from</span> <span class="nn">lxml.html.soupparser</span> <span class="k">import</span> <span class="n">fromstring</span> <span class="k">as</span> <span class="n">soup_parse</span>
 <span class="kn">from</span> <span class="nn">parse</span> <span class="k">import</span> <span class="n">search</span> <span class="k">as</span> <span class="n">parse_search</span>
 <span class="kn">from</span> <span class="nn">parse</span> <span class="k">import</span> <span class="n">findall</span><span class="p">,</span> <span class="n">Result</span>
@@ -52,6 +56,10 @@
 <span class="n">DEFAULT_ENCODING</span> <span class="o">=</span> <span class="s1">&#39;utf-8&#39;</span>
 <span class="n">DEFAULT_URL</span> <span class="o">=</span> <span class="s1">&#39;https://example.org/&#39;</span>
 <span class="n">DEFAULT_USER_AGENT</span> <span class="o">=</span> <span class="s1">&#39;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.1.2 Safari/603.3.8&#39;</span>
+
+<span class="n">cleaner</span> <span class="o">=</span> <span class="n">Cleaner</span><span class="p">()</span>
+<span class="n">cleaner</span><span class="o">.</span><span class="n">javascript</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">cleaner</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="kc">True</span>
 
 <span class="n">useragent</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -124,7 +132,11 @@
             <span class="k">return</span> <span class="n">etree</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">element</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;unicode&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
 
     <span class="nd">@html</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">html</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">html</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">html</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">html</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_html</span> <span class="o">=</span> <span class="n">html</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">)</span>
+
+    <span class="nd">@raw_html</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">raw_html</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">html</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Property setter for self.html.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_html</span> <span class="o">=</span> <span class="n">html</span>
 
@@ -225,11 +237,12 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">url</span>
 
-    <span class="k">def</span> <span class="nf">find</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="n">containing</span><span class="p">:</span> <span class="n">_Containing</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">first</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">_encoding</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Find</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">find</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">containing</span><span class="p">:</span> <span class="n">_Containing</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">clean</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">first</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">_encoding</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Find</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Given a CSS Selector, returns a list of</span>
 <span class="sd">        :class:`Element &lt;Element&gt;` objects or a single one.</span>
 
 <span class="sd">        :param selector: CSS Selector to use.</span>
+<span class="sd">        :param clean: Whether or not to sanitize the found HTML of ``&lt;script&gt;`` and ``&lt;style&gt;`` tags.</span>
 <span class="sd">        :param containing: If specified, only return elements that contain the provided text.</span>
 <span class="sd">        :param first: Whether or not to return just the first result.</span>
 <span class="sd">        :param _encoding: The encoding format.</span>
@@ -269,13 +282,23 @@
 
             <span class="n">elements</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
 
+        <span class="c1"># Sanitize the found HTML.</span>
+        <span class="k">if</span> <span class="n">clean</span><span class="p">:</span>
+            <span class="n">elements_copy</span> <span class="o">=</span> <span class="n">elements</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">elements</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">elements_copy</span><span class="p">:</span>
+                <span class="n">element</span><span class="o">.</span><span class="n">raw_html</span> <span class="o">=</span> <span class="n">lxml_html_tostring</span><span class="p">(</span><span class="n">cleaner</span><span class="o">.</span><span class="n">clean_html</span><span class="p">(</span><span class="n">element</span><span class="o">.</span><span class="n">lxml</span><span class="p">))</span>
+                <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="n">_get_first_or_list</span><span class="p">(</span><span class="n">elements</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">xpath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">first</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">_encoding</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_XPath</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">xpath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">clean</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">first</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">_encoding</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_XPath</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Given an XPath selector, returns a list of</span>
 <span class="sd">        :class:`Element &lt;Element&gt;` objects or a single one.</span>
 
 <span class="sd">        :param selector: XPath Selector to use.</span>
+<span class="sd">        :param clean: Whether or not to sanitize the found HTML of ``&lt;script&gt;`` and ``&lt;style&gt;`` tags.</span>
 <span class="sd">        :param first: Whether or not to return just the first result.</span>
 <span class="sd">        :param _encoding: The encoding format.</span>
 
@@ -296,6 +319,15 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">selection</span><span class="p">,</span> <span class="n">etree</span><span class="o">.</span><span class="n">_ElementUnicodeResult</span><span class="p">)</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">selection</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">selection</span> <span class="ow">in</span> <span class="n">selected</span>
         <span class="p">]</span>
+
+        <span class="c1"># Sanitize the found HTML.</span>
+        <span class="k">if</span> <span class="n">clean</span><span class="p">:</span>
+            <span class="n">elements_copy</span> <span class="o">=</span> <span class="n">elements</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">elements</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">elements_copy</span><span class="p">:</span>
+                <span class="n">element</span><span class="o">.</span><span class="n">raw_html</span> <span class="o">=</span> <span class="n">lxml_html_tostring</span><span class="p">(</span><span class="n">cleaner</span><span class="o">.</span><span class="n">clean_html</span><span class="p">(</span><span class="n">element</span><span class="o">.</span><span class="n">lxml</span><span class="p">))</span>
+                <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">_get_first_or_list</span><span class="p">(</span><span class="n">elements</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span>
 
@@ -337,15 +369,20 @@
         <span class="c1"># Parse the link with stdlib.</span>
         <span class="n">parsed</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">link</span><span class="p">)</span><span class="o">.</span><span class="n">_asdict</span><span class="p">()</span>
 
-        <span class="c1"># Appears to be a relative link:</span>
+        <span class="c1"># If link is relative, then join it with base_url.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">parsed</span><span class="p">[</span><span class="s1">&#39;netloc&#39;</span><span class="p">]:</span>
-            <span class="n">parsed</span><span class="p">[</span><span class="s1">&#39;netloc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">)</span><span class="o">.</span><span class="n">netloc</span>
+            <span class="k">return</span> <span class="n">urljoin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="n">link</span><span class="p">)</span>
+
+        <span class="c1"># Link is absolute; if it lacks a scheme, add one from base_url.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">parsed</span><span class="p">[</span><span class="s1">&#39;scheme&#39;</span><span class="p">]:</span>
             <span class="n">parsed</span><span class="p">[</span><span class="s1">&#39;scheme&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">)</span><span class="o">.</span><span class="n">scheme</span>
 
-        <span class="c1"># Re-construct URL, with new data.</span>
-        <span class="n">parsed</span> <span class="o">=</span> <span class="p">(</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">parsed</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-        <span class="k">return</span> <span class="n">urlunparse</span><span class="p">(</span><span class="n">parsed</span><span class="p">)</span>
+            <span class="c1"># Reconstruct the URL to incorporate the new scheme.</span>
+            <span class="n">parsed</span> <span class="o">=</span> <span class="p">(</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">parsed</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="k">return</span> <span class="n">urlunparse</span><span class="p">(</span><span class="n">parsed</span><span class="p">)</span>
+
+        <span class="c1"># Link is absolute and complete with scheme; nothing to be done here.</span>
+        <span class="k">return</span> <span class="n">link</span>
 
 
     <span class="nd">@property</span>
@@ -372,9 +409,15 @@
             <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">result</span>
 
-        <span class="n">url</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-        <span class="k">if</span> <span class="n">url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">):</span>
-            <span class="n">url</span> <span class="o">=</span> <span class="n">url</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># Parse the url to separate out the path</span>
+        <span class="n">parsed</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span><span class="o">.</span><span class="n">_asdict</span><span class="p">()</span>
+
+        <span class="c1"># Remove any part of the path after the last &#39;/&#39;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parsed</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="c1"># Reconstruct the url with the modified path</span>
+        <span class="n">parsed</span> <span class="o">=</span> <span class="p">(</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">parsed</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">urlunparse</span><span class="p">(</span><span class="n">parsed</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">url</span>
 
@@ -389,12 +432,13 @@
 
     <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s1">&#39;element&#39;</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">,</span> <span class="s1">&#39;skip_anchors&#39;</span><span class="p">,</span> <span class="s1">&#39;default_encoding&#39;</span><span class="p">,</span> <span class="s1">&#39;_encoding&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;_encoding&#39;</span><span class="p">,</span> <span class="s1">&#39;_html&#39;</span><span class="p">,</span> <span class="s1">&#39;_lxml&#39;</span><span class="p">,</span> <span class="s1">&#39;_pq&#39;</span><span class="p">,</span> <span class="s1">&#39;session&#39;</span>
+        <span class="s1">&#39;_html&#39;</span><span class="p">,</span> <span class="s1">&#39;_lxml&#39;</span><span class="p">,</span> <span class="s1">&#39;_pq&#39;</span><span class="p">,</span> <span class="s1">&#39;_attrs&#39;</span><span class="p">,</span> <span class="s1">&#39;session&#39;</span>
     <span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="n">_URL</span><span class="p">,</span> <span class="n">default_encoding</span><span class="p">:</span> <span class="n">_DefaultEncoding</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">Element</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">element</span><span class="o">=</span><span class="n">element</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">default_encoding</span><span class="o">=</span><span class="n">default_encoding</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">element</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_attrs</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="n">attrs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]))</span> <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="p">]</span>
@@ -405,14 +449,15 @@
         <span class="sd">&quot;&quot;&quot;Returns a dictionary of the attributes of the :class:`Element &lt;Element&gt;`</span>
 <span class="sd">        (`learn more &lt;https://www.w3schools.com/tags/ref_attributes.asp&gt;`_).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">element</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attrs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_attrs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">element</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
 
-        <span class="c1"># Split class and rel up, as there are ussually many of them:</span>
-        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;class&#39;</span><span class="p">,</span> <span class="s1">&#39;rel&#39;</span><span class="p">]:</span>
-            <span class="k">if</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">attrs</span><span class="p">:</span>
-                <span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+            <span class="c1"># Split class and rel up, as there are ussually many of them:</span>
+            <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;class&#39;</span><span class="p">,</span> <span class="s1">&#39;rel&#39;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">attr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attrs</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
 </div>
-        <span class="k">return</span> <span class="n">attrs</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attrs</span>
 
 
 <div class="viewcode-block" id="HTML"><a class="viewcode-back" href="../index.html#requests_html.HTML">[docs]</a><span class="k">class</span> <span class="nc">HTML</span><span class="p">(</span><span class="n">BaseParser</span><span class="p">):</span>
@@ -436,6 +481,7 @@
             <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span>
             <span class="n">default_encoding</span><span class="o">=</span><span class="n">default_encoding</span>
         <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">page</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;&lt;HTML url=</span><span class="si">{self.url!r}</span><span class="s2">&gt;&quot;</span>
@@ -450,6 +496,9 @@
                 <span class="nb">next</span> <span class="o">=</span> <span class="nb">next</span><span class="o">.</span><span class="n">next</span><span class="p">(</span><span class="n">fetch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">html</span>
             <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
                 <span class="k">break</span>
+
+    <span class="k">def</span> <span class="nf">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">next</span><span class="p">(</span><span class="n">fetch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">html</span>
 
 <div class="viewcode-block" id="HTML.render"><a class="viewcode-back" href="../index.html#requests_html.HTML.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="n">script</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">scrolldown</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sleep</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">reload</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mf">8.0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Reloads the response in Chromium, and replaces HTML content</span>
@@ -496,7 +545,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">async</span> <span class="k">def</span> <span class="nf">_async_render</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">script</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">scrolldown</span><span class="p">,</span> <span class="n">sleep</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">reload</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">timeout</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]):</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">browser</span> <span class="o">=</span> <span class="n">pyppeteer</span><span class="o">.</span><span class="n">launch</span><span class="p">(</span><span class="n">headless</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">browser</span> <span class="o">=</span> <span class="n">pyppeteer</span><span class="o">.</span><span class="n">launch</span><span class="p">(</span><span class="n">headless</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;--no-sandbox&#39;</span><span class="p">])</span>
                 <span class="n">page</span> <span class="o">=</span> <span class="k">await</span> <span class="n">browser</span><span class="o">.</span><span class="n">newPage</span><span class="p">()</span>
 
                 <span class="c1"># Wait before rendering the page, to prevent timeouts.</span>
@@ -524,7 +573,7 @@
 
                 <span class="c1"># Return the content of the page, JavaScript evaluated.</span>
                 <span class="n">content</span> <span class="o">=</span> <span class="k">await</span> <span class="n">page</span><span class="o">.</span><span class="n">content</span><span class="p">()</span>
-                <span class="k">return</span> <span class="n">content</span><span class="p">,</span> <span class="n">result</span>
+                <span class="k">return</span> <span class="n">content</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">page</span>
             <span class="k">except</span> <span class="ne">TimeoutError</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">None</span>
 
@@ -539,12 +588,13 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">content</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
 
-                    <span class="n">content</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">_async_render</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">script</span><span class="o">=</span><span class="n">script</span><span class="p">,</span> <span class="n">sleep</span><span class="o">=</span><span class="n">sleep</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="n">wait</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">html</span><span class="p">,</span> <span class="n">reload</span><span class="o">=</span><span class="n">reload</span><span class="p">,</span> <span class="n">scrolldown</span><span class="o">=</span><span class="n">scrolldown</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">))</span>
+                    <span class="n">content</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">page</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">_async_render</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">script</span><span class="o">=</span><span class="n">script</span><span class="p">,</span> <span class="n">sleep</span><span class="o">=</span><span class="n">sleep</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="n">wait</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">html</span><span class="p">,</span> <span class="n">reload</span><span class="o">=</span><span class="n">reload</span><span class="p">,</span> <span class="n">scrolldown</span><span class="o">=</span><span class="n">scrolldown</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">))</span>
                 <span class="k">except</span> <span class="ne">TimeoutError</span><span class="p">:</span>
                     <span class="k">pass</span>
 
         <span class="n">html</span> <span class="o">=</span> <span class="n">HTML</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">html</span><span class="o">=</span><span class="n">content</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">DEFAULT_ENCODING</span><span class="p">),</span> <span class="n">default_encoding</span><span class="o">=</span><span class="n">DEFAULT_ENCODING</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">html</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">html</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">page</span> <span class="o">=</span> <span class="n">page</span></div></div>
         <span class="k">return</span> <span class="n">result</span>
 
 
@@ -624,6 +674,40 @@
         <span class="n">r</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">HTMLSession</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </div></div>
         <span class="k">return</span> <span class="n">HTMLResponse</span><span class="o">.</span><span class="n">_from_response</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">AsyncHTMLSession</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">Session</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; An async consumable session. &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">workers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">mock_browser</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Set or create an event loop and a thread pool.</span>
+
+<span class="sd">            :param loop: Asyncio lopp to use.</span>
+<span class="sd">            :param workers: Amount of threads to use for executing async calls.</span>
+<span class="sd">                If not pass it will default to the number of processors on the</span>
+<span class="sd">                machine, multiplied by 5. &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Mock a web browser&#39;s user agent.</span>
+        <span class="k">if</span> <span class="n">mock_browser</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;User-Agent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user_agent</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="p">[</span><span class="s2">&quot;response&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">response_hook</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">loop</span> <span class="o">=</span> <span class="n">loop</span> <span class="ow">or</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thread_pool</span> <span class="o">=</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">workers</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">response_hook</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HTMLResponse</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Change response enconding and replace it by a HTMLResponse. &quot;&quot;&quot;</span>
+        <span class="n">response</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="n">DEFAULT_ENCODING</span>
+        <span class="k">return</span> <span class="n">HTMLResponse</span><span class="o">.</span><span class="n">_from_response</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Partial original request func and run it in a thread. &quot;&quot;&quot;</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">request</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">loop</span><span class="o">.</span><span class="n">run_in_executor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thread_pool</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
 </pre></div>
 
           </div>
