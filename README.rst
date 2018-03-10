@@ -120,8 +120,9 @@ XPath is also supported:
 
 .. code-block:: pycon
 
-   >>> r.html.xpath('a')
-   [<Element 'a' class='btn' href='https://help.github.com/articles/supported-browsers'>]
+   >>> r.html.xpath('/html/body/div[1]/a')
+   [<Element 'a' class=('px-2', 'py-4', 'show-on-focus', 'js-skip-to-content') href='#start-of-content' tabindex='1'>]
+
 
 JavaScript Support
 ==================
