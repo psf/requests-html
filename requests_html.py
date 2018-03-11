@@ -483,7 +483,7 @@ class HTML(BaseParser):
         """
         async def _async_render(*, url: str, script: str = None, scrolldown, sleep: int, wait: float, reload, content: Optional[str], timeout: Union[float, int]):
             try:
-                browser = pyppeteer.launch(headless=True, args=['--no-sandbox'])
+                browser = await pyppeteer.launch(headless=True, args=['--no-sandbox'])
                 page = await browser.newPage()
 
                 # Wait before rendering the page, to prevent timeouts.
