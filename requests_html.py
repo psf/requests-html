@@ -324,7 +324,7 @@ class BaseParser:
 
                 try:
                     href = link.attrs['href'].strip()
-                    if href and not (href.startswith('#') and self.skip_anchors) and not href.startswith('javascript:'):
+                    if href and not (href.startswith('#') and self.skip_anchors) and not href.startswith(('javascript:', 'mailto:')):
                         yield href
                 except KeyError:
                     pass
@@ -373,7 +373,7 @@ class BaseParser:
         # Support for <base> tag.
         base = self.find('base', first=True)
         if base:
-            result = base.attrs['href'].strip()
+            result = base.attrs.get('href', '').strip()
             if result:
                 return result
 
@@ -381,7 +381,7 @@ class BaseParser:
         parsed = urlparse(self.url)._asdict()
 
         # Remove any part of the path after the last '/'
-        path = '/'.join(parsed['path'].split('/')[:-1])
+        parsed['path'] = '/'.join(parsed['path'].split('/')[:-1]) + '/'
 
         # Reconstruct the url with the modified path
         parsed = (v for v in parsed.values())
@@ -513,7 +513,7 @@ class HTML(BaseParser):
         """
         async def _async_render(*, url: str, script: str = None, scrolldown, sleep: int, wait: float, reload, content: Optional[str], timeout: Union[float, int]):
             try:
-                browser = pyppeteer.launch(headless=True, args=['--no-sandbox'])
+                browser = await pyppeteer.launch(headless=True, args=['--no-sandbox'])
                 page = await browser.newPage()
 
                 # Wait before rendering the page, to prevent timeouts.
