@@ -24,6 +24,7 @@ from w3lib.encoding import html_to_unicode
 DEFAULT_ENCODING = 'utf-8'
 DEFAULT_URL = 'https://example.org/'
 DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.1.2 Safari/603.3.8'
+DEFAULT_NEXT_SYMBOL = ['next', 'more', 'older']
 
 cleaner = Cleaner()
 cleaner.javascript = True
@@ -49,6 +50,7 @@ _Containing = Union[str, List[str]]
 _Links = Set[str]
 _Attrs = MutableMapping
 _Next = Union['HTML', List[str]]
+_NextSymbol = List[str]
 
 # Sanity checking.
 try:
@@ -164,7 +166,7 @@ class BaseParser:
         """
         return self.lxml.text_content()
 
-    def next(self, fetch: bool = False) -> _Next:
+    def next(self, fetch: bool = False, next_symbol: _NextSymbol = DEFAULT_NEXT_SYMBOL) -> _Next:
         """Attempts to find the next page, if there is one. If ``fetch``
         is ``True`` (default), returns :class:`HTML <HTML>` object of
         next page. If ``fetch`` is ``False``, simply returns the next URL.
@@ -172,7 +174,7 @@ class BaseParser:
         """
 
         def get_next():
-            candidates = self.find('a', containing=('next', 'more', 'older'))
+            candidates = self.find('a', containing=next_symbol)
 
             for candidate in candidates:
                 if candidate.attrs.get('href'):
@@ -450,6 +452,7 @@ class HTML(BaseParser):
             default_encoding=default_encoding
         )
         self.page = None
+        self.next_symbol = DEFAULT_NEXT_SYMBOL
 
     def __repr__(self) -> str:
         return f"<HTML url={self.url!r}>"
@@ -461,12 +464,15 @@ class HTML(BaseParser):
         while True:
             yield next
             try:
-                next = next.next(fetch=True).html
+                next = next.next(fetch=True, next_symbol=self.next_symbol).html
             except AttributeError:
                 break
 
     def __next__(self):
-        return self.next(fetch=True).html
+        return self.next(fetch=True, next_symbol=self.next_symbol).html
+
+    def add_next_symbol(self, next_symbol):
+        self.next_symbol.append(next_symbol)
 
     def render(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0):
         """Reloads the response in Chromium, and replaces HTML content
