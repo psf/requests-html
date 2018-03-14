@@ -396,7 +396,7 @@ class HTML(BaseParser):
     :param default_encoding: Which encoding to default to.
     """
 
-    def __init__(self, *, session: 'HTTPSession' = None, url: str = DEFAULT_URL, html: _HTML, default_encoding: str = DEFAULT_ENCODING) -> None:
+    def __init__(self, *, session: Union['HTTPSession', 'AsyncHTMLSession'] = None, url: str = DEFAULT_URL, html: _HTML, default_encoding: str = DEFAULT_ENCODING) -> None:
 
         # Convert incoming unicode HTML into bytes.
         if isinstance(html, str):
@@ -577,20 +577,21 @@ class HTMLResponse(requests.Response):
     Effectively the same, but with an intelligent ``.html`` property added.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, session: Union['HTMLSession', 'AsyncHTMLSession']) -> None:
         super(HTMLResponse, self).__init__()
         self._html = None  # type: HTML
+        self.session = session
 
     @property
     def html(self) -> HTML:
         if not self._html:
-            self._html = HTML(url=self.url, html=self.content, default_encoding=self.encoding)
+            self._html = HTML(session=self.session, url=self.url, html=self.content, default_encoding=self.encoding)
 
         return self._html
 
     @classmethod
-    def _from_response(cls, response):
-        html_r = cls()
+    def _from_response(cls, response, session: Union['HTMLSession', 'AsyncHTMLSession']):
+        html_r = cls(session=session)
         html_r.__dict__.update(response.__dict__)
         return html_r
 
@@ -647,7 +648,7 @@ class HTMLSession(requests.Session):
         # Convert Request object into HTTPRequest object.
         r = super(HTMLSession, self).request(*args, **kwargs)
 
-        return HTMLResponse._from_response(r)
+        return HTMLResponse._from_response(r, self)
 
 
 class AsyncHTMLSession(requests.Session):
@@ -667,16 +668,15 @@ class AsyncHTMLSession(requests.Session):
         if mock_browser:
             self.headers['User-Agent'] = user_agent()
 
-        self.hooks["response"].append(self.response_hook)
+        self.hooks['response'].append(self.response_hook)
 
         self.loop = loop or asyncio.get_event_loop()
         self.thread_pool = ThreadPoolExecutor(max_workers=workers)
 
-    @staticmethod
-    def response_hook(response, **kwargs) -> HTMLResponse:
+    def response_hook(self, response, **kwargs) -> HTMLResponse:
         """ Change response enconding and replace it by a HTMLResponse. """
         response.encoding = DEFAULT_ENCODING
-        return HTMLResponse._from_response(response)
+        return HTMLResponse._from_response(response, self)
 
     def request(self, *args, **kwargs):
         """ Partial original request func and run it in a thread. """
