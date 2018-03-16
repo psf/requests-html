@@ -60,6 +60,12 @@ except AssertionError:
     raise RuntimeError('Requests-HTML requires Python 3.6+!')
 
 
+class MaxRetries(Exception):
+
+    def __init__(self, message):
+        self.message = message
+
+
 class BaseParser:
     """A basic HTML/Element Parser, for Humans.
 
@@ -563,8 +569,13 @@ class HTML(BaseParser):
                 try:
 
                     content, result, page = loop.run_until_complete(_async_render(url=self.url, script=script, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout))
-                except TimeoutError:
+                except TypeError:
                     pass
+            else:
+                break
+
+        if not content:
+            raise MaxRetries("Unable to render the page. Try increasing timeout")
 
         html = HTML(url=self.url, html=content.encode(DEFAULT_ENCODING), default_encoding=DEFAULT_ENCODING)
         self.__dict__.update(html.__dict__)
