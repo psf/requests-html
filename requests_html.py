@@ -665,12 +665,14 @@ class HTMLSession(requests.Session):
     def browser(self):
         if not hasattr(self, "_browser"):
             self.loop = asyncio.get_event_loop()
-
-            async def get_browser():
-                return await pyppeteer.launch(headless=True, args=['--no-sandbox'])
-
-            self._browser = self.loop.run_until_complete(get_browser())
+            self._browser = self.loop.run_until_complete(pyppeteer.launch(headless=True, args=['--no-sandbox']))
         return self._browser
+
+    def close(self):
+        """ If a browser was created close it first. """
+        if hasattr(self, "_browser"):
+            self.loop.run_until_complete(self._browser.close())
+        super().close()
 
 
 class AsyncHTMLSession(requests.Session):
