@@ -661,6 +661,17 @@ class HTMLSession(requests.Session):
 
         return HTMLResponse._from_response(r, self)
 
+    @property
+    def browser(self):
+        if not hasattr(self, "_browser"):
+            self.loop = asyncio.get_event_loop()
+
+            async def get_browser():
+                return await pyppeteer.launch(headless=True, args=['--no-sandbox'])
+
+            self._browser = self.loop.run_until_complete(get_browser())
+        return self._browser
+
 
 class AsyncHTMLSession(requests.Session):
     """ An async consumable session. """

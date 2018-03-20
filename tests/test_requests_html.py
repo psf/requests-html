@@ -2,6 +2,7 @@ import os
 from functools import partial
 
 import pytest
+from pyppeteer.browser import Browser
 from requests_html import HTMLSession, AsyncHTMLSession, HTML
 from requests_file import FileAdapter
 
@@ -222,6 +223,12 @@ def test_bare_js_eval():
     html.render()
 
     assert html.find('#replace', first=True).text == 'yolo'
+
+
+@pytest.mark.ok
+def test_browser_session():
+    assert isinstance(session.browser, Browser)
+    assert hasattr(session, "loop") == True
 
 
 if __name__ == '__main__':
