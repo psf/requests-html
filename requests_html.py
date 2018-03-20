@@ -480,7 +480,7 @@ class HTML(BaseParser):
     def add_next_symbol(self, next_symbol):
         self.next_symbol.append(next_symbol)
 
-    def render(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0):
+    def render(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False):
         """Reloads the response in Chromium, and replaces HTML content
         with an updated version, with JavaScript executed.
 
@@ -490,6 +490,7 @@ class HTML(BaseParser):
         :param scrolldown: Integer, if provided, of how many times to page down.
         :param sleep: Integer, if provided, of how many long to sleep after initial render.
         :param reload: If ``False``, content will not be loaded from the browser, but will be provided from memory.
+        :param keep_page: If ``True`` will allow you to interact with the browser page through ``r.html.page``.
 
         If ``scrolldown`` is specified, the page will scrolldown the specified
         number of times, after sleeping the specified amount of time
@@ -520,13 +521,15 @@ class HTML(BaseParser):
             >>> r.html.render(script=script)
             {'width': 800, 'height': 600, 'deviceScaleFactor': 1}
 
+        Warning: If you use keep_page, you're responsable for closing each page, since
+        opening to many at scale may crach the browser.
+
         Warning: the first time you run this method, it will download
         Chromium into your home directory (``~/.pyppeteer``).
         """
-        async def _async_render(*, url: str, script: str = None, scrolldown, sleep: int, wait: float, reload, content: Optional[str], timeout: Union[float, int]):
+        async def _async_render(*, url: str, script: str = None, scrolldown, sleep: int, wait: float, reload, content: Optional[str], timeout: Union[float, int], keep_page: bool):
             try:
-                browser = await pyppeteer.launch(headless=True, args=['--no-sandbox'])
-                page = await browser.newPage()
+                page = await self.session.browser.newPage()
 
                 # Wait before rendering the page, to prevent timeouts.
                 await asyncio.sleep(wait)
@@ -553,11 +556,14 @@ class HTML(BaseParser):
 
                 # Return the content of the page, JavaScript evaluated.
                 content = await page.content()
+                if not keep_page:
+                    await page.close()
+                    page = None
                 return content, result, page
             except TimeoutError:
                 return None
 
-        loop = asyncio.get_event_loop()
+        self.session.browser  # Automatycally create a event loop and browser
         content = None
 
         # Automatically set Reload to False, if example URL is being used.
@@ -568,7 +574,7 @@ class HTML(BaseParser):
             if not content:
                 try:
 
-                    content, result, page = loop.run_until_complete(_async_render(url=self.url, script=script, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout))
+                    content, result, page = self.session.loop.run_until_complete(_async_render(url=self.url, script=script, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout, keep_page=keep_page))
                 except TypeError:
                     pass
             else:

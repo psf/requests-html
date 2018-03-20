@@ -4,6 +4,7 @@ from functools import partial
 import pytest
 import psutil
 from pyppeteer.browser import Browser
+from pyppeteer.page import Page
 from requests_html import HTMLSession, AsyncHTMLSession, HTML
 from requests_file import FileAdapter
 
@@ -245,6 +246,28 @@ def test_browser_session():
     assert count_chromium_process() == 2
     session.close()
     assert count_chromium_process() == 0
+
+
+@pytest.mark.ok
+def test_browser_process():
+    for _ in range(3):
+        r = get()
+        r.html.render()
+
+        assert r.html.page == None
+
+    assert count_chromium_process() == 2
+
+
+@pytest.mark.ok
+def test_browser_pages():
+    for _ in range(3):
+        r = get()
+        r.html.render(keep_page=True)
+
+        assert isinstance(r.html.page, Page)
+
+    assert count_chromium_process() == 5  # 2 process for chromiun and 1 by each page
 
 
 if __name__ == '__main__':
