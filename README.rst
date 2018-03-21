@@ -20,6 +20,7 @@ When using this library you automatically get:
 - Automatic following of redirects.
 - Connection–pooling and cookie persistence.
 - The Requests experience you know and love, with magical parsing abilities.
+- **Async Support**
 
 .. Other nice features include:
 
@@ -37,6 +38,24 @@ Make a GET request to 'python.org', using Requests:
     >>> session = HTMLSession()
 
     >>> r = session.get('https://python.org/')
+
+Try async and get some sites at the same time:
+
+.. code-block:: pycon
+
+    >>> from requests_html import AsyncHTMLSession
+    >>> asession = AsyncHTMLSession()
+
+    >>> async def get_pythonorg():
+    ...    r = await asession.get('https://python.org/')
+
+    >>> async def get_reddit():
+    ...    r = await asession.get('https://reddit.com/')
+
+    >>> async def get_google():
+    ...    r = await asession.get('https://google.com/')
+
+    >>> result = session.run(get_pythonorg, get_reddit, get_google)
 
 Grab a list of all links on the page, as–is (anchors excluded):
 
@@ -136,6 +155,17 @@ Let's grab some text that's rendered by JavaScript:
     >>> r = session.get('http://python-requests.org')
 
     >>> r.html.render()
+
+    >>> r.html.search('Python 2 will retire in only {months} months!')['months']
+    '<time>25</time>'
+
+Or you can do this async also:
+
+.. code-block:: pycon
+
+    >>> r = asession.get('http://python-requests.org/')
+
+    >>> await r.html.arender()
 
     >>> r.html.search('Python 2 will retire in only {months} months!')['months']
     '<time>25</time>'
