@@ -641,47 +641,47 @@ def _get_first_or_list(l, first=False):
         return l
 
 
-class HTMLSession(requests.Session):
-    """A consumable session, for cookie persistence and connection pooling,
+class BaseSession(requests.Session):
+    """ A consumable session, for cookie persistence and connection pooling,
     amongst other things.
     """
 
-    def __init__(self, mock_browser=True, verify=False, browser_args=['--no-sandbox']):
-        super(HTMLSession, self).__init__()
+    def __init__(self, mock_browser : bool = True, verify : bool = False,
+                 browser_args : list = ['--no-sandbox']):
+        super().__init__()
 
         # Mock a web browser's user agent.
         if mock_browser:
             self.headers['User-Agent'] = user_agent()
 
-        self.hooks = {'response': self._handle_response}
+        self.hooks['response'].append(self.response_hook)
         self.verify = verify
 
         self.__browser_args = browser_argsverify
 
-    @staticmethod
-    def _handle_response(response, **kwargs) -> HTMLResponse:
-        """Requests HTTP Response handler. Attaches .html property to
-        class:`requests.Response <requests.Response>` objects.
-        """
+    def response_hook(self, response, **kwargs) -> HTMLResponse:
+        """ Change response enconding and replace it by a HTMLResponse. """
         if not response.encoding:
             response.encoding = DEFAULT_ENCODING
+        return HTMLResponse._from_response(response, self)
 
-        return response
+    @property
+    async def browser(self):
+        if not hasattr(self, "_browser"):
+            self._browser = await pyppeteer.launch(ignoreHTTPSErrors=not(self.verify), headless=True, args=self.__browser_args)
+        return self._browser
 
-    def request(self, *args, **kwargs) -> HTMLResponse:
-        """Makes an HTTP Request, with mocked User–Agent headers.
-        Returns a class:`HTTPResponse <HTTPResponse>`.
-        """
-        # Convert Request object into HTTPRequest object.
-        r = super(HTMLSession, self).request(*args, **kwargs)
 
-        return HTMLResponse._from_response(r, self)
+class HTMLSession(BaseSession):
+
+    def __init__(self, **kwargs):
+        super(HTMLSession, self).__init__(**kwargs)
 
     @property
     def browser(self):
         if not hasattr(self, "_browser"):
             self.loop = asyncio.get_event_loop()
-            self._browser = self.loop.run_until_complete(pyppeteer.launch(ignoreHTTPSErrors=not(self.verify), headless=True, args=self.__browser_args))
+            self._browser = self.loop.run_until_complete(super().browser)
         return self._browser
 
     def close(self):
@@ -691,7 +691,7 @@ class HTMLSession(requests.Session):
         super().close()
 
 
-class AsyncHTMLSession(requests.Session):
+class AsyncHTMLSession(BaseSession):
     """ An async consumable session. """
 
     def __init__(self, loop=None, workers=None,
@@ -704,19 +704,8 @@ class AsyncHTMLSession(requests.Session):
                 machine, multiplied by 5. """
         super().__init__(*args, **kwargs)
 
-        # Mock a web browser's user agent.
-        if mock_browser:
-            self.headers['User-Agent'] = user_agent()
-
-        self.hooks['response'].append(self.response_hook)
-
         self.loop = loop or asyncio.get_event_loop()
         self.thread_pool = ThreadPoolExecutor(max_workers=workers)
-
-    def response_hook(self, response, **kwargs) -> HTMLResponse:
-        """ Change response enconding and replace it by a HTMLResponse. """
-        response.encoding = DEFAULT_ENCODING
-        return HTMLResponse._from_response(response, self)
 
     def request(self, *args, **kwargs):
         """ Partial original request func and run it in a thread. """
