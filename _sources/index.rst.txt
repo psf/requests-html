@@ -265,9 +265,6 @@ These sessions are for making HTTP requests:
 .. autoclass:: HTMLSession
     :inherited-members:
 
-.. autoclass:: BrowserHTMLSession
-    :inherited-members:
-
 
 
 Indices and tables
