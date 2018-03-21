@@ -680,6 +680,8 @@ class HTMLSession(BaseSession):
     def browser(self):
         if not hasattr(self, "_browser"):
             self.loop = asyncio.get_event_loop()
+            if self.loop.is_running():
+                raise RuntimeError("Cannot use HTMLSession within an existing event loop. Use AsyncHTMLSession instead.")
             self._browser = self.loop.run_until_complete(super().browser)
         return self._browser
 
@@ -710,3 +712,9 @@ class AsyncHTMLSession(BaseSession):
         """ Partial original request func and run it in a thread. """
         func = partial(super().request, *args, **kwargs)
         return self.loop.run_in_executor(self.thread_pool, func)
+
+    async def close(self):
+        """ If a browser was created close it first. """
+        if hasattr(self, "_browser"):
+            await self._browser.close()
+        super().close()
