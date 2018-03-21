@@ -410,7 +410,7 @@ class HTML(BaseParser):
     :param default_encoding: Which encoding to default to.
     """
 
-    def __init__(self, *, session: Union['HTMLSession', 'AsyncHTMLSession'] = None, url: str = DEFAULT_URL, html: _HTML, default_encoding: str = DEFAULT_ENCODING) -> None:
+    def __init__(self, *, session: Union['HTMLSession', 'AsyncHTMLSession'] = None, url: str = DEFAULT_URL, html: _HTML, default_encoding: str = DEFAULT_ENCODING, async_: bool = False) -> None:
 
         # Convert incoming unicode HTML into bytes.
         if isinstance(html, str):
@@ -423,7 +423,7 @@ class HTML(BaseParser):
             url=url,
             default_encoding=default_encoding
         )
-        self.session = session or HTMLSession()
+        self.session = session or async_ and AsyncHTMLSession() or HTMLSession()
         self.page = None
         self.next_symbol = DEFAULT_NEXT_SYMBOL
 
@@ -610,6 +610,7 @@ class HTML(BaseParser):
 
     async def arender(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False):
         """ Async version of render. Takes same parameters. """
+
         self.browser = await self.session.browser
         content = None
 
