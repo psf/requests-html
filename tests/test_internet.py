@@ -18,7 +18,7 @@ def test_pagination():
 
 
 @pytest.mark.asyncio
-async def test_pagination(event_loop):
+async def test_async_pagination(event_loop):
     asession = AsyncHTMLSession()
     pages = (
         'https://xkcd.com/1957/',

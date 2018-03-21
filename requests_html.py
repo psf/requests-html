@@ -430,7 +430,7 @@ class HTML(BaseParser):
     def __repr__(self) -> str:
         return f"<HTML url={self.url!r}>"
 
-    def _next(self, fetch: bool = False, next_symbol: _NextSymbol = DEFAULT_NEXT_SYMBOL) -> _Next:
+    def next(self, fetch: bool = False, next_symbol: _NextSymbol = DEFAULT_NEXT_SYMBOL) -> _Next:
         """Attempts to find the next page, if there is one. If ``fetch``
         is ``True`` (default), returns :class:`HTML <HTML>` object of
         next page. If ``fetch`` is ``False``, simply returns the next URL.
@@ -478,19 +478,19 @@ class HTML(BaseParser):
         while True:
             yield next
             try:
-                next = next._next(fetch=True, next_symbol=self.next_symbol).html
+                next = next.next(fetch=True, next_symbol=self.next_symbol).html
             except AttributeError:
                 break
 
     def __next__(self):
-        return self._next(fetch=True, next_symbol=self.next_symbol).html
+        return self.next(fetch=True, next_symbol=self.next_symbol).html
 
     def __aiter__(self):
         return self
 
     async def __anext__(self):
         while True:
-            url = self._next(fetch=False, next_symbol=self.next_symbol)
+            url = self.next(fetch=False, next_symbol=self.next_symbol)
             if not url:
                 break
             response = await self.session.get(url)
