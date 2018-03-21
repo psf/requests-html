@@ -25,6 +25,7 @@ pytest = "*"
 sphinx = "*"
 mypy = "*"
 pytest-asyncio = "*"
+psutil = "*"
 
 
 [scripts]

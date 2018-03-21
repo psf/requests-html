@@ -2,6 +2,9 @@ import os
 from functools import partial
 
 import pytest
+import psutil
+from pyppeteer.browser import Browser
+from pyppeteer.page import Page
 from requests_html import HTMLSession, AsyncHTMLSession, HTML
 from requests_file import FileAdapter
 
@@ -26,6 +29,14 @@ def async_get(event_loop):
     url = 'file://{}'.format(path)
 
     return partial(async_session.get, url)
+
+
+def count_chromium_process():
+    process = 0
+    for proc in psutil.process_iter(attrs=['name']):
+        if proc.info["name"] == "Chromium":
+            process += 1
+    return process
 
 
 @pytest.mark.ok
@@ -222,6 +233,41 @@ def test_bare_js_eval():
     html.render()
 
     assert html.find('#replace', first=True).text == 'yolo'
+
+
+@pytest.mark.ok
+def test_browser_session():
+    """ Test browser instaces is created and properly close when session is closed.
+        Note: session.close method need to be tested together with browser creation,
+            since no doing that will left the browser running. """
+    session = HTMLSession()
+    assert isinstance(session.browser, Browser)
+    assert hasattr(session, "loop") == True
+    assert count_chromium_process() == 2
+    session.close()
+    assert count_chromium_process() == 0
+
+
+@pytest.mark.ok
+def test_browser_process():
+    for _ in range(3):
+        r = get()
+        r.html.render()
+
+        assert r.html.page == None
+
+    assert count_chromium_process() == 2
+
+
+@pytest.mark.ok
+def test_browser_pages():
+    for _ in range(3):
+        r = get()
+        r.html.render(keep_page=True)
+
+        assert isinstance(r.html.page, Page)
+
+    assert count_chromium_process() == 5  # 2 process for chromiun and 1 by each page
 
 
 if __name__ == '__main__':
