@@ -485,6 +485,17 @@ class HTML(BaseParser):
     def __next__(self):
         return self._next(fetch=True, next_symbol=self.next_symbol).html
 
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        while True:
+            url = self._next(fetch=False, next_symbol=self.next_symbol)
+            if not url:
+                break
+            response = await self.session.get(url)
+            return response.html
+
     def add_next_symbol(self, next_symbol):
         self.next_symbol.append(next_symbol)
 
