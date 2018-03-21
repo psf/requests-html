@@ -1,12 +1,9 @@
 [[source]]
-
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [packages]
-
 requests = "*"
 pyquery = "*"
 fake-useragent = "*"
@@ -14,10 +11,9 @@ parse = "*"
 "bs4" = "*"
 "w3lib" = "*"
 pyppeteer = "*"
-
+"rfc3986" = "*"
 
 [dev-packages]
-
 twine = "*"
 requests-file = "*"
 pytest = "*"
@@ -27,7 +23,5 @@ mypy = "*"
 pytest-asyncio = "*"
 psutil = "*"
 
-
 [scripts]
-
 tests = "pytest -v -m ok"

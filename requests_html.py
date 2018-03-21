@@ -126,6 +126,12 @@ class BaseParser:
         # Scan meta tags for charset.
         if self._html:
             self._encoding = html_to_unicode(self.default_encoding, self._html)[0]
+            # Fall back to requests' detected encoding if decode fails.
+            try:
+                self.raw_html.decode(self.encoding)
+            except UnicodeDecodeError:
+                self._encoding = self.default_encoding
+
 
         return self._encoding if self._encoding else self.default_encoding
 
