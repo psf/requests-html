@@ -28,6 +28,7 @@ When using this library you automatically get:
 - Automatic following of redirects.
 - Connection–pooling and cookie persistence.
 - The Requests experience you know and love, with magical parsing abilities.
+- **Async Support**
 
 .. Other nice features include:
 
@@ -56,6 +57,33 @@ Make a GET request to `python.org <https://python.org/>`_, using `Requests <http
     >>> session = HTMLSession()
 
     >>> r = session.get('https://python.org/')
+
+Or want to try our async session:
+
+.. code-block:: pycon
+
+    >>> from requests_html import AsyncHTMLSession
+    >>> asession = AsyncHTMLSession()
+
+    >>> r = await asession.get('https://python.org/')
+
+But async is fun when fetching some sites at the same time:
+
+.. code-block:: pycon
+
+    >>> from requests_html import AsyncHTMLSession
+    >>> asession = AsyncHTMLSession()
+
+    >>> async def get_pythonorg():
+    ...    r = await asession.get('https://python.org/')
+
+    >>> async def get_reddit():
+    ...    r = await asession.get('https://reddit.com/')
+
+    >>> async def get_google():
+    ...    r = await asession.get('https://google.com/')
+
+    >>> session.run(get_pythonorg, get_reddit, get_google)
 
 Grab a list of all links on the page, as–is (anchors excluded):
 
@@ -179,6 +207,17 @@ Let's grab some text that's rendered by JavaScript:
     >>> r.html.search('Python 2 will retire in only {months} months!')['months']
     '<time>25</time>'
 
+Or you can do this async also:
+
+.. code-block:: pycon
+
+    >>> r = asession.get('http://python-requests.org/')
+
+    >>> await r.html.arender()
+
+    >>> r.html.search('Python 2 will retire in only {months} months!')['months']
+    '<time>25</time>'
+
 Note, the first time you ever run the ``render()`` method, it will download
 Chromium into your home directory (e.g. ``~/.pyppeteer/``). This only happens
 once. You may also need to install a few `Linux packages <https://github.com/miyakogi/pyppeteer/issues/60>`_ to get pyppeteer working.
@@ -200,6 +239,17 @@ There's also intelligent pagination support (always improving):
     <HTML url='https://www.reddit.com/?count=100&after=t3_81k1c8'>
     <HTML url='https://www.reddit.com/?count=125&after=t3_81p438'>
     <HTML url='https://www.reddit.com/?count=150&after=t3_81nrcd'>
+    …
+
+For `async` pagination use the new `async for`:
+
+.. code-block:: pycon
+
+    >>> r = await asession.get('https://reddit.com')
+    >>> async for html in r.html:
+    ...     print(html)
+    <HTML url='https://www.reddit.com/'>
+    <HTML url='https://www.reddit.com/?count=25&after=t3_81puu5'>
     …
 
 You can also just request the next URL easily:
@@ -246,6 +296,16 @@ You can also render JavaScript pages without Requests:
     >>> print(html.html)
     <html><head></head><body><a href="https://httpbin.org"></a></body></html>
 
+For using `arender` just pass `async_=True` to HTML.
+
+.. code-block:: pycon
+
+    # ^^ using above script ^^
+    >>> html = HTML(html=doc, async_=True)
+    >>> val = await html.arender(script=script, reload=False)
+    >>> print(val)
+    {'width': 800, 'height': 600, 'deviceScaleFactor': 1}
+
 
 API Documentation
 =================
@@ -275,6 +335,10 @@ HTML Sessions
 These sessions are for making HTTP requests:
 
 .. autoclass:: HTMLSession
+    :inherited-members:
+
+
+.. autoclass:: AsyncHTMLSession
     :inherited-members:
 
 
