@@ -248,6 +248,15 @@ def test_browser_session():
 
 
 @pytest.mark.ok
+@pytest.mark.asyncio
+async def test_browser_session_fail():
+    """ HTMLSession.browser should not be call within an existing event loop> """
+    session = HTMLSession()
+    with pytest.raises(RuntimeError):
+        session.browser
+
+
+@pytest.mark.ok
 def test_browser_process():
     for _ in range(3):
         r = get()
@@ -255,6 +264,14 @@ def test_browser_process():
 
         assert r.html.page == None
 
+
+@pytest.mark.ok
+@pytest.mark.asyncio
+async def test_async_browser_session():
+    session = AsyncHTMLSession()
+    browser = await session.browser
+    assert isinstance(browser, Browser)
+    await session.close()
 
 
 if __name__ == '__main__':
