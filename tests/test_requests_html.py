@@ -237,6 +237,29 @@ def test_bare_render():
 
 
 @pytest.mark.render
+@pytest.mark.asyncio
+async def test_bare_arender():
+    doc = """<a href='https://httpbin.org'>"""
+    html = HTML(html=doc, async_=True)
+    script = """
+        () => {
+            return {
+                width: document.documentElement.clientWidth,
+                height: document.documentElement.clientHeight,
+                deviceScaleFactor: window.devicePixelRatio,
+            }
+        }
+    """
+    val = await html.arender(script=script, reload=False)
+    for value in ('width', 'height', 'deviceScaleFactor'):
+        assert value in val
+
+    assert html.find('html')
+    assert 'https://httpbin.org' in html.links
+    await html.browser.close()
+
+
+@pytest.mark.render
 def test_bare_js_eval():
     doc = """
     <!DOCTYPE html>
@@ -255,6 +278,29 @@ def test_bare_js_eval():
     html.render()
 
     assert html.find('#replace', first=True).text == 'yolo'
+
+
+@pytest.mark.render
+@pytest.mark.asyncio
+async def test_bare_js_async_eval():
+    doc = """
+    <!DOCTYPE html>
+    <html>
+    <body>
+    <div id="replace">This gets replaced</div>
+
+    <script type="text/javascript">
+      document.getElementById("replace").innerHTML = "yolo";
+    </script>
+    </body>
+    </html>
+    """
+
+    html = HTML(html=doc, async_=True)
+    await html.arender()
+
+    assert html.find('#replace', first=True).text == 'yolo'
+    await html.browser.close()
 
 
 @pytest.mark.ok
