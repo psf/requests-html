@@ -499,6 +499,45 @@ class HTML(BaseParser):
     def add_next_symbol(self, next_symbol):
         self.next_symbol.append(next_symbol)
 
+    async def _async_render(self, *, url: str, script: str = None, scrolldown, sleep: int, wait: float, reload, content: Optional[str], timeout: Union[float, int], keep_page: bool):
+        """ Handle page creation and js rendering. Internal use for render/arender methods. """
+        try:
+            page = await self.browser.newPage()
+
+            # Wait before rendering the page, to prevent timeouts.
+            await asyncio.sleep(wait)
+
+            # Load the given page (GET request, obviously.)
+            if reload:
+                await page.goto(url, options={'timeout': int(timeout * 1000)})
+            else:
+                await page.goto(f'data:text/html,{self.html}', options={'timeout': int(timeout * 1000)})
+
+            result = None
+            if script:
+                result = await page.evaluate(script)
+
+            if scrolldown:
+                for _ in range(scrolldown):
+                    await page._keyboard.down('PageDown')
+                    await asyncio.sleep(sleep)
+            else:
+                await asyncio.sleep(sleep)
+
+            if scrolldown:
+                await page._keyboard.up('PageDown')
+
+            # Return the content of the page, JavaScript evaluated.
+            content = await page.content()
+            if not keep_page:
+                await page.close()
+                page = None
+            return content, result, page
+        except TimeoutError:
+            await page.close()
+            page = None
+            return None
+
     def render(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False):
         """Reloads the response in Chromium, and replaces HTML content
         with an updated version, with JavaScript executed.
@@ -543,45 +582,35 @@ class HTML(BaseParser):
         Warning: the first time you run this method, it will download
         Chromium into your home directory (``~/.pyppeteer``).
         """
-        async def _async_render(*, url: str, script: str = None, scrolldown, sleep: int, wait: float, reload, content: Optional[str], timeout: Union[float, int], keep_page: bool):
-            try:
-                page = await self.session.browser.newPage()
 
-                # Wait before rendering the page, to prevent timeouts.
-                await asyncio.sleep(wait)
+        self.browser = self.session.browser  # Automatycally create a event loop and browser
+        content = None
 
-                # Load the given page (GET request, obviously.)
-                if reload:
-                    await page.goto(url, options={'timeout': int(timeout * 1000)})
-                else:
-                    await page.goto(f'data:text/html,{self.html}', options={'timeout': int(timeout * 1000)})
+        # Automatically set Reload to False, if example URL is being used.
+        if self.url == DEFAULT_URL:
+            reload = False
 
-                result = None
-                if script:
-                    result = await page.evaluate(script)
+        for i in range(retries):
+            if not content:
+                try:
 
-                if scrolldown:
-                    for _ in range(scrolldown):
-                        await page._keyboard.down('PageDown')
-                        await asyncio.sleep(sleep)
-                else:
-                    await asyncio.sleep(sleep)
+                    content, result, page = self.session.loop.run_until_complete(self._async_render(url=self.url, script=script, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout, keep_page=keep_page))
+                except TypeError:
+                    pass
+            else:
+                break
 
-                if scrolldown:
-                    await page._keyboard.up('PageDown')
+        if not content:
+            raise MaxRetries("Unable to render the page. Try increasing timeout")
 
-                # Return the content of the page, JavaScript evaluated.
-                content = await page.content()
-                if not keep_page:
-                    await page.close()
-                    page = None
-                return content, result, page
-            except TimeoutError:
-                await page.close()
-                page = None
-                return None
+        html = HTML(url=self.url, html=content.encode(DEFAULT_ENCODING), default_encoding=DEFAULT_ENCODING)
+        self.__dict__.update(html.__dict__)
+        self.page = page
+        return result
 
-        self.session.browser  # Automatically create a event loop and browser
+    async def arender(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False):
+        """ Async version of render. Takes same parameters. """
+        self.browser = await self.session.browser
         content = None
 
         # Automatically set Reload to False, if example URL is being used.
@@ -592,7 +621,7 @@ class HTML(BaseParser):
             if not content:
                 try:
 
-                    content, result, page = self.session.loop.run_until_complete(_async_render(url=self.url, script=script, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout, keep_page=keep_page))
+                    content, result, page = await self._async_render(url=self.url, script=script, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout, keep_page=keep_page)
                 except TypeError:
                     pass
             else:

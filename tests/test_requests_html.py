@@ -194,6 +194,28 @@ def test_render():
 
 
 @pytest.mark.render
+@pytest.mark.asyncio
+async def test_async_render(async_get):
+    r = await async_get()
+    script = """
+    () => {
+        return {
+            width: document.documentElement.clientWidth,
+            height: document.documentElement.clientHeight,
+            deviceScaleFactor: window.devicePixelRatio,
+        }
+    }
+    """
+    val = await r.html.arender(script=script)
+    for value in ('width', 'height', 'deviceScaleFactor'):
+        assert value in val
+
+    about = r.html.find('#about', first=True)
+    assert len(about.links) == 6
+    await r.html.browser.close()
+
+
+@pytest.mark.render
 def test_bare_render():
     doc = """<a href='https://httpbin.org'>"""
     html = HTML(html=doc)
