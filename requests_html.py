@@ -759,3 +759,13 @@ class AsyncHTMLSession(BaseSession):
         if hasattr(self, "_browser"):
             await self._browser.close()
         super().close()
+
+    def run(self, *coros):
+        """ Pass in all the coroutines you want to run, it will wrap each one
+            in a task, run it and wait for the result. Retuen a list with all
+            results, this are returned in the same order coros are passed in. """
+        tasks = [
+            asyncio.ensure_future(coro()) for coro in coros
+        ]
+        done, _ = self.loop.run_until_complete(asyncio.wait(tasks))
+        return [t.result() for t in done]
