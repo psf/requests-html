@@ -210,7 +210,7 @@ once.</p>
 <p>These classes are the main interface to <code class="docutils literal notranslate"><span class="pre">requests-html</span></code>:</p>
 <dl class="class">
 <dt id="requests_html.HTML">
-<em class="property">class </em><code class="descclassname">requests_html.</code><code class="descname">HTML</code><span class="sig-paren">(</span><em>*, url: str = 'https://example.org/', html: Union[str, bytes], default_encoding: str = 'utf-8'</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/requests_html.html#HTML"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#requests_html.HTML" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">requests_html.</code><code class="descname">HTML</code><span class="sig-paren">(</span><em>*, session: Union[_ForwardRef('HTTPSession'), _ForwardRef('AsyncHTMLSession')] = None, url: str = 'https://example.org/', html: Union[str, bytes], default_encoding: str = 'utf-8'</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/requests_html.html#HTML"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#requests_html.HTML" title="Permalink to this definition">¶</a></dt>
 <dd><p>An HTML document, ready for parsing.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -306,14 +306,6 @@ for more details.</p>
 <a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> or <a class="reference internal" href="#requests_html.HTML" title="requests_html.HTML"><code class="xref py py-class docutils literal notranslate"><span class="pre">HTML</span></code></a>.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="requests_html.HTML.next">
-<code class="descname">next</code><span class="sig-paren">(</span><em>fetch: bool = False</em><span class="sig-paren">)</span> &#x2192; Union[_ForwardRef('HTML'), typing.List[str]]<a class="headerlink" href="#requests_html.HTML.next" title="Permalink to this definition">¶</a></dt>
-<dd><p>Attempts to find the next page, if there is one. If <code class="docutils literal notranslate"><span class="pre">fetch</span></code>
-is <code class="docutils literal notranslate"><span class="pre">True</span></code> (default), returns <a class="reference internal" href="#requests_html.HTML" title="requests_html.HTML"><code class="xref py py-class docutils literal notranslate"><span class="pre">HTML</span></code></a> object of
-next page. If <code class="docutils literal notranslate"><span class="pre">fetch</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>, simply returns the next URL.</p>
-</dd></dl>
-
 <dl class="attribute">
 <dt id="requests_html.HTML.pq">
 <code class="descname">pq</code><a class="headerlink" href="#requests_html.HTML.pq" title="Permalink to this definition">¶</a></dt>
@@ -330,7 +322,7 @@ of the <a class="reference internal" href="#requests_html.Element" title="reques
 
 <dl class="method">
 <dt id="requests_html.HTML.render">
-<code class="descname">render</code><span class="sig-paren">(</span><em>retries: int = 8</em>, <em>script: str = None</em>, <em>wait: float = 0.2</em>, <em>scrolldown=False</em>, <em>sleep: int = 0</em>, <em>reload: bool = True</em>, <em>timeout: Union[float</em>, <em>int] = 8.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/requests_html.html#HTML.render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#requests_html.HTML.render" title="Permalink to this definition">¶</a></dt>
+<code class="descname">render</code><span class="sig-paren">(</span><em>retries: int = 8</em>, <em>script: str = None</em>, <em>wait: float = 0.2</em>, <em>scrolldown=False</em>, <em>sleep: int = 0</em>, <em>reload: bool = True</em>, <em>timeout: Union[float</em>, <em>int] = 8.0</em>, <em>keep_page: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/requests_html.html#HTML.render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#requests_html.HTML.render" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reloads the response in Chromium, and replaces HTML content
 with an updated version, with JavaScript executed.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -344,6 +336,7 @@ with an updated version, with JavaScript executed.</p>
 <li><strong>scrolldown</strong> – Integer, if provided, of how many times to page down.</li>
 <li><strong>sleep</strong> – Integer, if provided, of how many long to sleep after initial render.</li>
 <li><strong>reload</strong> – If <code class="docutils literal notranslate"><span class="pre">False</span></code>, content will not be loaded from the browser, but will be provided from memory.</li>
+<li><strong>keep_page</strong> – If <code class="docutils literal notranslate"><span class="pre">True</span></code> will allow you to interact with the browser page through <code class="docutils literal notranslate"><span class="pre">r.html.page</span></code>.</li>
 </ul>
 </td>
 </tr>
@@ -372,6 +365,8 @@ runtime. Example:</p>
 <span class="go">{&#39;width&#39;: 800, &#39;height&#39;: 600, &#39;deviceScaleFactor&#39;: 1}</span>
 </pre></div>
 </div>
+<p>Warning: If you use keep_page, you’re responsable for closing each page, since
+opening to many at scale may crach the browser.</p>
 <p>Warning: the first time you run this method, it will download
 Chromium into your home directory (<code class="docutils literal notranslate"><span class="pre">~/.pyppeteer</span></code>).</p>
 </dd></dl>
@@ -546,14 +541,6 @@ for more details.</p>
 <a class="reference internal" href="#requests_html.Element" title="requests_html.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> or <a class="reference internal" href="#requests_html.HTML" title="requests_html.HTML"><code class="xref py py-class docutils literal notranslate"><span class="pre">HTML</span></code></a>.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="requests_html.Element.next">
-<code class="descname">next</code><span class="sig-paren">(</span><em>fetch: bool = False</em><span class="sig-paren">)</span> &#x2192; Union[_ForwardRef('HTML'), typing.List[str]]<a class="headerlink" href="#requests_html.Element.next" title="Permalink to this definition">¶</a></dt>
-<dd><p>Attempts to find the next page, if there is one. If <code class="docutils literal notranslate"><span class="pre">fetch</span></code>
-is <code class="docutils literal notranslate"><span class="pre">True</span></code> (default), returns <a class="reference internal" href="#requests_html.HTML" title="requests_html.HTML"><code class="xref py py-class docutils literal notranslate"><span class="pre">HTML</span></code></a> object of
-next page. If <code class="docutils literal notranslate"><span class="pre">fetch</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>, simply returns the next URL.</p>
-</dd></dl>
-
 <dl class="attribute">
 <dt id="requests_html.Element.pq">
 <code class="descname">pq</code><a class="headerlink" href="#requests_html.Element.pq" title="Permalink to this definition">¶</a></dt>
@@ -654,8 +641,8 @@ style. Defaults to a Chrome-style User-Agent.</p>
 amongst other things.</p>
 <dl class="method">
 <dt id="requests_html.HTMLSession.close">
-<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#requests_html.HTMLSession.close" title="Permalink to this definition">¶</a></dt>
-<dd><p>Closes all adapters and as such the session</p>
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/requests_html.html#HTMLSession.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#requests_html.HTMLSession.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>If a browser was created close it first.</p>
 </dd></dl>
 
 <dl class="method">
