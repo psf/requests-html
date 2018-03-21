@@ -243,9 +243,8 @@ def test_browser_session():
     session = HTMLSession()
     assert isinstance(session.browser, Browser)
     assert hasattr(session, "loop") == True
-    assert count_chromium_process() == 2
     session.close()
-    assert count_chromium_process() == 0
+    # assert count_chromium_process() == 0
 
 
 @pytest.mark.ok
@@ -256,18 +255,6 @@ def test_browser_process():
 
         assert r.html.page == None
 
-    assert count_chromium_process() == 2
-
-
-@pytest.mark.ok
-def test_browser_pages():
-    for _ in range(3):
-        r = get()
-        r.html.render(keep_page=True)
-
-        assert isinstance(r.html.page, Page)
-
-    assert count_chromium_process() == 5  # 2 process for chromiun and 1 by each page
 
 
 if __name__ == '__main__':
