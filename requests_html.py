@@ -569,14 +569,14 @@ class HTML(BaseParser):
             except TimeoutError:
                 return None
 
-        self.session.browser  # Automatycally create a event loop and browser
+        self.session.browser  # Automatically create a event loop and browser
         content = None
 
         # Automatically set Reload to False, if example URL is being used.
         if self.url == DEFAULT_URL:
             reload = False
 
-        for i in range(retries):
+        for _ in range(retries):
             if not content:
                 try:
 
@@ -694,7 +694,7 @@ class AsyncHTMLSession(requests.Session):
                  mock_browser: bool = True, *args, **kwargs):
         """ Set or create an event loop and a thread pool.
 
-            :param loop: Asyncio lopp to use.
+            :param loop: Asyncio loop to use.
             :param workers: Amount of threads to use for executing async calls.
                 If not pass it will default to the number of processors on the
                 machine, multiplied by 5. """
