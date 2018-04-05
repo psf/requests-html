@@ -159,7 +159,7 @@ class BaseParser:
             try:
                 self._lxml = soup_parse(self.html, features='html.parser')
             except ValueError:
-                self._lxml = lxml.html.fromstring(self.html)
+                self._lxml = lxml.html.fromstring(self.raw_html)
 
         return self._lxml
 
