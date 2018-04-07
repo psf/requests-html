@@ -102,7 +102,7 @@ class BaseParser:
         (`learn more <http://www.diveintopython3.net/strings.html>`_).
         """
         if self._html:
-            return self.raw_html.decode(self.encoding)
+            return self.raw_html.decode(self.encoding, errors='replace')
         else:
             return etree.tostring(self.element, encoding='unicode').strip()
 
@@ -128,7 +128,7 @@ class BaseParser:
             self._encoding = html_to_unicode(self.default_encoding, self._html)[0]
             # Fall back to requests' detected encoding if decode fails.
             try:
-                self.raw_html.decode(self.encoding)
+                self.raw_html.decode(self.encoding, errors='replace')
             except UnicodeDecodeError:
                 self._encoding = self.default_encoding
 
