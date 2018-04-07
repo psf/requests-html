@@ -527,7 +527,7 @@ class HTML(BaseParser):
             >>> r.html.render(script=script)
             {'width': 800, 'height': 600, 'deviceScaleFactor': 1}
 
-        Warning: If you use keep_page, you're responsable for closing each page, since
+        Warning: If you use keep_page, you're responsible for closing each page, since
         opening to many at scale may crach the browser.
 
         Warning: the first time you run this method, it will download
@@ -569,7 +569,7 @@ class HTML(BaseParser):
             except TimeoutError:
                 return None
 
-        self.session.browser  # Automatycally create a event loop and browser
+        self.session.browser  # Automatycally create an event loop and browser
         content = None
 
         # Automatically set Reload to False, if example URL is being used.
@@ -694,7 +694,7 @@ class AsyncHTMLSession(requests.Session):
                  mock_browser: bool = True, *args, **kwargs):
         """ Set or create an event loop and a thread pool.
 
-            :param loop: Asyncio lopp to use.
+            :param loop: Asyncio loop to use.
             :param workers: Amount of threads to use for executing async calls.
                 If not pass it will default to the number of processors on the
                 machine, multiplied by 5. """
