@@ -146,7 +146,7 @@ class BaseParser:
         of the :class:`Element <Element>` or :class:`HTML <HTML>`.
         """
         if self._pq is None:
-            self._pq = PyQuery(self.html)
+            self._pq = PyQuery(self.lxml)
 
         return self._pq
 
