@@ -486,7 +486,7 @@ class HTML(BaseParser):
     def add_next_symbol(self, next_symbol):
         self.next_symbol.append(next_symbol)
 
-    def render(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False):
+    def render(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False, headers: dict = {}):
         """Reloads the response in Chromium, and replaces HTML content
         with an updated version, with JavaScript executed.
 
@@ -497,6 +497,7 @@ class HTML(BaseParser):
         :param sleep: Integer, if provided, of how many long to sleep after initial render.
         :param reload: If ``False``, content will not be loaded from the browser, but will be provided from memory.
         :param keep_page: If ``True`` will allow you to interact with the browser page through ``r.html.page``.
+        :param headers: The additional headers added to the page.
 
         If ``scrolldown`` is specified, the page will scrolldown the specified
         number of times, after sleeping the specified amount of time
@@ -536,6 +537,10 @@ class HTML(BaseParser):
         async def _async_render(*, url: str, script: str = None, scrolldown, sleep: int, wait: float, reload, content: Optional[str], timeout: Union[float, int], keep_page: bool):
             try:
                 page = await self.session.browser.newPage()
+
+                # Add additional headers to the page
+                if headers:
+                    await page.setExtraHTTPHeaders(headers)
 
                 # Wait before rendering the page, to prevent timeouts.
                 await asyncio.sleep(wait)
