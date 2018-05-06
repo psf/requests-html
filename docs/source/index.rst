@@ -169,7 +169,7 @@ Let's grab some text that's rendered by JavaScript:
 
 Note, the first time you ever run the ``render()`` method, it will download
 Chromium into your home directory (e.g. ``~/.pyppeteer/``). This only happens
-once.
+once. You may also need to install a few `Linux packages <https://github.com/miyakogi/pyppeteer/issues/60>`_ to get pyppeteer working.
 
 Pagination
 ==========
