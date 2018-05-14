@@ -414,7 +414,7 @@ class HTML(BaseParser):
         if isinstance(html, str):
             html = html.encode(DEFAULT_ENCODING)
 
-        super(HTML, self).__init__(
+        super().__init__(
             # Convert unicode HTML to bytes.
             element=PyQuery(html)('html') or PyQuery(f'<html>{html}</html>')('html'),
             html=html,
@@ -426,7 +426,7 @@ class HTML(BaseParser):
         self.next_symbol = DEFAULT_NEXT_SYMBOL
 
     def __repr__(self) -> str:
-        return f"<HTML url={self.url!r}>"
+        return f"<{self.__class__.__name__} url={self.url!r}>"
 
     def _next(self, fetch: bool = False, next_symbol: _NextSymbol = DEFAULT_NEXT_SYMBOL) -> _Next:
         """Attempts to find the next page, if there is one. If ``fetch``
@@ -589,7 +589,7 @@ class HTML(BaseParser):
         if not content:
             raise MaxRetries("Unable to render the page. Try increasing timeout")
 
-        html = HTML(url=self.url, html=content.encode(DEFAULT_ENCODING), default_encoding=DEFAULT_ENCODING)
+        html = self.__class__(url=self.url, html=content.encode(DEFAULT_ENCODING), default_encoding=DEFAULT_ENCODING)
         self.__dict__.update(html.__dict__)
         self.page = page
         return result
@@ -608,7 +608,7 @@ class HTMLResponse(requests.Response):
     @property
     def html(self) -> HTML:
         if not self._html:
-            self._html = HTML(session=self.session, url=self.url, html=self.content, default_encoding=self.encoding)
+            self._html = self.session.html_handler(session=self.session, url=self.url, html=self.content, default_encoding=self.encoding)
 
         return self._html
 
@@ -645,7 +645,7 @@ class HTMLSession(requests.Session):
     amongst other things.
     """
 
-    def __init__(self, mock_browser=True):
+    def __init__(self, mock_browser=True, html_handler=HTML):
         super(HTMLSession, self).__init__()
 
         # Mock a web browser's user agent.
@@ -653,6 +653,7 @@ class HTMLSession(requests.Session):
             self.headers['User-Agent'] = user_agent()
 
         self.hooks = {'response': self._handle_response}
+        self.html_handler = html_handler
 
     @staticmethod
     def _handle_response(response, **kwargs) -> HTMLResponse:
@@ -691,7 +692,7 @@ class AsyncHTMLSession(requests.Session):
     """ An async consumable session. """
 
     def __init__(self, loop=None, workers=None,
-                 mock_browser: bool = True, *args, **kwargs):
+                 mock_browser: bool = True, html_handler=HTML, *args, **kwargs):
         """ Set or create an event loop and a thread pool.
 
             :param loop: Asyncio lopp to use.
@@ -708,6 +709,7 @@ class AsyncHTMLSession(requests.Session):
 
         self.loop = loop or asyncio.get_event_loop()
         self.thread_pool = ThreadPoolExecutor(max_workers=workers)
+        self.html_handler = html_handler
 
     def response_hook(self, response, **kwargs) -> HTMLResponse:
         """ Change response enconding and replace it by a HTMLResponse. """
