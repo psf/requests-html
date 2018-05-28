@@ -292,10 +292,18 @@ class BaseParser:
         """All found links on page, in as–is form."""
 
         def gen():
-            for link in self.find('a'):
+            href_list = []
 
+            for link in self.find('a') + self.find('link'):
+                href = link.attrs.get('href', '').strip()
+                href_list.append(href)
+
+            for link in self.find('script') + self.find('img'):
+                href = link.attrs.get('src', '').strip()
+                href_list.append(href)
+
+            for href in href_list:
                 try:
-                    href = link.attrs['href'].strip()
                     if href and not (href.startswith('#') and self.skip_anchors) and not href.startswith(('javascript:', 'mailto:')):
                         yield href
                 except KeyError:
