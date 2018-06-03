@@ -528,7 +528,7 @@ class HTML(BaseParser):
             {'width': 800, 'height': 600, 'deviceScaleFactor': 1}
 
         Warning: If you use keep_page, you're responsable for closing each page, since
-        opening to many at scale may crach the browser.
+        opening to many at scale may crash the browser.
 
         Warning: the first time you run this method, it will download
         Chromium into your home directory (``~/.pyppeteer``).
