@@ -1,4 +1,2 @@
-docs/source/_templates/hacks.html linguist-vendored=false
-docs/source/_templates/sidebarintro.html linguist-vendored=false
-docs/source/_templates/sidebarlogo.html linguist-vendored=false
-tests/python.html linguist-vendored=false
+docs/source/_templates/*.html linguist-vendored=false
+tests/*.html linguist-vendored=false
