@@ -378,6 +378,7 @@ class Element(BaseParser):
     def __init__(self, *, element, url: _URL, default_encoding: _DefaultEncoding = None) -> None:
         super(Element, self).__init__(element=element, url=url, default_encoding=default_encoding)
         self.element = element
+        self.tag = element.tag
         self._attrs = None
 
     def __repr__(self) -> str:
