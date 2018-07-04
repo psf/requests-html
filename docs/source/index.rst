@@ -110,6 +110,13 @@ Crab an :class:`Element <Element>`'s root tag name:
    >>> about.tag
    'li'
 
+Show the line number that an :class:`Element <Element>`'s root tag located in:
+
+.. code-block:: pycon
+
+    >>> about.lineno
+    249
+
 Select an :class:`Element <Element>` list within an :class:`Element <Element>`:
 
 .. code-block:: pycon
