@@ -155,6 +155,8 @@ def test_anchor_links():
     ('http://example.com/foo/', 'test.html', 'http://example.com/foo/test.html'),
     ('http://example.com/foo/bar', 'test.html', 'http://example.com/foo/test.html'),
     ('http://example.com/foo/', '/test.html', 'http://example.com/test.html'),
+    ('http://example.com/foo.html', '?test=val', 'http://example.com/foo.html?test=val'),
+    ('http://example.com/foo/?some=var', 'test.html', 'http://example.com/foo/test.html'),
     ('http://example.com/', 'http://xkcd.com/about/', 'http://xkcd.com/about/'),
     ('http://example.com/', '//xkcd.com/about/', 'http://xkcd.com/about/'),
 ])
