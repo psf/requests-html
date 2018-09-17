@@ -9,6 +9,8 @@ Requests-HTML: HTML Parsing for Humans™
 This library intends to make parsing HTML (e.g. scraping the web) as
 simple and intuitive as possible.
 
+**If you're interested in financially supporting Kenneth Reitz open source, consider [visiting this link](https://cash.me/$KennethReitz). Your support helps tremendously with sustainability of motivation, as Open Source is no longer part of my day job.**
+
 When using this library you automatically get:
 
 - **Full JavaScript support**!
