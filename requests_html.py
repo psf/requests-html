@@ -102,7 +102,7 @@ class BaseParser:
         (`learn more <http://www.diveintopython3.net/strings.html>`_).
         """
         if self._html:
-            return self.raw_html.decode(self.encoding)
+            return self.raw_html.decode(self.encoding, errors='replace')
         else:
             return etree.tostring(self.element, encoding='unicode').strip()
 
@@ -128,7 +128,7 @@ class BaseParser:
             self._encoding = html_to_unicode(self.default_encoding, self._html)[0]
             # Fall back to requests' detected encoding if decode fails.
             try:
-                self.raw_html.decode(self.encoding)
+                self.raw_html.decode(self.encoding, errors='replace')
             except UnicodeDecodeError:
                 self._encoding = self.default_encoding
 
@@ -146,7 +146,7 @@ class BaseParser:
         of the :class:`Element <Element>` or :class:`HTML <HTML>`.
         """
         if self._pq is None:
-            self._pq = PyQuery(self.html)
+            self._pq = PyQuery(self.lxml)
 
         return self._pq
 
@@ -159,7 +159,7 @@ class BaseParser:
             try:
                 self._lxml = soup_parse(self.html, features='html.parser')
             except ValueError:
-                self._lxml = lxml.html.fromstring(self.html)
+                self._lxml = lxml.html.fromstring(self.raw_html)
 
         return self._lxml
 
@@ -378,6 +378,8 @@ class Element(BaseParser):
     def __init__(self, *, element, url: _URL, default_encoding: _DefaultEncoding = None) -> None:
         super(Element, self).__init__(element=element, url=url, default_encoding=default_encoding)
         self.element = element
+        self.tag = element.tag
+        self.lineno = element.sourceline
         self._attrs = None
 
     def __repr__(self) -> str:
@@ -408,7 +410,7 @@ class HTML(BaseParser):
     :param default_encoding: Which encoding to default to.
     """
 
-    def __init__(self, *, session: Union['HTTPSession', 'AsyncHTMLSession'] = None, url: str = DEFAULT_URL, html: _HTML, default_encoding: str = DEFAULT_ENCODING) -> None:
+    def __init__(self, *, session: Union['HTMLSession', 'AsyncHTMLSession'] = None, url: str = DEFAULT_URL, html: _HTML, default_encoding: str = DEFAULT_ENCODING) -> None:
 
         # Convert incoming unicode HTML into bytes.
         if isinstance(html, str):
@@ -527,9 +529,6 @@ class HTML(BaseParser):
             >>> r.html.render(script=script)
             {'width': 800, 'height': 600, 'deviceScaleFactor': 1}
 
-        Warning: If you use keep_page, you're responsable for closing each page, since
-        opening to many at scale may crach the browser.
-
         Warning: the first time you run this method, it will download
         Chromium into your home directory (``~/.pyppeteer``).
         """
@@ -567,16 +566,18 @@ class HTML(BaseParser):
                     page = None
                 return content, result, page
             except TimeoutError:
+                await page.close()
+                page = None
                 return None
 
-        self.session.browser  # Automatycally create a event loop and browser
+        self.session.browser  # Automatically create a event loop and browser
         content = None
 
         # Automatically set Reload to False, if example URL is being used.
         if self.url == DEFAULT_URL:
             reload = False
 
-        for i in range(retries):
+        for _ in range(retries):
             if not content:
                 try:
 
@@ -645,7 +646,7 @@ class HTMLSession(requests.Session):
     amongst other things.
     """
 
-    def __init__(self, mock_browser=True, ignoreHTTPSErrors=False):
+    def __init__(self, mock_browser=True, verify=False):
         super(HTMLSession, self).__init__()
 
         # Mock a web browser's user agent.
@@ -654,6 +655,8 @@ class HTMLSession(requests.Session):
 
         self.hooks = {'response': self._handle_response}
         self.ignoreHTTPSErrors = ignoreHTTPSErrors
+
+        self.__browser_args = browser_args
 
     @staticmethod
     def _handle_response(response, **kwargs) -> HTMLResponse:
@@ -678,7 +681,7 @@ class HTMLSession(requests.Session):
     def browser(self):
         if not hasattr(self, "_browser"):
             self.loop = asyncio.get_event_loop()
-            self._browser = self.loop.run_until_complete(pyppeteer.launch(ignoreHTTPSErrors=self.ignoreHTTPSErrors, headless=True, args=['--no-sandbox']))
+            self._browser = self.loop.run_until_complete(pyppeteer.launch(ignoreHTTPSErrors=self.verify, headless=True, args=['--no-sandbox']))
         return self._browser
 
     def close(self):
@@ -695,7 +698,7 @@ class AsyncHTMLSession(requests.Session):
                  mock_browser: bool = True, *args, **kwargs):
         """ Set or create an event loop and a thread pool.
 
-            :param loop: Asyncio lopp to use.
+            :param loop: Asyncio loop to use.
             :param workers: Amount of threads to use for executing async calls.
                 If not pass it will default to the number of processors on the
                 machine, multiplied by 5. """
