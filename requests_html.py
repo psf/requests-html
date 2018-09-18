@@ -646,7 +646,7 @@ class HTMLSession(requests.Session):
     amongst other things.
     """
 
-    def __init__(self, mock_browser=True, verify=False):
+    def __init__(self, mock_browser=True, verify=False, browser_args=['--no-sandbox']):
         super(HTMLSession, self).__init__()
 
         # Mock a web browser's user agent.
@@ -654,7 +654,6 @@ class HTMLSession(requests.Session):
             self.headers['User-Agent'] = user_agent()
 
         self.hooks = {'response': self._handle_response}
-        self.ignoreHTTPSErrors = ignoreHTTPSErrors
 
         self.__browser_args = browser_args
 
@@ -681,7 +680,7 @@ class HTMLSession(requests.Session):
     def browser(self):
         if not hasattr(self, "_browser"):
             self.loop = asyncio.get_event_loop()
-            self._browser = self.loop.run_until_complete(pyppeteer.launch(ignoreHTTPSErrors=self.verify, headless=True, args=['--no-sandbox']))
+            self._browser = self.loop.run_until_complete(pyppeteer.launch(ignoreHTTPSErrors=self.verify, headless=True, args=self.__browser_args))
         return self._browser
 
     def close(self):
