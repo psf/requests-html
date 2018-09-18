@@ -577,7 +577,7 @@ class HTML(BaseParser):
         if self.url == DEFAULT_URL:
             reload = False
 
-        for i in range(retries):
+        for _ in range(retries):
             if not content:
                 try:
 
