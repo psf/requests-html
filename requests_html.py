@@ -654,6 +654,24 @@ class HTMLSession(requests.Session):
             self.headers['User-Agent'] = user_agent()
 
         self.hooks = {'response': self._handle_response}
+        
+    def get(self, *args, **kwargs) -> HTMLResponse:
+        return super(HTMLSession, self).get(*args, **kwargs)
+
+    def post(self, *args, **kwargs) -> HTMLResponse:
+        return super(HTMLSession, self).post(*args, **kwargs)
+
+    def put(self, *args, **kwargs) -> HTMLResponse:
+        return super(HTMLSession, self).post(*args, **kwargs)
+
+    def patch(self, *args, **kwargs) -> HTMLResponse:
+        return super(HTMLSession, self).post(*args, **kwargs)
+
+    def head(self, *args, **kwargs) -> HTMLResponse:
+        return super(HTMLSession, self).post(*args, **kwargs)
+
+    def options(self, *args, **kwargs) -> HTMLResponse:
+        return super(HTMLSession, self).post(*args, **kwargs)
 
         self.__browser_args = browser_args
 
