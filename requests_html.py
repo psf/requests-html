@@ -410,7 +410,7 @@ class HTML(BaseParser):
     :param default_encoding: Which encoding to default to.
     """
 
-    def __init__(self, *, session: Union['HTMLSession', 'AsyncHTMLSession'] = None, url: str = DEFAULT_URL, html: _HTML, default_encoding: str = DEFAULT_ENCODING) -> None:
+    def __init__(self, *, session: Union['HTMLSession', 'AsyncHTMLSession'] = None, url: str = DEFAULT_URL, html: _HTML, default_encoding: str = DEFAULT_ENCODING, async_: bool = False) -> None:
 
         # Convert incoming unicode HTML into bytes.
         if isinstance(html, str):
@@ -423,14 +423,14 @@ class HTML(BaseParser):
             url=url,
             default_encoding=default_encoding
         )
-        self.session = session or HTMLSession()
+        self.session = session or async_ and AsyncHTMLSession() or HTMLSession()
         self.page = None
         self.next_symbol = DEFAULT_NEXT_SYMBOL
 
     def __repr__(self) -> str:
         return f"<HTML url={self.url!r}>"
 
-    def _next(self, fetch: bool = False, next_symbol: _NextSymbol = DEFAULT_NEXT_SYMBOL) -> _Next:
+    def next(self, fetch: bool = False, next_symbol: _NextSymbol = DEFAULT_NEXT_SYMBOL) -> _Next:
         """Attempts to find the next page, if there is one. If ``fetch``
         is ``True`` (default), returns :class:`HTML <HTML>` object of
         next page. If ``fetch`` is ``False``, simply returns the next URL.
@@ -478,15 +478,65 @@ class HTML(BaseParser):
         while True:
             yield next
             try:
-                next = next._next(fetch=True, next_symbol=self.next_symbol).html
+                next = next.next(fetch=True, next_symbol=self.next_symbol).html
             except AttributeError:
                 break
 
     def __next__(self):
-        return self._next(fetch=True, next_symbol=self.next_symbol).html
+        return self.next(fetch=True, next_symbol=self.next_symbol).html
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        while True:
+            url = self.next(fetch=False, next_symbol=self.next_symbol)
+            if not url:
+                break
+            response = await self.session.get(url)
+            return response.html
 
     def add_next_symbol(self, next_symbol):
         self.next_symbol.append(next_symbol)
+
+    async def _async_render(self, *, url: str, script: str = None, scrolldown, sleep: int, wait: float, reload, content: Optional[str], timeout: Union[float, int], keep_page: bool):
+        """ Handle page creation and js rendering. Internal use for render/arender methods. """
+        try:
+            page = await self.browser.newPage()
+
+            # Wait before rendering the page, to prevent timeouts.
+            await asyncio.sleep(wait)
+
+            # Load the given page (GET request, obviously.)
+            if reload:
+                await page.goto(url, options={'timeout': int(timeout * 1000)})
+            else:
+                await page.goto(f'data:text/html,{self.html}', options={'timeout': int(timeout * 1000)})
+
+            result = None
+            if script:
+                result = await page.evaluate(script)
+
+            if scrolldown:
+                for _ in range(scrolldown):
+                    await page._keyboard.down('PageDown')
+                    await asyncio.sleep(sleep)
+            else:
+                await asyncio.sleep(sleep)
+
+            if scrolldown:
+                await page._keyboard.up('PageDown')
+
+            # Return the content of the page, JavaScript evaluated.
+            content = await page.content()
+            if not keep_page:
+                await page.close()
+                page = None
+            return content, result, page
+        except TimeoutError:
+            await page.close()
+            page = None
+            return None
 
     def render(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False):
         """Reloads the response in Chromium, and replaces HTML content
@@ -532,45 +582,36 @@ class HTML(BaseParser):
         Warning: the first time you run this method, it will download
         Chromium into your home directory (``~/.pyppeteer``).
         """
-        async def _async_render(*, url: str, script: str = None, scrolldown, sleep: int, wait: float, reload, content: Optional[str], timeout: Union[float, int], keep_page: bool):
-            try:
-                page = await self.session.browser.newPage()
 
-                # Wait before rendering the page, to prevent timeouts.
-                await asyncio.sleep(wait)
+        self.browser = self.session.browser  # Automatycally create a event loop and browser
+        content = None
 
-                # Load the given page (GET request, obviously.)
-                if reload:
-                    await page.goto(url, options={'timeout': int(timeout * 1000)})
-                else:
-                    await page.goto(f'data:text/html,{self.html}', options={'timeout': int(timeout * 1000)})
+        # Automatically set Reload to False, if example URL is being used.
+        if self.url == DEFAULT_URL:
+            reload = False
 
-                result = None
-                if script:
-                    result = await page.evaluate(script)
+        for i in range(retries):
+            if not content:
+                try:
 
-                if scrolldown:
-                    for _ in range(scrolldown):
-                        await page._keyboard.down('PageDown')
-                        await asyncio.sleep(sleep)
-                else:
-                    await asyncio.sleep(sleep)
+                    content, result, page = self.session.loop.run_until_complete(self._async_render(url=self.url, script=script, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout, keep_page=keep_page))
+                except TypeError:
+                    pass
+            else:
+                break
 
-                if scrolldown:
-                    await page._keyboard.up('PageDown')
+        if not content:
+            raise MaxRetries("Unable to render the page. Try increasing timeout")
 
-                # Return the content of the page, JavaScript evaluated.
-                content = await page.content()
-                if not keep_page:
-                    await page.close()
-                    page = None
-                return content, result, page
-            except TimeoutError:
-                await page.close()
-                page = None
-                return None
+        html = HTML(url=self.url, html=content.encode(DEFAULT_ENCODING), default_encoding=DEFAULT_ENCODING)
+        self.__dict__.update(html.__dict__)
+        self.page = page
+        return result
 
-        self.session.browser  # Automatically create a event loop and browser
+    async def arender(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False):
+        """ Async version of render. Takes same parameters. """
+
+        self.browser = await self.session.browser
         content = None
 
         # Automatically set Reload to False, if example URL is being used.
@@ -581,7 +622,7 @@ class HTML(BaseParser):
             if not content:
                 try:
 
-                    content, result, page = self.session.loop.run_until_complete(_async_render(url=self.url, script=script, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout, keep_page=keep_page))
+                    content, result, page = await self._async_render(url=self.url, script=script, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout, keep_page=keep_page)
                 except TypeError:
                     pass
             else:
@@ -641,47 +682,48 @@ def _get_first_or_list(l, first=False):
         return l
 
 
-class HTMLSession(requests.Session):
-    """A consumable session, for cookie persistence and connection pooling,
+class BaseSession(requests.Session):
+    """ A consumable session, for cookie persistence and connection pooling,
     amongst other things.
     """
 
-    def __init__(self, mock_browser=True, verify=False):
-        super(HTMLSession, self).__init__()
+    def __init__(self, mock_browser : bool = True, verify : bool = False,
+                 browser_args : list = ['--no-sandbox']):
+        super().__init__()
 
         # Mock a web browser's user agent.
         if mock_browser:
             self.headers['User-Agent'] = user_agent()
 
-        self.hooks = {'response': self._handle_response}
-        self.ignoreHTTPSErrors = ignoreHTTPSErrors
+        self.hooks['response'].append(self.response_hook)
 
         self.__browser_args = browser_args
 
-    @staticmethod
-    def _handle_response(response, **kwargs) -> HTMLResponse:
-        """Requests HTTP Response handler. Attaches .html property to
-        class:`requests.Response <requests.Response>` objects.
-        """
+    def response_hook(self, response, **kwargs) -> HTMLResponse:
+        """ Change response enconding and replace it by a HTMLResponse. """
         if not response.encoding:
             response.encoding = DEFAULT_ENCODING
+        return HTMLResponse._from_response(response, self)
 
-        return response
+    @property
+    async def browser(self):
+        if not hasattr(self, "_browser"):
+            self._browser = await pyppeteer.launch(ignoreHTTPSErrors=self.verify, headless=True, args=self.__browser_args)
+        return self._browser
 
-    def request(self, *args, **kwargs) -> HTMLResponse:
-        """Makes an HTTP Request, with mocked User–Agent headers.
-        Returns a class:`HTTPResponse <HTTPResponse>`.
-        """
-        # Convert Request object into HTTPRequest object.
-        r = super(HTMLSession, self).request(*args, **kwargs)
 
-        return HTMLResponse._from_response(r, self)
+class HTMLSession(BaseSession):
+
+    def __init__(self, **kwargs):
+        super(HTMLSession, self).__init__(**kwargs)
 
     @property
     def browser(self):
         if not hasattr(self, "_browser"):
             self.loop = asyncio.get_event_loop()
-            self._browser = self.loop.run_until_complete(pyppeteer.launch(ignoreHTTPSErrors=self.verify, headless=True, args=['--no-sandbox']))
+            if self.loop.is_running():
+                raise RuntimeError("Cannot use HTMLSession within an existing event loop. Use AsyncHTMLSession instead.")
+            self._browser = self.loop.run_until_complete(super().browser)
         return self._browser
 
     def close(self):
@@ -691,7 +733,7 @@ class HTMLSession(requests.Session):
         super().close()
 
 
-class AsyncHTMLSession(requests.Session):
+class AsyncHTMLSession(BaseSession):
     """ An async consumable session. """
 
     def __init__(self, loop=None, workers=None,
@@ -704,21 +746,26 @@ class AsyncHTMLSession(requests.Session):
                 machine, multiplied by 5. """
         super().__init__(*args, **kwargs)
 
-        # Mock a web browser's user agent.
-        if mock_browser:
-            self.headers['User-Agent'] = user_agent()
-
-        self.hooks['response'].append(self.response_hook)
-
         self.loop = loop or asyncio.get_event_loop()
         self.thread_pool = ThreadPoolExecutor(max_workers=workers)
-
-    def response_hook(self, response, **kwargs) -> HTMLResponse:
-        """ Change response enconding and replace it by a HTMLResponse. """
-        response.encoding = DEFAULT_ENCODING
-        return HTMLResponse._from_response(response, self)
 
     def request(self, *args, **kwargs):
         """ Partial original request func and run it in a thread. """
         func = partial(super().request, *args, **kwargs)
         return self.loop.run_in_executor(self.thread_pool, func)
+
+    async def close(self):
+        """ If a browser was created close it first. """
+        if hasattr(self, "_browser"):
+            await self._browser.close()
+        super().close()
+
+    def run(self, *coros):
+        """ Pass in all the coroutines you want to run, it will wrap each one
+            in a task, run it and wait for the result. Retuen a list with all
+            results, this are returned in the same order coros are passed in. """
+        tasks = [
+            asyncio.ensure_future(coro()) for coro in coros
+        ]
+        done, _ = self.loop.run_until_complete(asyncio.wait(tasks))
+        return [t.result() for t in done]

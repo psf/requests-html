@@ -79,7 +79,7 @@ def test_containing():
     r = get()
 
     python = r.html.find(containing='python')
-    assert len(python) == 191
+    assert len(python) == 192
 
     for e in python:
         assert 'python' in e.full_text.lower()
@@ -194,6 +194,28 @@ def test_render():
 
 
 @pytest.mark.render
+@pytest.mark.asyncio
+async def test_async_render(async_get):
+    r = await async_get()
+    script = """
+    () => {
+        return {
+            width: document.documentElement.clientWidth,
+            height: document.documentElement.clientHeight,
+            deviceScaleFactor: window.devicePixelRatio,
+        }
+    }
+    """
+    val = await r.html.arender(script=script)
+    for value in ('width', 'height', 'deviceScaleFactor'):
+        assert value in val
+
+    about = r.html.find('#about', first=True)
+    assert len(about.links) == 6
+    await r.html.browser.close()
+
+
+@pytest.mark.render
 def test_bare_render():
     doc = """<a href='https://httpbin.org'>"""
     html = HTML(html=doc)
@@ -212,6 +234,29 @@ def test_bare_render():
 
     assert html.find('html')
     assert 'https://httpbin.org' in html.links
+
+
+@pytest.mark.render
+@pytest.mark.asyncio
+async def test_bare_arender():
+    doc = """<a href='https://httpbin.org'>"""
+    html = HTML(html=doc, async_=True)
+    script = """
+        () => {
+            return {
+                width: document.documentElement.clientWidth,
+                height: document.documentElement.clientHeight,
+                deviceScaleFactor: window.devicePixelRatio,
+            }
+        }
+    """
+    val = await html.arender(script=script, reload=False)
+    for value in ('width', 'height', 'deviceScaleFactor'):
+        assert value in val
+
+    assert html.find('html')
+    assert 'https://httpbin.org' in html.links
+    await html.browser.close()
 
 
 @pytest.mark.render
@@ -235,6 +280,29 @@ def test_bare_js_eval():
     assert html.find('#replace', first=True).text == 'yolo'
 
 
+@pytest.mark.render
+@pytest.mark.asyncio
+async def test_bare_js_async_eval():
+    doc = """
+    <!DOCTYPE html>
+    <html>
+    <body>
+    <div id="replace">This gets replaced</div>
+
+    <script type="text/javascript">
+      document.getElementById("replace").innerHTML = "yolo";
+    </script>
+    </body>
+    </html>
+    """
+
+    html = HTML(html=doc, async_=True)
+    await html.arender()
+
+    assert html.find('#replace', first=True).text == 'yolo'
+    await html.browser.close()
+
+
 @pytest.mark.ok
 def test_browser_session():
     """ Test browser instaces is created and properly close when session is closed.
@@ -248,6 +316,15 @@ def test_browser_session():
 
 
 @pytest.mark.ok
+@pytest.mark.asyncio
+async def test_browser_session_fail():
+    """ HTMLSession.browser should not be call within an existing event loop> """
+    session = HTMLSession()
+    with pytest.raises(RuntimeError):
+        session.browser
+
+
+@pytest.mark.ok
 def test_browser_process():
     for _ in range(3):
         r = get()
@@ -255,6 +332,14 @@ def test_browser_process():
 
         assert r.html.page == None
 
+
+@pytest.mark.ok
+@pytest.mark.asyncio
+async def test_async_browser_session():
+    session = AsyncHTMLSession()
+    browser = await session.browser
+    assert isinstance(browser, Browser)
+    await session.close()
 
 
 if __name__ == '__main__':
