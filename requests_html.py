@@ -146,7 +146,7 @@ class BaseParser:
         of the :class:`Element <Element>` or :class:`HTML <HTML>`.
         """
         if self._pq is None:
-            self._pq = PyQuery(self.html)
+            self._pq = PyQuery(self.lxml)
 
         return self._pq
 
@@ -159,7 +159,7 @@ class BaseParser:
             try:
                 self._lxml = soup_parse(self.html, features='html.parser')
             except ValueError:
-                self._lxml = lxml.html.fromstring(self.html)
+                self._lxml = lxml.html.fromstring(self.raw_html)
 
         return self._lxml
 
