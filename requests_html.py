@@ -76,15 +76,15 @@ class BaseParser:
 
     """
 
-    def __init__(self, *, element, default_encoding: _DefaultEncoding = None, html: _HTML = None, url: _URL) -> None:
+    def __init__(self, *, element, default_encoding: _DefaultEncoding = None, html: _HTML = None, url: _URL, pq: PyQuery = None) -> None:
         self.element = element
         self.url = url
         self.skip_anchors = True
         self.default_encoding = default_encoding
+        self.pq = pq
         self._encoding = None
         self._html = html.encode(DEFAULT_ENCODING) if isinstance(html, str) else html
         self._lxml = None
-        self._pq = None
 
     @property
     def raw_html(self) -> _RawHTML:
@@ -139,16 +139,6 @@ class BaseParser:
     def encoding(self, enc: str) -> None:
         """Property setter for self.encoding."""
         self._encoding = enc
-
-    @property
-    def pq(self) -> PyQuery:
-        """`PyQuery <https://pythonhosted.org/pyquery/>`_ representation
-        of the :class:`Element <Element>` or :class:`HTML <HTML>`.
-        """
-        if self._pq is None:
-            self._pq = PyQuery(self.html)
-
-        return self._pq
 
     @property
     def lxml(self) -> HtmlElement:
@@ -371,12 +361,12 @@ class Element(BaseParser):
     """
 
     __slots__ = [
-        'element', 'url', 'skip_anchors', 'default_encoding', '_encoding',
-        '_html', '_lxml', '_pq', '_attrs', 'session'
+        'element', 'url', 'skip_anchors', 'default_encoding', 'pq', '_encoding',
+        '_html', '_lxml', '_attrs', 'session'
     ]
 
     def __init__(self, *, element, url: _URL, default_encoding: _DefaultEncoding = None) -> None:
-        super(Element, self).__init__(element=element, url=url, default_encoding=default_encoding)
+        super(Element, self).__init__(element=element, url=url, default_encoding=default_encoding, pq=PyQuery(element))
         self.element = element
         self.tag = element.tag
         self.lineno = element.sourceline
@@ -416,12 +406,14 @@ class HTML(BaseParser):
         if isinstance(html, str):
             html = html.encode(DEFAULT_ENCODING)
 
+        pq = PyQuery(html)
         super(HTML, self).__init__(
             # Convert unicode HTML to bytes.
-            element=PyQuery(html)('html') or PyQuery(f'<html>{html}</html>')('html'),
+            element=pq('html') or PyQuery(f'<html>{html}</html>')('html'),
             html=html,
             url=url,
-            default_encoding=default_encoding
+            default_encoding=default_encoding,
+            pq=pq
         )
         self.session = session or HTMLSession()
         self.page = None
