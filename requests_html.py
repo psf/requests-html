@@ -654,9 +654,9 @@ class HTMLSession(requests.Session):
             self.headers['User-Agent'] = user_agent()
 
         self.hooks = {'response': self._handle_response}
-        self.ignoreHTTPSErrors = ignoreHTTPSErrors
+        self.verify = verify
 
-        self.__browser_args = browser_args
+        self.__browser_args = browser_argsverify
 
     @staticmethod
     def _handle_response(response, **kwargs) -> HTMLResponse:
@@ -681,7 +681,7 @@ class HTMLSession(requests.Session):
     def browser(self):
         if not hasattr(self, "_browser"):
             self.loop = asyncio.get_event_loop()
-            self._browser = self.loop.run_until_complete(pyppeteer.launch(ignoreHTTPSErrors=self.verify, headless=True, args=['--no-sandbox']))
+            self._browser = self.loop.run_until_complete(pyppeteer.launch(ignoreHTTPSErrors=not(self.verify), headless=True, args=['--no-sandbox']))
         return self._browser
 
     def close(self):
