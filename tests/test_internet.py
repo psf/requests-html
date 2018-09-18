@@ -7,7 +7,6 @@ session = HTMLSession()
 def test_pagination():
     pages = (
         'https://xkcd.com/1957/',
-        'https://reddit.com/',
         'https://smile.amazon.com/',
         'https://theverge.com/archives'
     )
@@ -22,7 +21,6 @@ async def test_async_pagination(event_loop):
     asession = AsyncHTMLSession()
     pages = (
         'https://xkcd.com/1957/',
-        'https://reddit.com/',
         'https://smile.amazon.com/',
         'https://theverge.com/archives'
     )
