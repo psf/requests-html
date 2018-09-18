@@ -79,7 +79,7 @@ def test_containing():
     r = get()
 
     python = r.html.find(containing='python')
-    assert len(python) == 191
+    assert len(python) == 192
 
     for e in python:
         assert 'python' in e.full_text.lower()
