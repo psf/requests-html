@@ -696,7 +696,7 @@ class AsyncHTMLSession(requests.Session):
                  mock_browser: bool = True, *args, **kwargs):
         """ Set or create an event loop and a thread pool.
 
-            :param loop: Asyncio lopp to use.
+            :param loop: Asyncio loop to use.
             :param workers: Amount of threads to use for executing async calls.
                 If not pass it will default to the number of processors on the
                 machine, multiplied by 5. """
