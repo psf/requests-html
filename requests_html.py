@@ -349,17 +349,7 @@ class BaseParser:
             if result:
                 return result
 
-        # Parse the url to separate out the path
-        parsed = urlparse(self.url)._asdict()
-
-        # Remove any part of the path after the last '/'
-        parsed['path'] = '/'.join(parsed['path'].split('/')[:-1]) + '/'
-
-        # Reconstruct the url with the modified path
-        parsed = (v for v in parsed.values())
-        url = urlunparse(parsed)
-
-        return url
+        return self.url
 
 
 class Element(BaseParser):
