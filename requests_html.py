@@ -569,6 +569,8 @@ class HTML(BaseParser):
                     page = None
                 return content, result, page
             except TimeoutError:
+                await page.close()
+                page = None
                 return None
 
         self.session.browser  # Automatically create a event loop and browser
