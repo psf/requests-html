@@ -378,6 +378,8 @@ class Element(BaseParser):
     def __init__(self, *, element, url: _URL, default_encoding: _DefaultEncoding = None) -> None:
         super(Element, self).__init__(element=element, url=url, default_encoding=default_encoding)
         self.element = element
+        self.tag = element.tag
+        self.lineno = element.sourceline
         self._attrs = None
 
     def __repr__(self) -> str:
@@ -408,7 +410,7 @@ class HTML(BaseParser):
     :param default_encoding: Which encoding to default to.
     """
 
-    def __init__(self, *, session: Union['HTTPSession', 'AsyncHTMLSession'] = None, url: str = DEFAULT_URL, html: _HTML, default_encoding: str = DEFAULT_ENCODING) -> None:
+    def __init__(self, *, session: Union['HTMLSession', 'AsyncHTMLSession'] = None, url: str = DEFAULT_URL, html: _HTML, default_encoding: str = DEFAULT_ENCODING) -> None:
 
         # Convert incoming unicode HTML into bytes.
         if isinstance(html, str):
@@ -527,9 +529,6 @@ class HTML(BaseParser):
             >>> r.html.render(script=script)
             {'width': 800, 'height': 600, 'deviceScaleFactor': 1}
 
-        Warning: If you use keep_page, you're responsible for closing each page, since
-        opening to many at scale may crach the browser.
-
         Warning: the first time you run this method, it will download
         Chromium into your home directory (``~/.pyppeteer``).
         """
@@ -567,9 +566,11 @@ class HTML(BaseParser):
                     page = None
                 return content, result, page
             except TimeoutError:
+                await page.close()
+                page = None
                 return None
 
-        self.session.browser  # Automatycally create an event loop and browser
+        self.session.browser  # Automatically create a event loop and browser
         content = None
 
         # Automatically set Reload to False, if example URL is being used.
@@ -645,7 +646,7 @@ class HTMLSession(requests.Session):
     amongst other things.
     """
 
-    def __init__(self, mock_browser=True):
+    def __init__(self, mock_browser=True, browser_args=['--no-sandbox']):
         super(HTMLSession, self).__init__()
 
         # Mock a web browser's user agent.
@@ -653,6 +654,8 @@ class HTMLSession(requests.Session):
             self.headers['User-Agent'] = user_agent()
 
         self.hooks = {'response': self._handle_response}
+
+        self.__browser_args = browser_args
 
     @staticmethod
     def _handle_response(response, **kwargs) -> HTMLResponse:
@@ -677,7 +680,7 @@ class HTMLSession(requests.Session):
     def browser(self):
         if not hasattr(self, "_browser"):
             self.loop = asyncio.get_event_loop()
-            self._browser = self.loop.run_until_complete(pyppeteer.launch(headless=True, args=['--no-sandbox']))
+            self._browser = self.loop.run_until_complete(pyppeteer.launch(headless=True, args=self.__browser_args))
         return self._browser
 
     def close(self):
