@@ -569,7 +569,7 @@ class HTML(BaseParser):
             except TimeoutError:
                 return None
 
-        self.session.browser  # Automatycally create a event loop and browser
+        self.session.browser  # Automatically create a event loop and browser
         content = None
 
         # Automatically set Reload to False, if example URL is being used.
