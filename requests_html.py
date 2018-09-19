@@ -590,6 +590,7 @@ class HTML(BaseParser):
         if self.url == DEFAULT_URL:
             reload = False
 
+
         for i in range(retries):
             if not content:
                 try:
@@ -698,6 +699,9 @@ class BaseSession(requests.Session):
         self.hooks['response'].append(self.response_hook)
         self.verify = verify
 
+        self.__browser_args = browser_args
+
+
     def response_hook(self, response, **kwargs) -> HTMLResponse:
         """ Change response enconding and replace it by a HTMLResponse. """
         if not response.encoding:
@@ -708,6 +712,7 @@ class BaseSession(requests.Session):
     async def browser(self):
         if not hasattr(self, "_browser"):
             self._browser = await pyppeteer.launch(ignoreHTTPSErrors=not(self.verify), headless=True, args=self.__browser_args)
+
         return self._browser
 
 
