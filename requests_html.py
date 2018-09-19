@@ -698,8 +698,6 @@ class BaseSession(requests.Session):
         self.hooks['response'].append(self.response_hook)
         self.verify = verify
 
-        self.__browser_args = browser_argsverify
-
     def response_hook(self, response, **kwargs) -> HTMLResponse:
         """ Change response enconding and replace it by a HTMLResponse. """
         if not response.encoding:
