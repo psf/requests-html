@@ -688,7 +688,7 @@ class BaseSession(requests.Session):
     amongst other things.
     """
 
-    def __init__(self, mock_browser : bool = True, verify : bool = False,
+    def __init__(self, mock_browser : bool = True, verify : bool = True,
                  browser_args : list = ['--no-sandbox']):
         super().__init__()
 
