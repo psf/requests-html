@@ -55,7 +55,7 @@ Try async and get some sites at the same time:
     >>> async def get_google():
     ...    r = await asession.get('https://google.com/')
 
-    >>> result = session.run(get_pythonorg, get_reddit, get_google)
+    >>> result = asession.run(get_pythonorg, get_reddit, get_google)
 
 Grab a list of all links on the page, as–is (anchors excluded):
 
