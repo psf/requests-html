@@ -36,7 +36,6 @@ Make a GET request to 'python.org', using Requests:
 
     >>> from requests_html import HTMLSession
     >>> session = HTMLSession()
-
     >>> r = session.get('https://python.org/')
 
 Try async and get some sites at the same time:
@@ -45,17 +44,30 @@ Try async and get some sites at the same time:
 
     >>> from requests_html import AsyncHTMLSession
     >>> asession = AsyncHTMLSession()
-
     >>> async def get_pythonorg():
     ...    r = await asession.get('https://python.org/')
-
+	...    return r
+	...
     >>> async def get_reddit():
     ...    r = await asession.get('https://reddit.com/')
-
+	...    return r
+	...
     >>> async def get_google():
     ...    r = await asession.get('https://google.com/')
+	...    return r
+	...
+    >>> results = asession.run(get_pythonorg, get_reddit, get_google)
+	>>> results # check the requests all returned a 200 (success) code
+	[<Response [200]>, <Response [200]>, <Response [200]>]
+	>>> # Each item in the results list is a response object and can be interacted with as such
+	>>> for result in results: 
+	...     print(result.html.url)
+	... 
+	https://www.python.org/
+	https://www.google.com/
+	https://www.reddit.com/
 
-    >>> result = session.run(get_pythonorg, get_reddit, get_google)
+Note that the order of the objects in the results list represents the order they were returned in, not the order that the coroutines are passed to the ``run`` method, which is shown in the examply by the order being different. 
 
 Grab a list of all links on the page, as–is (anchors excluded):
 
@@ -133,7 +145,6 @@ More complex CSS Selector example (copied from Chrome dev tools):
 
     >>> r = session.get('https://github.com/')
     >>> sel = 'body > div.application-main > div.jumbotron.jumbotron-codelines > div > div > div.col-md-7.text-center.text-md-left > p'
-
     >>> print(r.html.find(sel, first=True).text)
     GitHub is a development platform inspired by the way you work. From open source to business, you can host and review code, manage projects, and build software alongside millions of other developers.
 
@@ -148,27 +159,75 @@ XPath is also supported:
 JavaScript Support
 ==================
 
-Let's grab some text that's rendered by JavaScript:
+Let's grab some text that's rendered by JavaScript. Until 2020, the Python 2.7 countdown clock (https://pythonclock.org) will serve as a good test page:
 
 .. code-block:: pycon
 
-    >>> r = session.get('http://python-requests.org')
+    >>> r = session.get('https://pythonclock.org')
+
+Let's try and see the dynamically rendered code (The countdown clock). To do that quickly at first, we'll search between the last text we see before it ('Python 2.7 will retire in...') and the first text we see after it ('Enable Guido Mode').
+
+.. code-block:: pycon
+
+	>>> r.html.search('Python 2.7 will retire in...{}Enable Guido Mode')[0]
+	'</h1>\n        </div>\n        <div class="python-27-clock"></div>\n        <div class="center">\n            <div class="guido-button-block">\n                <button class="js-guido-mode guido-button">'
+
+Notice the clock is missing. The ``render()`` method takes the response and renders the dynamic content just like a web browser would.
+
+.. code-block:: pycon
 
     >>> r.html.render()
+    >>> r.html.search('Python 2.7 will retire in...{}Enable Guido Mode')[0]
+    '</h1>\n        </div>\n        <div class="python-27-clock is-countdown"><span class="countdown-row countdown-show6"><span class="countdown-section"><span class="countdown-amount">1</span><span class="countdown-period">Year</span></span><span class="countdown-section"><span class="countdown-amount">2</span><span class="countdown-period">Months</span></span><span class="countdown-section"><span class="countdown-amount">28</span><span class="countdown-period">Days</span></span><span class="countdown-section"><span class="countdown-amount">16</span><span class="countdown-period">Hours</span></span><span class="countdown-section"><span class="countdown-amount">52</span><span class="countdown-period">Minutes</span></span><span class="countdown-section"><span class="countdown-amount">46</span><span class="countdown-period">Seconds</span></span></span></div>\n        <div class="center">\n            <div class="guido-button-block">\n                <button class="js-guido-mode guido-button">'
 
-    >>> r.html.search('Python 2 will retire in only {months} months!')['months']
-    '<time>25</time>'
+Let's clean it up a bit. This step is not needed, it just makes it a bit easier to visualise the returned html to see what we need to target to extract our required information. 
+
+.. code-block:: pycon
+
+	>>> from pprint import pprint
+	>>> pprint(r.html.search('Python 2.7 will retire in...{}Enable')[0])
+	('</h1>\n'
+ '        </div>\n'
+ '        <div class="python-27-clock is-countdown"><span class="countdown-row '
+ 'countdown-show6"><span class="countdown-section"><span '
+ 'class="countdown-amount">1</span><span '
+ 'class="countdown-period">Year</span></span><span '
+ 'class="countdown-section"><span class="countdown-amount">2</span><span '
+ 'class="countdown-period">Months</span></span><span '
+ 'class="countdown-section"><span class="countdown-amount">28</span><span '
+ 'class="countdown-period">Days</span></span><span '
+ 'class="countdown-section"><span class="countdown-amount">16</span><span '
+ 'class="countdown-period">Hours</span></span><span '
+ 'class="countdown-section"><span class="countdown-amount">52</span><span '
+ 'class="countdown-period">Minutes</span></span><span '
+ 'class="countdown-section"><span class="countdown-amount">46</span><span '
+ 'class="countdown-period">Seconds</span></span></span></div>\n'
+ '        <div class="center">\n'
+ '            <div class="guido-button-block">\n'
+ '                <button class="js-guido-mode guido-button">')
+
+The rendered html has all the same methods and attributes as above. Let's extract just the data that we want out of the clock into something easy to use elsewhere and introspect like a dictionary.
+
+.. code-block:: pycon
+	
+	>>> periods = [element.text for element in r.html.find('.countdown-period')]
+	>>> amounts = [element.text for element in r.html.find('.countdown-amount')]
+	>>> countdown_data = dict(zip(periods, amounts))
+	>>> countdown_data
+	{'Year': '1', 'Months': '2', 'Days': '5', 'Hours': '23', 'Minutes': '34', 'Seconds': '37'}
 
 Or you can do this async also:
 
 .. code-block:: pycon
 
-    >>> r = asession.get('http://python-requests.org/')
+    >>> async def get_pyclock():
+	... 	r = await asession.get('https://pythonclock.org/')
+	... 	await r.html.arender()
+	... 	return r
+	...
+	>>> results = asession.run(get_pyclock, get_pyclock, get_pyclock)
 
-    >>> await r.html.arender()
-
-    >>> r.html.search('Python 2 will retire in only {months} months!')['months']
-    '<time>25</time>'
+The rest of the code operates the same way as the synchronous version except that ``results`` is a list containing multiple response objects however the same basic processes can be applied as above to extract the data you want. 
 
 Note, the first time you ever run the ``render()`` method, it will download
 Chromium into your home directory (e.g. ``~/.pyppeteer/``). This only happens
@@ -183,7 +242,6 @@ You can also use this library without Requests:
 
     >>> from requests_html import HTML
     >>> doc = """<a href='https://httpbin.org'>"""
-
     >>> html = HTML(html=doc)
     >>> html.links
     {'https://httpbin.org'}
