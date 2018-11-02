@@ -1,2 +1,2 @@
-docs/source/_templates/*.html linguist-vendored=false
-tests/*.html linguist-vendored=false
+docs/source/_templates/*.html linguist-vendored
+tests/*.html linguist-vendored
