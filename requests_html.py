@@ -689,7 +689,7 @@ class BaseSession(requests.Session):
     """
 
     def __init__(self, mock_browser : bool = True, verify : bool = True,
-                 browser_args : list = ['--no-sandbox']):
+                 browser_args : list = ['--no-sandbox'], executable_path : str = ''):
         super().__init__()
 
         # Mock a web browser's user agent.
@@ -698,6 +698,9 @@ class BaseSession(requests.Session):
 
         self.hooks['response'].append(self.response_hook)
         self.verify = verify
+
+        if executable_path:
+            self.executable_path = executable_path
 
         self.__browser_args = browser_args
 
@@ -711,7 +714,10 @@ class BaseSession(requests.Session):
     @property
     async def browser(self):
         if not hasattr(self, "_browser"):
-            self._browser = await pyppeteer.launch(ignoreHTTPSErrors=not(self.verify), headless=True, args=self.__browser_args)
+            if self.executable_path:
+                self._browser = await pyppeteer.launch(ignoreHTTPSErrors=not(self.verify), executablePath=self.executable_path, headless=True, args=self.__browser_args)
+            else:
+                self._browser = await pyppeteer.launch(ignoreHTTPSErrors=not(self.verify), headless=True, args=self.__browser_args)
 
         return self._browser
 
