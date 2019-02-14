@@ -583,7 +583,7 @@ class HTML(BaseParser):
         Chromium into your home directory (``~/.pyppeteer``).
         """
 
-        self.browser = self.session.browser  # Automatycally create a event loop and browser
+        self.browser = self.session.browser  # Automatically create a event loop and browser
         content = None
 
         # Automatically set Reload to False, if example URL is being used.
@@ -766,8 +766,8 @@ class AsyncHTMLSession(BaseSession):
 
     def run(self, *coros):
         """ Pass in all the coroutines you want to run, it will wrap each one
-            in a task, run it and wait for the result. Retuen a list with all
-            results, this are returned in the same order coros are passed in. """
+            in a task, run it and wait for the result. Return a list with all
+            results, this is returned in the same order coros are passed in. """
         tasks = [
             asyncio.ensure_future(coro()) for coro in coros
         ]
