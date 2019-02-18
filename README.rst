@@ -246,6 +246,19 @@ You can also use this library without Requests:
     >>> html.links
     {'https://httpbin.org'}
 
+Using with socks proxies
+=============================
+
+.. code-block:: pycon
+
+    >>> from requests_html import HTMLSession
+    >>> session = HTMLSession()
+    >>> url = 'https://www.google.com'
+    >>> session.proxies = {'http': 'socks5h://127.0.0.1:1086', 'https': 'socks5h://127.0.0.1:1086'}
+    >>> res = session.get(url)
+
+Same usage with the AsyncHTMLSession
+
 
 Installation
 ============
