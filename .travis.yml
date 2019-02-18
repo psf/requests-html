@@ -1,6 +1,13 @@
+dist: xenial
 language: python
 python:
   - "3.6"
+  - "3.7"
+  - "3.8-dev"
+
+matrix:
+  allow_failures:
+    - python: "3.8-dev"
 
 # command to install dependencies
 install:
@@ -17,3 +24,15 @@ script:
     # - stage: "✨ Flake8 Nit–Picking ✨"
       # python: "3.6"
       # script: "pipenv run flake8"
+
+deploy:
+  provider: pypi
+  distributions: "sdist bdist_wheel"
+  user: "<username>"
+  password:
+    secure: "<password>"
+  on:
+    tags: true
+    branch: master
+    repo: kennethreitz/requests-html
+    python: "3.7"
