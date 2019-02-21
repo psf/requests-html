@@ -4,7 +4,6 @@ from functools import partial
 import pytest
 import psutil
 from pyppeteer.browser import Browser
-from pyppeteer.page import Page
 from requests_html import HTMLSession, AsyncHTMLSession, HTML
 from requests_file import FileAdapter
 
@@ -241,7 +240,7 @@ def test_browser_session():
         Note: session.close method need to be tested together with browser creation,
             since no doing that will left the browser running. """
     session = HTMLSession()
-    assert isinstance(session.browser, Browser)
+    assert isinstance(session.get_browser(), Browser)
     assert hasattr(session, "loop") == True
     session.close()
     # assert count_chromium_process() == 0
