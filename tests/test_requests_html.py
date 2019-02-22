@@ -173,6 +173,15 @@ def test_absolute_links(url, link, expected):
     assert html.absolute_links.pop() == expected
 
 
+@pytest.mark.parser
+def test_parser():
+    doc = """<a href='https://httpbin.org'>httpbin.org\n</a>"""
+    html = HTML(html=doc)
+
+    assert html.find('html')
+    assert html.element('a').text().strip() == 'httpbin.org'
+
+
 @pytest.mark.render
 def test_render():
     r = get()
