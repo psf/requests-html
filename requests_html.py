@@ -416,9 +416,9 @@ class HTML(BaseParser):
         if isinstance(html, str):
             html = html.encode(DEFAULT_ENCODING)
 
+        pq = PyQuery(html)
         super(HTML, self).__init__(
-            # Convert unicode HTML to bytes.
-            element=PyQuery(html)('html') or PyQuery(f'<html>{html}</html>')('html'),
+            element=pq('html') or pq.wrapAll('<html></html>')('html'),
             html=html,
             url=url,
             default_encoding=default_encoding
