@@ -45,27 +45,27 @@ Try async and get some sites at the same time:
     >>> from requests_html import AsyncHTMLSession
     >>> asession = AsyncHTMLSession()
     >>> async def get_pythonorg():
-    ...    r = await asession.get('https://python.org/')
-	...    return r
-	...
+    ...     r = await asession.get('https://python.org/')
+    ...     return r
+    ...
     >>> async def get_reddit():
     ...    r = await asession.get('https://reddit.com/')
-	...    return r
-	...
+    ...    return r
+    ...
     >>> async def get_google():
     ...    r = await asession.get('https://google.com/')
-	...    return r
-	...
+    ...    return r
+    ...
     >>> results = asession.run(get_pythonorg, get_reddit, get_google)
-	>>> results # check the requests all returned a 200 (success) code
-	[<Response [200]>, <Response [200]>, <Response [200]>]
-	>>> # Each item in the results list is a response object and can be interacted with as such
-	>>> for result in results: 
-	...     print(result.html.url)
-	... 
-	https://www.python.org/
-	https://www.google.com/
-	https://www.reddit.com/
+    >>> results # check the requests all returned a 200 (success) code
+    [<Response [200]>, <Response [200]>, <Response [200]>]
+    >>> # Each item in the results list is a response object and can be interacted with as such
+    >>> for result in results: 
+    ...     print(result.html.url)
+    ... 
+    https://www.python.org/
+    https://www.google.com/
+    https://www.reddit.com/
 
 Note that the order of the objects in the results list represents the order they were returned in, not the order that the coroutines are passed to the ``run`` method, which is shown in the examply by the order being different. 
 
@@ -221,11 +221,11 @@ Or you can do this async also:
 .. code-block:: pycon
 
     >>> async def get_pyclock():
-	... 	r = await asession.get('https://pythonclock.org/')
-	... 	await r.html.arender()
-	... 	return r
-	...
-	>>> results = asession.run(get_pyclock, get_pyclock, get_pyclock)
+    ...     r = await asession.get('https://pythonclock.org/')
+    ...     await r.html.arender()
+    ...     return r
+    ...
+    >>> results = asession.run(get_pyclock, get_pyclock, get_pyclock)
 
 The rest of the code operates the same way as the synchronous version except that ``results`` is a list containing multiple response objects however the same basic processes can be applied as above to extract the data you want. 
 
