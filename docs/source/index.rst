@@ -49,7 +49,7 @@ Only **Python 3.6** is supported.
 Tutorial & Usage
 ================
 
-Make a GET request to `python.org <https://python.org/>`_, using `Requests <https://docs.python-requests.org/>`_:
+Make a GET request to `python.org <https://python.org/>`_, using `Requests <http://docs.python-requests.org/>`_:
 
 .. code-block:: pycon
 
