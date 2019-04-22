@@ -510,7 +510,8 @@ class HTML(BaseParser):
 
             if cookies:
                 for cookie in cookies:
-                    await page.setCookie(cookie)
+                    if cookie:
+                        await page.setCookie(cookie)
 
             # Load the given page (GET request, obviously.)
             if reload:
@@ -673,7 +674,7 @@ class HTML(BaseParser):
         self.page = page
         return result
 
-    async def arender(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False):
+    async def arender(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False, cookies: list = [{}], send_cookies_session: bool = False):
         """ Async version of render. Takes same parameters. """
 
         self.browser = await self.session.browser
@@ -683,11 +684,14 @@ class HTML(BaseParser):
         if self.url == DEFAULT_URL:
             reload = False
 
+        if send_cookies_session:
+           cookies = self._convert_cookiesjar_to_render()
+
         for _ in range(retries):
             if not content:
                 try:
 
-                    content, result, page = await self._async_render(url=self.url, script=script, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout, keep_page=keep_page)
+                    content, result, page = await self._async_render(url=self.url, script=script, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout, keep_page=keep_page, cookies=cookies)
                 except TypeError:
                     pass
             else:
