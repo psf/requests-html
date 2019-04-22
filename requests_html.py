@@ -8,6 +8,7 @@ from typing import Set, Union, List, MutableMapping, Optional
 
 import pyppeteer
 import requests
+import http.cookiejar
 from pyquery import PyQuery
 
 from fake_useragent import UserAgent
@@ -542,9 +543,9 @@ class HTML(BaseParser):
             page = None
             return None
 
-    def _convert_cookie_to_render(self, session_cookie):
+    def _convert_cookiejar_to_render(self, session_cookiejar):
         """
-        Convert HTMLSession.cookies[] for browser.newPage().setCookie
+        Convert HTMLSession.cookies:cookiejar[] for browser.newPage().setCookie
         """
         # |  setCookie(self, *cookies:dict) -> None
         # |      Set cookies.
@@ -561,9 +562,9 @@ class HTML(BaseParser):
         # |      * ``secure`` (bool)
         # |      * ``sameSite`` (str): ``'Strict'`` or ``'Lax'``
         cookie_render = {}
-        def __convert(cookie, key):
+        def __convert(cookiejar, key):
             try:
-                v = eval ("cookie."+key)
+                v = eval ("cookiejar."+key)
                 if not v: kv = ''
                 else: kv = {key: v}
             except:
@@ -582,17 +583,18 @@ class HTML(BaseParser):
             'secure',
         ]
         for key in keys:
-            cookie_render.update(__convert(session_cookie, key))
+            cookie_render.update(__convert(session_cookiejar, key))
         return cookie_render
 
-    def _convert_cookies_to_render(self):
+    def _convert_cookiesjar_to_render(self):
         """
         Convert HTMLSession.cookies for browser.newPage().setCookie
         Return a list of dict
         """
         cookies_render = []
-        for cookie in self.session.cookies:
-            cookies_render.append(self._convert_cookie_to_render(cookie))
+        if isinstance(self.session.cookies, http.cookiejar.CookieJar):
+            for cookie in self.session.cookies:
+                cookies_render.append(self._convert_cookiejar_to_render(cookie))
         return cookies_render
 
     def render(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False, cookies: list = [{}], send_cookies_session: bool = False):
@@ -651,7 +653,7 @@ class HTML(BaseParser):
             reload = False
 
         if send_cookies_session:
-           cookies = self._convert_cookies_to_render()
+           cookies = self._convert_cookiesjar_to_render()
 
         for i in range(retries):
             if not content:
