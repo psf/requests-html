@@ -538,7 +538,7 @@ class HTML(BaseParser):
             page = None
             return None
 
-    def render(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False):
+    def render(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False, pyppeteer_args: dict = None):
         """Reloads the response in Chromium, and replaces HTML content
         with an updated version, with JavaScript executed.
 
@@ -549,6 +549,7 @@ class HTML(BaseParser):
         :param sleep: Integer, if provided, of how many long to sleep after initial render.
         :param reload: If ``False``, content will not be loaded from the browser, but will be provided from memory.
         :param keep_page: If ``True`` will allow you to interact with the browser page through ``r.html.page``.
+        :param pyppeteer_args: Arguments for ``pyppeteer.launch()`` method.
 
         If ``scrolldown`` is specified, the page will scrolldown the specified
         number of times, after sleeping the specified amount of time
@@ -582,8 +583,7 @@ class HTML(BaseParser):
         Warning: the first time you run this method, it will download
         Chromium into your home directory (``~/.pyppeteer``).
         """
-
-        self.browser = self.session.browser  # Automatically create a event loop and browser
+        self.browser = self.session.get_browser(pyppeteer_args)
         content = None
 
         # Automatically set Reload to False, if example URL is being used.
@@ -609,10 +609,10 @@ class HTML(BaseParser):
         self.page = page
         return result
 
-    async def arender(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False):
+    async def arender(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False, pyppeteer_args: dict = None):
         """ Async version of render. Takes same parameters. """
 
-        self.browser = await self.session.browser
+        self.browser = await self.session.get_browser(pyppeteer_args)
         content = None
 
         # Automatically set Reload to False, if example URL is being used.
@@ -688,8 +688,7 @@ class BaseSession(requests.Session):
     amongst other things.
     """
 
-    def __init__(self, mock_browser : bool = True, verify : bool = True,
-                 browser_args : list = ['--no-sandbox']):
+    def __init__(self, mock_browser : bool = True, verify : bool = True):
         super().__init__()
 
         # Mock a web browser's user agent.
@@ -699,19 +698,26 @@ class BaseSession(requests.Session):
         self.hooks['response'].append(self.response_hook)
         self.verify = verify
 
-        self.__browser_args = browser_args
-
-
     def response_hook(self, response, **kwargs) -> HTMLResponse:
         """ Change response enconding and replace it by a HTMLResponse. """
         if not response.encoding:
             response.encoding = DEFAULT_ENCODING
         return HTMLResponse._from_response(response, self)
 
-    @property
-    async def browser(self):
+    async def get_browser(self, pyppeteer_args=None):
         if not hasattr(self, "_browser"):
-            self._browser = await pyppeteer.launch(ignoreHTTPSErrors=not(self.verify), headless=True, args=self.__browser_args)
+            if pyppeteer_args is None:
+                pyppeteer_args = {}
+
+            browser_args = {
+                'headless': True,
+                'args': ['--no-sandbox']
+            }
+            browser_args.update(pyppeteer_args)
+            if 'browserWSEndpoint' in browser_args:
+                self._browser = await pyppeteer.connect(ignoreHTTPSErrors=not self.verify, **browser_args)
+            else:
+                self._browser = await pyppeteer.launch(ignoreHTTPSErrors=not self.verify, **browser_args)
 
         return self._browser
 
@@ -721,13 +727,12 @@ class HTMLSession(BaseSession):
     def __init__(self, **kwargs):
         super(HTMLSession, self).__init__(**kwargs)
 
-    @property
-    def browser(self):
+    def get_browser(self, pyppeteer_args=None):
         if not hasattr(self, "_browser"):
             self.loop = asyncio.get_event_loop()
             if self.loop.is_running():
                 raise RuntimeError("Cannot use HTMLSession within an existing event loop. Use AsyncHTMLSession instead.")
-            self._browser = self.loop.run_until_complete(super().browser)
+            self._browser = self.loop.run_until_complete(super().get_browser(pyppeteer_args))
         return self._browser
 
     def close(self):

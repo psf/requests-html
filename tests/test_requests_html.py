@@ -4,7 +4,6 @@ from functools import partial
 import pytest
 import psutil
 from pyppeteer.browser import Browser
-from pyppeteer.page import Page
 from requests_html import HTMLSession, AsyncHTMLSession, HTML
 from requests_file import FileAdapter
 
@@ -318,7 +317,7 @@ def test_browser_session():
         Note: session.close method need to be tested together with browser creation,
             since no doing that will left the browser running. """
     session = HTMLSession()
-    assert isinstance(session.browser, Browser)
+    assert isinstance(session.get_browser(), Browser)
     assert hasattr(session, "loop") == True
     session.close()
     # assert count_chromium_process() == 0
@@ -330,7 +329,7 @@ async def test_browser_session_fail():
     """ HTMLSession.browser should not be call within an existing event loop> """
     session = HTMLSession()
     with pytest.raises(RuntimeError):
-        session.browser
+        session.get_browser()
 
 
 @pytest.mark.ok
@@ -346,7 +345,7 @@ def test_browser_process():
 @pytest.mark.asyncio
 async def test_async_browser_session():
     session = AsyncHTMLSession()
-    browser = await session.browser
+    browser = await session.get_browser()
     assert isinstance(browser, Browser)
     await session.close()
 

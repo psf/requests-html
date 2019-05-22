@@ -4,7 +4,7 @@ python:
 
 # command to install dependencies
 install:
-  - "pip install pipenv --upgrade-strategy=only-if-needed"
+  - "pip install git+https://github.com/pypa/pipenv.git"
   - "pipenv install --dev"
 
 # command to run the dependencies
