@@ -23,7 +23,7 @@ When using this library you automatically get:
 
 - **Full JavaScript support**!
 - *CSS Selectors* (a.k.a jQuery-style, thanks to PyQuery).
-- *XPath Selectors*, for the faint at heart.
+- *XPath Selectors*, for the faint of heart.
 - Mocked user-agent (like a real web browser).
 - Automatic following of redirects.
 - Connection–pooling and cookie persistence.
