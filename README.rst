@@ -3,8 +3,8 @@ Requests-HTML: HTML Parsing for Humans™
 
 .. image:: https://farm5.staticflickr.com/4695/39152770914_a3ab8af40d_k_d.jpg
 
-.. image:: https://travis-ci.org/kennethreitz/requests-html.svg?branch=master
-    :target: https://travis-ci.org/kennethreitz/requests-html
+.. image:: https://travis-ci.com/psf/requests-html.svg?branch=master
+    :target: https://travis-ci.com/psf/requests-html
 
 This library intends to make parsing HTML (e.g. scraping the web) as
 simple and intuitive as possible.

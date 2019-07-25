@@ -13,8 +13,8 @@ Requests-HTML: HTML Parsing for Humans (writing Python 3)!
 
 
 
-.. image:: https://travis-ci.org/kennethreitz/requests-html.svg?branch=master
-    :target: https://travis-ci.org/kennethreitz/requests-html
+.. image:: https://travis-ci.com/psf/requests-html.svg?branch=master
+    :target: https://travis-ci.com/psf/requests-html
 
 This library intends to make parsing HTML (e.g. scraping the web) as
 simple and intuitive as possible.

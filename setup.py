@@ -14,7 +14,7 @@ from setuptools import setup, Command
 # Package meta-data.
 NAME = 'requests-html'
 DESCRIPTION = 'HTML Parsing for Humans.'
-URL = 'https://github.com/kennethreitz/requests-html'
+URL = 'https://github.com/psf/requests-html'
 EMAIL = 'me@kennethreitz.org'
 AUTHOR = 'Kenneth Reitz'
 VERSION = '0.10.0'
