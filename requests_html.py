@@ -160,7 +160,11 @@ class BaseParser:
             try:
                 self._lxml = soup_parse(self.html, features='html.parser')
             except ValueError:
-                self._lxml = lxml.html.fromstring(self.raw_html)
+                raw = str(self.raw_html,encoding='utf-8').replace('gb2312',self.default_encoding)
+                self._lxml = lxml.html.fromstring(raw.encode('utf-8')) #因为lxml.html.fromstring会根据html中编码格式进行解码,但是如果html的编码是gbk,GB2312等,经过render函数后,即渲染过js后,
+                #self.raw_html的编码格式此时是utf-8,而html中charset的值是gbk或者gb2312,这样会导致因编码\解码不一致的乱码情况,代码此处改成这样,此时
+                #编码方式写死为gb2312,只是为了说明,这里可以灵活根据html的编码惊醒更改.
+                #self._lxml = lxml.html.fromstring(self.raw_html)
 
         return self._lxml
 
