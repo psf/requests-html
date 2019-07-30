@@ -420,6 +420,14 @@ class HTML(BaseParser):
         # Convert incoming unicode HTML into bytes.
         if isinstance(html, str):
             html = html.encode(DEFAULT_ENCODING)
+              
+        if default_encoding == DEFAULT_ENCODING:
+            import re
+            pattern = re.compile(r'<title>[\s\S]*</title>')
+            html = html.decode(default_encoding).replace('gb2312', default_encoding)
+            html = pattern.sub('',html)
+            html =html.encode(default_encoding) #有些网站title写在charset上面,导致解析HTML的时候会出现乱码,同时爬取数据时不需要title中
+            #的信息，因而直接将titile标签去掉,消除影响.
 
         pq = PyQuery(html)
         super(HTML, self).__init__(
