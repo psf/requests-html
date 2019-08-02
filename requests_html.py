@@ -814,7 +814,10 @@ class HTMLSession(BaseSession):
         """ If a browser was created close it first. """
         if hasattr(self, "_browser"):
             self.loop.run_until_complete(self._browser.close())
-        super().close()
+        super().close()  #在刚开始使用这个爬虫包的时候,没有特别注意这个close方法.但是在爬的过程中,遇见了一些问题,刚开始仅仅以为是requests的时候
+        #没有设置timeout,大概爬取30多个页面的时候,请求会"假死",程序一直不报错也不爬,后面相继设置了timeout参数,更换了DNS地址,但是每当爬了100多个网页
+        #的时候,还是出现了"假死"事故,百度了一通,但是无从下手,然后尝试每请求完一个页面后就关闭一个HTMLSESION(之前都不关闭),就这样,页面"假死"就这样
+        #解决了.
 
 
 class AsyncHTMLSession(BaseSession):
