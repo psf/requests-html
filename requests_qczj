@@ -1,0 +1,233 @@
+#这个文件记录了爬取汽车ZJ的车型配置信息的代码,总共爬取到1万9千个左右车型数据
+import re
+import os
+import json
+
+import requests
+import xlwt
+from selenium import webdriver
+from requests_html import HTMLSession
+import csv
+import logging
+import pickle
+
+logger = logging.getLogger("spawlerlog")
+logger.setLevel(logging.DEBUG)
+
+fh = logging.FileHandler('info.log','a')
+fh.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s-%(message)s ',"%Y-%m-%d %H:%M:%S")
+ch.setFormatter(formatter)
+fh.setFormatter(formatter)
+logger.addHandler(ch)
+logger.addHandler(fh)
+
+
+
+with open('car_item.pk','rb') as f_car:
+    car_item = pickle.load(f_car)
+with open('car_configdetail_list.pk','rb') as f_configdetail:
+    configdetail_dict = pickle.load(f_configdetail)
+
+# car_item = {}
+# configdetail_dict = {}
+
+session = HTMLSession()
+
+def get_proxy():
+    return requests.get("http://127.0.0.1:5010/get/").content
+
+def delete_proxy(proxy):
+    requests.get("http://127.0.0.1:5010/delete/?proxy={}".format(proxy))
+
+
+# 运行JS的DOM
+DOM_TEMP = ("var rules = '2';"
+       "var document = {};"
+       "function getRules(){return rules}"
+       "document.createElement = function() {"
+       "      return {"
+       "              sheet: {"
+       "                      insertRule: function(rule, i) {"
+       "                              if (rules.length == 0) {"
+       "                                      rules = rule;"
+       "                              } else {"
+       "                                      rules = rules + '#' + rule;"
+       "                              }"
+       "                      }"
+       "              }"
+       "      }"
+       "};"
+       "document.querySelectorAll = function() {"
+       "      return {};"
+       "};"
+       "document.head = {};"
+       "document.head.appendChild = function() {};"
+
+       "var window = {};"
+       "window.decodeURIComponent = decodeURIComponent;")
+
+def get_configdetail(url):
+    global configdetail_dict
+    global car_item
+    global DOM_TEMP
+    DOM = DOM_TEMP
+    current_specid = re.search("https://car.autohome.com.cn/config/spec/([0-9]+)\.html", url)
+    if current_specid.group(1) in car_item.keys():
+        logger.info("第{} 行 结束!".format(row_num))
+        return
+    # headers = {
+    #     "User-agent": "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+    #                   "Chrome/71.0.3578.98 Safari/537.36"
+    # }
+    # response = requests.get(url=url, headers=headers, timeout=10)
+    flag = True
+    while flag == True:
+        try:
+            proxy = get_proxy()
+            proxies = {"http": "https://{}".format(proxy)}
+            response = session.get(url, timeout=(3, 3), proxies=proxies)
+            flag = False
+        except Exception as e:
+            logger.info(e)
+            pass
+    # print(response.content.decode("utf-8"))
+    response.encoding = response.apparent_encoding
+    html = response.text
+    # html = response.content.decode("utf-8")
+
+    # 匹配汽车的参数
+    car_info = ""
+    config = re.search("var config = (.*?)};", html, re.S)  # 车的参数
+    option = re.search("var option = (.*?)};", html, re.S)  # 主被动安全装备
+    bag = re.search("var bag = (.*?)};", html, re.S)  # 选装包
+    ids = re.search("var specIDs =\[(.*?)\];", html, re.S)
+    js_list = re.findall('(\(function\([a-zA-Z]{2}.*?_\).*?\(document\);)', html)
+    # 拼接车型的所有参数car_info
+    if config and option and bag:
+        car_info = car_info + config.group(0) + option.group(0) + bag.group(0)
+    # print(car_info)
+
+    # 封装JS成本地文件通过selenium执行,得到true_text
+    for item in js_list:
+        DOM = DOM + item
+    html_type = "<html><meta http-equiv='Content-Type' content='text/html; charset=utf-8' /><head></head><body>    <script type='text/javascript'>"
+    js = html_type + DOM + " document.write(rules)</script></body></html>"  # 待执行的JS字符串
+    if not os.path.exists("D:\\test11"):
+        os.makedirs("D:\\test11")
+    with open("D:\\test11\\asd.html", "w", encoding="utf-8") as f:
+        f.write(js)
+    browser = webdriver.Chrome(executable_path="D:\Program Files\chromedriver_win32\chromedriver.exe")
+    browser.get("file://D:/test11/asd.html")
+    true_text = browser.find_element_by_tag_name('body').text
+    browser.quit()
+    session.close()
+    # print(true_text)
+
+    span_list = re.findall("<span(.*?)></span>", car_info)  # 匹配车辆参数中所有的span标签
+    # 按照span标签与true_text中的关键字进行替换
+    for span in span_list:
+        info = re.search("'(.*?)'", span)
+        if info:
+            class_info = str(info.group(1)) + "::before { content:(.*?)}"  #
+            content = re.search(class_info, true_text).group(1)  # 匹配到的字体
+            car_info = car_info.replace(str("<span class='" + info.group(1) + "'></span>"),
+                                        re.search("\"(.*?)\"", content).group(1))
+    # print(car_info)
+    # 持久化
+    try:
+        config = re.search("var config = (.*?)};", car_info).group(1)
+        option = re.search("var option = (.*?)};var", car_info).group(1)
+        bag = re.search("var bag = (.*?)};", car_info).group(1)
+    except Exception as e:
+        return
+    config_re = json.loads(config + "}")
+    option_re = json.loads(option + "}")
+    bag_re = json.loads(bag + "}")
+
+    config_item = config_re['result']['paramtypeitems'][0]['paramitems']
+    if len(option_re['result']['configtypeitems']) > 0:
+        option_item = option_re['result']['configtypeitems'][0]['configitems']
+    else:
+        option_item = []
+    if len(bag_re['result']['bagtypeitems']) > 0:
+        bag_item = bag_re['result']['bagtypeitems'][0]['bagitems']
+    else:
+        bag_item = []
+
+    for id in list(ids.group(1).split(",")):
+        car_item.setdefault(id.strip(), {})
+
+    for car in config_item:
+        for value in car['valueitems']:
+            if not car['name'] in car_item[str(value['specid'])].keys():
+                car_item[str(value['specid'])][car['name']] = value['value']
+                configdetail_dict[car['name']] = configdetail_dict.get(car['name'], 0) + 1
+
+    for car in option_item:
+        for value in car['valueitems']:
+            if not car['name'] in car_item[str(value['specid'])].keys():
+                car_item[str(value['specid'])][car['name']] = value['value'].replace("&nbsp;", "")
+                configdetail_dict[car['name']] = configdetail_dict.get(car['name'], 0) + 1
+
+    for i in range(len(bag_item)):
+        if not "选装包" in car_item[str(bag_item[0]['specid'])].keys():
+            for car in bag_item[i]['valueitems']:
+                car_item[str(bag_item[0]['specid'])].setdefault('选装包', ' ') + car['name'] + \
+                ":(" + car['pricedesc'] + " " + car['description'] + ") "
+            configdetail_dict['选装包'] = configdetail_dict.get("选装包", 0) + 1
+
+
+row_num = 0
+current_dir = os.path.abspath('.')
+filename1 = os.path.join(current_dir,"data\\instance.csv")
+with open(filename1,'rt') as fr:
+    rows = csv.reader(fr)
+    for row in rows:
+        try:
+            row_num += 1
+            logger.info("开始爬取第{}行数据!".format(row_num))
+            url = row[3]
+            get_configdetail(url)
+            logger.info("结束爬取第{}行数据!".format(row_num))
+        except Exception as e:
+            logger.info("报错,保存数据")
+            with open('car_item.pk','wb') as fw:
+                pickle.dump(car_item,fw)
+            with open('car_configdetail_list.pk','wb') as fw1:
+                pickle.dump(configdetail_dict,fw1)
+            logger.info(str(e))
+            raise Exception
+
+with open('car_item.pk', 'wb') as fw:
+    pickle.dump(car_item, fw)
+with open('car_configdetail_list.pk', 'wb') as fw1:
+    pickle.dump(configdetail_dict, fw1)
+configdetail_dicSorted = dict(sorted(configdetail_dict.items(),key=lambda x:x[1],reverse=True))
+# 生成表格
+
+workbook = xlwt.Workbook(encoding='utf-8')  # 创建一个文件
+worksheet = workbook.add_sheet('汽车之家')  # 创建一个表
+cols = 0
+start_row = 0
+
+for co in configdetail_dicSorted.keys():
+    worksheet.write(start_row, cols, co)  # 在第0(一)行写入车的配置信息
+    cols = cols + 1
+    if cols > 255:
+        break
+end_row_num = start_row + len(car_item)   # 车辆款式记录数
+row = 0
+for id in car_item.keys():
+    row += 1
+    for col in configdetail_dicSorted.keys():
+        if col == 'specid':
+            worksheet.write(row, 0,id)
+            continue
+        column = configdetail_dicSorted[col]
+        if column <= 255:
+            worksheet.write(row, column, car_item[id].get(col,'-'))
+
+workbook.save('data\\configdetal.xls')
