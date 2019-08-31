@@ -90,7 +90,7 @@ class BaseParser:
     @property
     def raw_html(self) -> _RawHTML:
         """Bytes representation of the HTML content.
-        (`learn more <http://http://diveintopython3.problemsolving.io/strings.html>`_).
+        (`learn more <http://diveintopython3.problemsolving.io/strings.html>`_).
         """
         if self._html:
             return self._html
@@ -100,7 +100,7 @@ class BaseParser:
     @property
     def html(self) -> _BaseHTML:
         """Unicode representation of the HTML content
-        (`learn more <http://www.http://diveintopython3.problemsolving.io/strings.html.html>`_).
+        (`learn more <http://diveintopython3.problemsolving.io/strings.html>`_).
         """
         if self._html:
             return self.raw_html.decode(self.encoding, errors='replace')
