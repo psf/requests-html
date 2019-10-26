@@ -65,7 +65,7 @@ Try async and get some sites at the same time:
     https://www.google.com/
     https://www.reddit.com/
 
-Note that the order of the objects in the results list represents the order they were returned in, not the order that the coroutines are passed to the ``run`` method, which is shown in the examply by the order being different. 
+Note that the order of the objects in the results list represents the order they were returned in, not the order that the coroutines are passed to the ``run`` method, which is shown in the example by the order being different. 
 
 Grab a list of all links on the page, as–is (anchors excluded):
 
@@ -178,7 +178,7 @@ Notice the clock is missing. The ``render()`` method takes the response and rend
     >>> r.html.search('Python 2.7 will retire in...{}Enable Guido Mode')[0]
     '</h1>\n        </div>\n        <div class="python-27-clock is-countdown"><span class="countdown-row countdown-show6"><span class="countdown-section"><span class="countdown-amount">1</span><span class="countdown-period">Year</span></span><span class="countdown-section"><span class="countdown-amount">2</span><span class="countdown-period">Months</span></span><span class="countdown-section"><span class="countdown-amount">28</span><span class="countdown-period">Days</span></span><span class="countdown-section"><span class="countdown-amount">16</span><span class="countdown-period">Hours</span></span><span class="countdown-section"><span class="countdown-amount">52</span><span class="countdown-period">Minutes</span></span><span class="countdown-section"><span class="countdown-amount">46</span><span class="countdown-period">Seconds</span></span></span></div>\n        <div class="center">\n            <div class="guido-button-block">\n                <button class="js-guido-mode guido-button">'
 
-Let's clean it up a bit. This step is not needed, it just makes it a bit easier to visualise the returned html to see what we need to target to extract our required information. 
+Let's clean it up a bit. This step is not needed, it just makes it a bit easier to visualize the returned html to see what we need to target to extract our required information. 
 
 .. code-block:: pycon
 
