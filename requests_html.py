@@ -500,7 +500,7 @@ class HTML(BaseParser):
     def add_next_symbol(self, next_symbol):
         self.next_symbol.append(next_symbol)
 
-    async def _async_render(self, *, url: str, script: str = None, scrolldown, sleep: int, wait: float, reload, content: Optional[str], timeout: Union[float, int], keep_page: bool, cookies: list = [{}]):
+    async def _async_render(self, *, url: str, script: str = None, script_before_load: str = None, scrolldown, sleep: int, wait: float, reload, content: Optional[str], timeout: Union[float, int], keep_page: bool, cookies: list = [{}]):
         """ Handle page creation and js rendering. Internal use for render/arender methods. """
         try:
             page = await self.browser.newPage()
@@ -513,11 +513,29 @@ class HTML(BaseParser):
                     if cookie:
                         await page.setCookie(cookie)
 
+            if script_before_load:
+                await page.evaluateOnNewDocument(script_before_load)
+
+            if not reload:
+                initial_request = True
+
+                async def _on_request(intercepted_request):
+                    nonlocal initial_request, self
+                    if intercepted_request.isNavigationRequest() and initial_request:
+                        await intercepted_request.respond({
+                            "status": self.status_code,
+                            "headers": self.headers,
+                            "contentType": self.headers.get("Content-Type", "text/plain"),
+                            "body": self.html
+                        })
+                        initial_request = False
+                        await page.setRequestInterception(False)
+
+                await page.setRequestInterception(True)
+                self.page.on('request', _on_request)
+
             # Load the given page (GET request, obviously.)
-            if reload:
-                await page.goto(url, options={'timeout': int(timeout * 1000)})
-            else:
-                await page.goto(f'data:text/html,{self.html}', options={'timeout': int(timeout * 1000)})
+            await page.goto(url, options={'timeout': int(timeout * 1000)})
 
             result = None
             if script:
@@ -598,12 +616,13 @@ class HTML(BaseParser):
                 cookies_render.append(self._convert_cookiejar_to_render(cookie))
         return cookies_render
 
-    def render(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False, cookies: list = [{}], send_cookies_session: bool = False):
+    def render(self, retries: int = 8, script: str = None, script_before_load: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False, cookies: list = [{}], send_cookies_session: bool = False):
         """Reloads the response in Chromium, and replaces HTML content
         with an updated version, with JavaScript executed.
 
         :param retries: The number of times to retry loading the page in Chromium.
         :param script: JavaScript to execute upon page load (optional).
+        :param script_before_load: JavaScript to execute before page load (optional).
         :param wait: The number of seconds to wait before loading the page, preventing timeouts (optional).
         :param scrolldown: Integer, if provided, of how many times to page down.
         :param sleep: Integer, if provided, of how many long to sleep after initial render.
@@ -660,7 +679,7 @@ class HTML(BaseParser):
             if not content:
                 try:
 
-                    content, result, page = self.session.loop.run_until_complete(self._async_render(url=self.url, script=script, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout, keep_page=keep_page, cookies=cookies))
+                    content, result, page = self.session.loop.run_until_complete(self._async_render(url=self.url, script=script, script_before_load=script_before_load, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout, keep_page=keep_page, cookies=cookies))
                 except TypeError:
                     pass
             else:
@@ -674,7 +693,7 @@ class HTML(BaseParser):
         self.page = page
         return result
 
-    async def arender(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False, cookies: list = [{}], send_cookies_session: bool = False):
+    async def arender(self, retries: int = 8, script: str = None, script_before_load: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False, cookies: list = [{}], send_cookies_session: bool = False):
         """ Async version of render. Takes same parameters. """
 
         self.browser = await self.session.browser
@@ -691,7 +710,7 @@ class HTML(BaseParser):
             if not content:
                 try:
 
-                    content, result, page = await self._async_render(url=self.url, script=script, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout, keep_page=keep_page, cookies=cookies)
+                    content, result, page = await self._async_render(url=self.url, script=script, script_before_load=script_before_load, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout, keep_page=keep_page, cookies=cookies)
                 except TypeError:
                     pass
             else:
