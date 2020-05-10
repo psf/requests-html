@@ -3,7 +3,7 @@ from requests_html import HTMLSession, AsyncHTMLSession, HTMLResponse
 
 session = HTMLSession()
 
-
+@pytest.mark.internet
 def test_pagination():
     pages = (
         'https://xkcd.com/1957/',
@@ -15,7 +15,7 @@ def test_pagination():
         r = session.get(page)
         assert next(r.html)
 
-
+@pytest.mark.internet
 @pytest.mark.asyncio
 async def test_async_pagination(event_loop):
     asession = AsyncHTMLSession()
@@ -29,7 +29,7 @@ async def test_async_pagination(event_loop):
         r = await asession.get(page)
         assert await r.html.__anext__()
 
-
+@pytest.mark.internet
 def test_async_run():
     asession = AsyncHTMLSession()
 

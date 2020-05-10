@@ -2,7 +2,6 @@ import os
 from functools import partial
 
 import pytest
-import psutil
 from pyppeteer.browser import Browser
 from pyppeteer.page import Page
 from requests_html import HTMLSession, AsyncHTMLSession, HTML
@@ -29,14 +28,6 @@ def async_get(event_loop):
     url = 'file://{}'.format(path)
 
     return partial(async_session.get, url)
-
-
-def count_chromium_process():
-    process = 0
-    for proc in psutil.process_iter(attrs=['name']):
-        if proc.info["name"] == "Chromium":
-            process += 1
-    return process
 
 
 @pytest.mark.ok

@@ -17,12 +17,12 @@ pyppeteer = "*"
 twine = "*"
 requests-file = "*"
 pytest = "*"
-"e1839a8" = {path = ".", editable = true}
+e1839a8 = {path = ".",editable = true}
 sphinx = "*"
 mypy = "*"
 pytest-asyncio = "*"
-psutil = "*"
 white = "*"
 
 [scripts]
-tests = "pytest -v -m ok"
+tests = "pytest -v -m 'not internet' "
+
