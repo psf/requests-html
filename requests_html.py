@@ -395,7 +395,7 @@ class Element(BaseParser):
         if self._attrs is None:
             self._attrs = {k: v for k, v in self.element.items()}
 
-            # Split class and rel up, as there are ussually many of them:
+            # Split class and rel up, as there are usually many of them:
             for attr in ['class', 'rel']:
                 if attr in self._attrs:
                     self._attrs[attr] = tuple(self._attrs[attr].split())
