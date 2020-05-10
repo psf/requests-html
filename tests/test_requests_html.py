@@ -30,20 +30,17 @@ def async_get(event_loop):
     return partial(async_session.get, url)
 
 
-@pytest.mark.ok
 def test_file_get():
     r = get()
     assert r.status_code == 200
 
 
-@pytest.mark.ok
 @pytest.mark.asyncio
 async def test_async_file_get(async_get):
     r = await async_get()
     assert r.status_code == 200
 
 
-@pytest.mark.ok
 def test_class_seperation():
     r = get()
 
@@ -51,7 +48,6 @@ def test_class_seperation():
     assert len(about.attrs['class']) == 2
 
 
-@pytest.mark.ok
 def test_css_selector():
     r = get()
 
@@ -65,7 +61,6 @@ def test_css_selector():
         assert menu_item in about.full_text.split('\n')
 
 
-@pytest.mark.ok
 def test_containing():
     r = get()
 
@@ -76,7 +71,6 @@ def test_containing():
         assert 'python' in e.full_text.lower()
 
 
-@pytest.mark.ok
 def test_attrs():
     r = get()
     about = r.html.find('#about', first=True)
@@ -85,7 +79,6 @@ def test_attrs():
     assert len(about.attrs['class']) == 2
 
 
-@pytest.mark.ok
 def test_links():
     r = get()
     about = r.html.find('#about', first=True)
@@ -94,7 +87,6 @@ def test_links():
     assert len(about.absolute_links) == 6
 
 
-@pytest.mark.ok
 @pytest.mark.asyncio
 async def test_async_links(async_get):
     r = await async_get()
@@ -104,14 +96,12 @@ async def test_async_links(async_get):
     assert len(about.absolute_links) == 6
 
 
-@pytest.mark.ok
 def test_search():
     r = get()
     style = r.html.search('Python is a {} language')[0]
     assert style == 'programming'
 
 
-@pytest.mark.ok
 def test_xpath():
     r = get()
     html = r.html.xpath('/html', first=True)
@@ -121,7 +111,6 @@ def test_xpath():
     assert '#site-map' in a_hrefs
 
 
-@pytest.mark.ok
 def test_html_loading():
     doc = """<a href='https://httpbin.org'>"""
     html = HTML(html=doc)
@@ -131,7 +120,6 @@ def test_html_loading():
     assert isinstance(html.html, str)
 
 
-@pytest.mark.ok
 def test_anchor_links():
     r = get()
     r.html.skip_anchors = False
@@ -139,7 +127,6 @@ def test_anchor_links():
     assert '#site-map' in r.html.links
 
 
-@pytest.mark.ok
 @pytest.mark.parametrize('url,link,expected', [
     ('http://example.com/', 'test.html', 'http://example.com/test.html'),
     ('http://example.com', 'test.html', 'http://example.com/test.html'),
@@ -164,7 +151,6 @@ def test_absolute_links(url, link, expected):
     assert html.absolute_links.pop() == expected
 
 
-@pytest.mark.parser
 def test_parser():
     doc = """<a href='https://httpbin.org'>httpbin.org\n</a>"""
     html = HTML(html=doc)
@@ -303,7 +289,6 @@ async def test_bare_js_async_eval():
     await html.browser.close()
 
 
-@pytest.mark.ok
 def test_browser_session():
     """ Test browser instaces is created and properly close when session is closed.
         Note: session.close method need to be tested together with browser creation,
@@ -315,7 +300,6 @@ def test_browser_session():
     # assert count_chromium_process() == 0
 
 
-@pytest.mark.ok
 @pytest.mark.asyncio
 async def test_browser_session_fail():
     """ HTMLSession.browser should not be call within an existing event loop> """
@@ -324,7 +308,6 @@ async def test_browser_session_fail():
         session.browser
 
 
-@pytest.mark.ok
 def test_browser_process():
     for _ in range(3):
         r = get()
@@ -333,7 +316,6 @@ def test_browser_process():
         assert r.html.page == None
 
 
-@pytest.mark.ok
 @pytest.mark.asyncio
 async def test_async_browser_session():
     session = AsyncHTMLSession()
