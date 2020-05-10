@@ -1,6 +1,13 @@
 language: python
 python:
   - "3.6"
+  - "3.7"
+  - "3.8"
+  - "3.9-dev"
+
+matrix:
+  allow_failures:
+    - python: "3.9-dev"
 
 # command to install dependencies
 install:
