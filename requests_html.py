@@ -606,7 +606,7 @@ class HTML(BaseParser):
         :param script: JavaScript to execute upon page load (optional).
         :param wait: The number of seconds to wait before loading the page, preventing timeouts (optional).
         :param scrolldown: Integer, if provided, of how many times to page down.
-        :param sleep: Integer, if provided, of how many long to sleep after initial render.
+        :param sleep: Integer, if provided, of how many seconds to sleep after initial render.
         :param reload: If ``False``, content will not be loaded from the browser, but will be provided from memory.
         :param keep_page: If ``True`` will allow you to interact with the browser page through ``r.html.page``.
 
