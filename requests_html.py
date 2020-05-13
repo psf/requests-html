@@ -508,7 +508,8 @@ class HTML(BaseParser):
             # Wait before rendering the page, to prevent timeouts.
             await asyncio.sleep(wait)
 
-            await page.setUserAgent(self.session.headers['User-Agent'])
+            if 'User-Agent' in self.session.headers:
+                await page.setUserAgent(self.session.headers['User-Agent'])
             
             if cookies:
                 for cookie in cookies:
