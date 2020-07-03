@@ -837,7 +837,7 @@ class AsyncHTMLSession(BaseSession):
             in a task, run it and wait for the result. Return a list with all
             results, this is returned in the same order coros are passed in. """
         tasks = [
-            asyncio.ensure_future(coro()) for coro in coros
+            asyncio.ensure_future(coro() for coro in coros)
         ]
         done, _ = self.loop.run_until_complete(asyncio.wait(tasks))
         return [t.result() for t in done]
