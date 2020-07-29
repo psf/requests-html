@@ -757,7 +757,7 @@ class BaseSession(requests.Session):
     """
 
     def __init__(self, mock_browser : bool = True, verify : bool = True,
-                 browser_args : list = ['--no-sandbox'], pyppeteer_args : dict = None):
+                 browser_args : list = ['--no-sandbox'], pyppeteer_args : dict = {}):
         super().__init__()
 
         # Mock a web browser's user agent.
