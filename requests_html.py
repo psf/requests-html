@@ -719,7 +719,10 @@ class HTMLResponse(requests.Response):
     @property
     def html(self) -> HTML:
         if not self._html:
-            self._html = HTML(session=self.session, url=self.url, html=self.content, default_encoding=self.encoding)
+            if self.encoding == 'gb2312':
+                self._html = HTML(session=self.session, url=self.url, html=self.content.decode(self.encoding, 'ignore').encode(self.encoding), default_encoding=self.encoding)
+            else:
+                self._html = HTML(session=self.session, url=self.url, html=self.content, default_encoding=self.encoding)
 
         return self._html
 
