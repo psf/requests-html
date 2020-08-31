@@ -8,10 +8,10 @@ requests = "*"
 pyquery = "*"
 fake-useragent = "*"
 parse = "*"
-"bs4" = "*"
 "w3lib" = "*"
 pyppeteer = "*"
 "rfc3986" = "*"
+beautifulsoup4 = "*"
 
 [dev-packages]
 twine = "*"
@@ -25,4 +25,3 @@ white = "*"
 
 [scripts]
 tests = "pytest -v -m 'not internet' "
-
