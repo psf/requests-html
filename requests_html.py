@@ -539,7 +539,7 @@ class HTML(BaseParser):
                 await page.close()
                 page = None
             return content, result, page
-        except TimeoutError:
+        except (TimeoutError, pyppeteer.errors.TimeoutError):
             await page.close()
             page = None
             return None
