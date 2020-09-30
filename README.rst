@@ -252,5 +252,11 @@ Installation
 
     $ pipenv install requests-html
     ✨🍰✨
+ 
+If you're not using pipenv:
+.. code-block:: shell
+
+    $ pip install requests-html
+
 
 Only **Python 3.6 and above** is supported.
