@@ -211,7 +211,7 @@ Or you can do this async also:
 
 .. code-block:: pycon
 
-    >>> r = asession.get('http://python-requests.org/')
+    >>> r = await asession.get('http://python-requests.org/')
 
     >>> await r.html.arender()
 
