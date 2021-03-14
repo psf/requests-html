@@ -760,7 +760,7 @@ class BaseSession(requests.Session):
         self,
         mock_browser : bool = True,
         verify : bool = True,
-        browser_args : list = ['--no-sandbox']
+        browser_args : list = ['--no-sandbox'],
         headers : dict = None,
         port : str = None,
     ):
