@@ -69,10 +69,12 @@ class MaxRetries(Exception):
 
 class BaseParser:
     """A basic HTML/Element Parser, for Humans.
+
     :param element: The element from which to base the parsing upon.
     :param default_encoding: Which encoding to default to.
     :param html: HTML from which to base the parsing upon (optional).
     :param url: The URL from which the HTML originated, used for ``absolute_links``.
+
     """
 
     def __init__(self, *, element, default_encoding: _DefaultEncoding = None, html: _HTML = None, url: _URL) -> None:
@@ -179,19 +181,24 @@ class BaseParser:
     def find(self, selector: str = "*", *, containing: _Containing = None, clean: bool = False, first: bool = False, _encoding: str = None) -> _Find:
         """Given a CSS Selector, returns a list of
         :class:`Element <Element>` objects or a single one.
+
         :param selector: CSS Selector to use.
         :param clean: Whether or not to sanitize the found HTML of ``<script>`` and ``<style>`` tags.
         :param containing: If specified, only return elements that contain the provided text.
         :param first: Whether or not to return just the first result.
         :param _encoding: The encoding format.
+
         Example CSS Selectors:
+
         - ``a``
         - ``a.someClass``
         - ``a#someID``
         - ``a[target=_blank]``
+
         See W3School's `CSS Selectors Reference
         <https://www.w3schools.com/cssref/css_selectors.asp>`_
         for more details.
+
         If ``first`` is ``True``, only returns the first
         :class:`Element <Element>` found.
         """
@@ -230,15 +237,19 @@ class BaseParser:
     def xpath(self, selector: str, *, clean: bool = False, first: bool = False, _encoding: str = None) -> _XPath:
         """Given an XPath selector, returns a list of
         :class:`Element <Element>` objects or a single one.
+
         :param selector: XPath Selector to use.
         :param clean: Whether or not to sanitize the found HTML of ``<script>`` and ``<style>`` tags.
         :param first: Whether or not to return just the first result.
         :param _encoding: The encoding format.
+
         If a sub-selector is specified (e.g. ``//a/@href``), a simple
         list of results is returned.
+
         See W3School's `XPath Examples
         <https://www.w3schools.com/xml/xpath_examples.asp>`_
         for more details.
+
         If ``first`` is ``True``, only returns the first
         :class:`Element <Element>` found.
         """
@@ -263,6 +274,7 @@ class BaseParser:
 
     def search(self, template: str) -> Result:
         """Search the :class:`Element <Element>` for the given Parse template.
+
         :param template: The Parse template to use.
         """
 
@@ -271,6 +283,7 @@ class BaseParser:
     def search_all(self, template: str) -> _Result:
         """Search the :class:`Element <Element>` (multiple times) for the given parse
         template.
+
         :param template: The Parse template to use.
         """
         return [r for r in findall(template, self.html)]
@@ -352,6 +365,7 @@ class BaseParser:
 
 class Element(BaseParser):
     """An element of HTML.
+
     :param element: The element from which to base the parsing upon.
     :param url: The URL from which the HTML originated, used for ``absolute_links``.
     :param default_encoding: Which encoding to default to.
@@ -391,6 +405,7 @@ class Element(BaseParser):
 
 class HTML(BaseParser):
     """An HTML document, ready for parsing.
+
     :param url: The URL from which the HTML originated, used for ``absolute_links``.
     :param html: HTML from which to base the parsing upon (optional).
     :param default_encoding: Which encoding to default to.
@@ -420,6 +435,7 @@ class HTML(BaseParser):
         """Attempts to find the next page, if there is one. If ``fetch``
         is ``True`` (default), returns :class:`HTML <HTML>` object of
         next page. If ``fetch`` is ``False``, simply returns the next URL.
+
         """
 
         def get_next():
@@ -585,6 +601,7 @@ class HTML(BaseParser):
     def render(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False, cookies: list = [{}], send_cookies_session: bool = False):
         """Reloads the response in Chromium, and replaces HTML content
         with an updated version, with JavaScript executed.
+
         :param retries: The number of times to retry loading the page in Chromium.
         :param script: JavaScript to execute upon page load (optional).
         :param wait: The number of seconds to wait before loading the page, preventing timeouts (optional).
@@ -592,16 +609,22 @@ class HTML(BaseParser):
         :param sleep: Integer, if provided, of how many seconds to sleep after initial render.
         :param reload: If ``False``, content will not be loaded from the browser, but will be provided from memory.
         :param keep_page: If ``True`` will allow you to interact with the browser page through ``r.html.page``.
+
         :param send_cookies_session: If ``True`` send ``HTMLSession.cookies`` convert.
         :param cookies: If not ``empty`` send ``cookies``.
+
         If ``scrolldown`` is specified, the page will scrolldown the specified
         number of times, after sleeping the specified amount of time
         (e.g. ``scrolldown=10, sleep=1``).
+
         If just ``sleep`` is provided, the rendering will wait *n* seconds, before
         returning.
+
         If ``script`` is specified, it will execute the provided JavaScript at
         runtime. Example:
+
         .. code-block:: python
+
             script = \"\"\"
                 () => {
                     return {
@@ -611,10 +634,14 @@ class HTML(BaseParser):
                     }
                 }
             \"\"\"
+
         Returns the return value of the executed  ``script``, if any is provided:
+
         .. code-block:: python
+
             >>> r.html.render(script=script)
             {'width': 800, 'height': 600, 'deviceScaleFactor': 1}
+
         Warning: the first time you run this method, it will download
         Chromium into your home directory (``~/.pyppeteer``).
         """
@@ -734,8 +761,8 @@ class BaseSession(requests.Session):
         mock_browser : bool = True,
         verify : bool = True,
         browser_args : list = ['--no-sandbox']
-        headers: dict = None,
-        port: str = None,
+        headers : dict = None,
+        port : str = None,
     ):
         super().__init__()
 
@@ -793,6 +820,7 @@ class AsyncHTMLSession(BaseSession):
     def __init__(self, loop=None, workers=None,
                  mock_browser: bool = True, *args, **kwargs):
         """ Set or create an event loop and a thread pool.
+
             :param loop: Asyncio loop to use.
             :param workers: Amount of threads to use for executing async calls.
                 If not pass it will default to the number of processors on the
