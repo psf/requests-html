@@ -769,7 +769,7 @@ class BaseSession(requests.Session):
         # Mock a web browser's user agent.
         if mock_browser and not headers:
             self.headers['User-Agent'] = user_agent()
-        if headers:
+        elif headers:
             self.headers = headers
 
         self.hooks['response'].append(self.response_hook)
