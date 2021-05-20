@@ -26,7 +26,12 @@ DEFAULT_ENCODING = 'utf-8'
 DEFAULT_URL = 'https://example.org/'
 DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.1.2 Safari/603.3.8'
 DEFAULT_NEXT_SYMBOL = ['next', 'more', 'older']
-
+DEFAULT_PYPPETEER_KWARGS = {
+    'handleSIGINT': False,
+    'handleSIGTERM': False,
+    'handleSIGHUP': False,
+    'headless': True,
+}
 cleaner = Cleaner()
 cleaner.javascript = True
 cleaner.style = True
@@ -757,7 +762,9 @@ class BaseSession(requests.Session):
     """
 
     def __init__(self, mock_browser : bool = True, verify : bool = True,
-                 browser_args : list = ['--no-sandbox']):
+                 browser_args : list = ['--no-sandbox'],
+                 pyppeteer_kwargs : dict = DEFAULT_PYPPETEER_KWARGS.copy()
+                 ):
         super().__init__()
 
         # Mock a web browser's user agent.
@@ -769,6 +776,8 @@ class BaseSession(requests.Session):
 
         self.__browser_args = browser_args
 
+        self._pyppeteer_kwargs = pyppeteer_kwargs
+
 
     def response_hook(self, response, **kwargs) -> HTMLResponse:
         """ Change response enconding and replace it by a HTMLResponse. """
@@ -779,7 +788,12 @@ class BaseSession(requests.Session):
     @property
     async def browser(self):
         if not hasattr(self, "_browser"):
-            self._browser = await pyppeteer.launch(ignoreHTTPSErrors=not(self.verify), headless=True, args=self.__browser_args)
+            self._browser = await pyppeteer.launch(
+                ignoreHTTPSErrors=not(self.verify),
+                # headless=True,
+                args=self.__browser_args,
+                **self._pyppeteer_kwargs
+            )
 
         return self._browser
 
