@@ -253,4 +253,4 @@ Installation
     $ pipenv install requests-html
     ✨🍰✨
 
-Only **Python 3.6 and above** is supported.
+Only **Python 3.6 and above** are supported.
