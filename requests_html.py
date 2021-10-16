@@ -437,8 +437,8 @@ class HTML(BaseParser):
         next page. If ``fetch`` is ``False``, simply returns the next URL.
 
         """
-        if _NextSymbol is None:
-            _NextSymbol = DEFAULT_NEXT_SYMBOL
+        if next_symbol is None:
+            next_symbol = DEFAULT_NEXT_SYMBOL
 
         def get_next():
             candidates = self.find('a', containing=next_symbol)
