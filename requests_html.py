@@ -431,12 +431,14 @@ class HTML(BaseParser):
     def __repr__(self) -> str:
         return f"<HTML url={self.url!r}>"
 
-    def next(self, fetch: bool = False, next_symbol: _NextSymbol = DEFAULT_NEXT_SYMBOL) -> _Next:
+    def next(self, fetch: bool = False, next_symbol: _NextSymbol = None) -> _Next:
         """Attempts to find the next page, if there is one. If ``fetch``
         is ``True`` (default), returns :class:`HTML <HTML>` object of
         next page. If ``fetch`` is ``False``, simply returns the next URL.
 
         """
+        if _NextSymbol is None:
+            _NextSymbol = DEFAULT_NEXT_SYMBOL
 
         def get_next():
             candidates = self.find('a', containing=next_symbol)
