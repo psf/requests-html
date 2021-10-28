@@ -643,7 +643,7 @@ class HTML(BaseParser):
             {'width': 800, 'height': 600, 'deviceScaleFactor': 1}
 
         Warning: the first time you run this method, it will download
-        Chromium into your home directory (``~/.pyppeteer``).
+        Chromium into your home directory (``~/.local/share/pyppeteer``).
         """
 
         self.browser = self.session.browser  # Automatically create a event loop and browser
