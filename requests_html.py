@@ -95,7 +95,7 @@ class BaseParser:
         if self._html:
             return self._html
         else:
-            return etree.tostring(self.element, encoding='unicode').strip().encode(self.encoding)
+            return etree.tostring(self.element, encoding='unicode', method='html').strip().encode(self.encoding)
 
     @property
     def html(self) -> _BaseHTML:
@@ -105,7 +105,7 @@ class BaseParser:
         if self._html:
             return self.raw_html.decode(self.encoding, errors='replace')
         else:
-            return etree.tostring(self.element, encoding='unicode').strip()
+            return etree.tostring(self.element, encoding='unicode', method='html').strip()
 
     @html.setter
     def html(self, html: str) -> None:
@@ -129,7 +129,7 @@ class BaseParser:
             self._encoding = html_to_unicode(self.default_encoding, self._html)[0]
             # Fall back to requests' detected encoding if decode fails.
             try:
-                self.raw_html.decode(self.encoding, errors='replace')
+                self.raw_html.decode(self.encoding, errors='strict')
             except UnicodeDecodeError:
                 self._encoding = self.default_encoding
 
@@ -229,7 +229,7 @@ class BaseParser:
             elements = []
 
             for element in elements_copy:
-                element.raw_html = lxml_html_tostring(cleaner.clean_html(element.lxml))
+                element.raw_html = lxml_html_tostring(cleaner.clean_html(element.lxml),encoding=element.encoding)
                 elements.append(element)
 
         return _get_first_or_list(elements, first)
