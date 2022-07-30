@@ -290,7 +290,7 @@ async def test_bare_js_async_eval():
 
 
 def test_browser_session():
-    """ Test browser instaces is created and properly close when session is closed.
+    """ Test browser instances is created and properly close when session is closed.
         Note: session.close method need to be tested together with browser creation,
             since no doing that will left the browser running. """
     session = HTMLSession()
