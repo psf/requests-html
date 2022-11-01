@@ -6,9 +6,10 @@ from concurrent.futures._base import TimeoutError
 from functools import partial
 from typing import Set, Union, List, MutableMapping, Optional
 
+import http.cookiejar
 import pyppeteer
 import requests
-import http.cookiejar
+
 from pyquery import PyQuery
 
 from fake_useragent import UserAgent
@@ -94,8 +95,7 @@ class BaseParser:
         """
         if self._html:
             return self._html
-        else:
-            return etree.tostring(self.element, encoding='unicode').strip().encode(self.encoding)
+        return etree.tostring(self.element, encoding='unicode').strip().encode(self.encoding)
 
     @property
     def html(self) -> _BaseHTML:
@@ -104,8 +104,7 @@ class BaseParser:
         """
         if self._html:
             return self.raw_html.decode(self.encoding, errors='replace')
-        else:
-            return etree.tostring(self.element, encoding='unicode').strip()
+        return etree.tostring(self.element, encoding='unicode').strip()
 
     @html.setter
     def html(self, html: str) -> None:
@@ -377,7 +376,7 @@ class Element(BaseParser):
     ]
 
     def __init__(self, *, element, url: _URL, default_encoding: _DefaultEncoding = None) -> None:
-        super(Element, self).__init__(element=element, url=url, default_encoding=default_encoding)
+        super().__init__(element=element, url=url, default_encoding=default_encoding)
         self.element = element
         self.tag = element.tag
         self.lineno = element.sourceline
@@ -418,7 +417,7 @@ class HTML(BaseParser):
             html = html.encode(DEFAULT_ENCODING)
 
         pq = PyQuery(html)
-        super(HTML, self).__init__(
+        super().__init__(
             element=pq('html') or pq.wrapAll('<html></html>')('html'),
             html=html,
             url=url,
@@ -469,8 +468,7 @@ class HTML(BaseParser):
 
         if fetch:
             return self.session.get(url)
-        else:
-            return url
+        return url
 
     def __iter__(self):
 
@@ -566,9 +564,11 @@ class HTML(BaseParser):
         def __convert(cookiejar, key):
             try:
                 v = eval ("cookiejar."+key)
-                if not v: kv = ''
-                else: kv = {key: v}
-            except:
+                if not v:
+                    kv = ''
+                else:
+                    kv = {key: v}
+            except Exception:
                 kv = ''
             return kv
 
@@ -654,9 +654,9 @@ class HTML(BaseParser):
             reload = False
 
         if send_cookies_session:
-           cookies = self._convert_cookiesjar_to_render()
+            cookies = self._convert_cookiesjar_to_render()
 
-        for i in range(retries):
+        for _ in range(retries):
             if not content:
                 try:
 
@@ -685,7 +685,7 @@ class HTML(BaseParser):
             reload = False
 
         if send_cookies_session:
-           cookies = self._convert_cookiesjar_to_render()
+            cookies = self._convert_cookiesjar_to_render()
 
         for _ in range(retries):
             if not content:
@@ -712,7 +712,7 @@ class HTMLResponse(requests.Response):
     """
 
     def __init__(self, session: Union['HTMLSession', 'AsyncHTMLSession']) -> None:
-        super(HTMLResponse, self).__init__()
+        super().__init__()
         self._html = None  # type: HTML
         self.session = session
 
@@ -787,7 +787,7 @@ class BaseSession(requests.Session):
 class HTMLSession(BaseSession):
 
     def __init__(self, **kwargs):
-        super(HTMLSession, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def browser(self):
