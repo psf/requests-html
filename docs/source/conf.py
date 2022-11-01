@@ -21,7 +21,7 @@
 import requests_html
 
 project = 'requests-HTML'
-copyright = u'MMXVIII. A <a href="http://kennethreitz.com/pages/open-projects.html">Kenneth Reitz</a> Project'
+copyright = 'MMXVIII. A <a href="http://kennethreitz.com/pages/open-projects.html">Kenneth Reitz</a> Project'
 author = 'Kenneth Reitz'
 
 # The short X.Y version

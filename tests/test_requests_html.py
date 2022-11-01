@@ -3,9 +3,9 @@ from functools import partial
 
 import pytest
 from pyppeteer.browser import Browser
-from pyppeteer.page import Page
-from requests_html import HTMLSession, AsyncHTMLSession, HTML
 from requests_file import FileAdapter
+from requests_html import HTMLSession, AsyncHTMLSession, HTML
+
 
 session = HTMLSession()
 session.mount('file://', FileAdapter())
@@ -295,7 +295,7 @@ def test_browser_session():
             since no doing that will left the browser running. """
     session = HTMLSession()
     assert isinstance(session.browser, Browser)
-    assert hasattr(session, "loop") == True
+    assert hasattr(session, "loop") is True
     session.close()
     # assert count_chromium_process() == 0
 
@@ -313,7 +313,7 @@ def test_browser_process():
         r = get()
         r.html.render()
 
-        assert r.html.page == None
+        assert r.html.page is None
 
 
 @pytest.mark.asyncio
