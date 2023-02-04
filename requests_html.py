@@ -839,5 +839,5 @@ class AsyncHTMLSession(BaseSession):
         tasks = [
             asyncio.ensure_future(coro()) for coro in coros
         ]
-        done, _ = self.loop.run_until_complete(asyncio.wait(tasks))
-        return [t.result() for t in done]
+        _, _ = self.loop.run_until_complete(asyncio.wait(tasks))
+        return [t.result() for t in tasks]

@@ -62,10 +62,8 @@ Try async and get some sites at the same time:
     ...     print(result.html.url)
     ... 
     https://www.python.org/
-    https://www.google.com/
     https://www.reddit.com/
-
-Note that the order of the objects in the results list represents the order they were returned in, not the order that the coroutines are passed to the ``run`` method, which is shown in the example by the order being different. 
+    https://www.google.com/
 
 Grab a list of all links on the page, as–is (anchors excluded):
 
