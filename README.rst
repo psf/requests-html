@@ -11,7 +11,7 @@ simple and intuitive as possible.
 
 When using this library you automatically get:
 
-- **Full JavaScript support**! (Using Chromium, thanks to Puppeteer)
+- **Full JavaScript support**! (Using Chromium, thanks to pyppeteer)
 - *CSS Selectors* (a.k.a jQuery-style, thanks to PyQuery).
 - *XPath Selectors*, for the faint of heart.
 - Mocked user-agent (like a real web browser).
