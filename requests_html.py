@@ -771,7 +771,7 @@ class BaseSession(requests.Session):
 
 
     def response_hook(self, response, **kwargs) -> HTMLResponse:
-        """ Change response enconding and replace it by a HTMLResponse. """
+        """ Change response encoding and replace it by a HTMLResponse. """
         if not response.encoding:
             response.encoding = DEFAULT_ENCODING
         return HTMLResponse._from_response(response, self)
