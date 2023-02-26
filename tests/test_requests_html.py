@@ -13,14 +13,14 @@ session.mount('file://', FileAdapter())
 
 def get():
     path = os.path.sep.join((os.path.dirname(os.path.abspath(__file__)), 'python.html'))
-    url = 'file://{}'.format(path)
+    url = f'file://{path}'
 
     return session.get(url)
 
 
 @pytest.fixture
 def async_get(event_loop):
-    """ AsyncSession cannot be created global since it will create
+    """AsyncSession cannot be created global since it will create
         a different loop from pytest-asyncio. """
     async_session = AsyncHTMLSession()
     async_session.mount('file://', FileAdapter())
@@ -54,8 +54,8 @@ def test_css_selector():
     about = r.html.find('#about', first=True)
 
     for menu_item in (
-        'About', 'Applications', 'Quotes', 'Getting Started', 'Help',
-        'Python Brochure'
+            'About', 'Applications', 'Quotes', 'Getting Started', 'Help',
+            'Python Brochure'
     ):
         assert menu_item in about.text.split('\n')
         assert menu_item in about.full_text.split('\n')
@@ -290,14 +290,22 @@ async def test_bare_js_async_eval():
 
 
 def test_browser_session():
-    """ Test browser instaces is created and properly close when session is closed.
+    """ Test browser instances is created and properly close when session is closed.
         Note: session.close method need to be tested together with browser creation,
-            since no doing that will left the browser running. """
+            since not doing that will leave the browser running. """
     session = HTMLSession()
     assert isinstance(session.browser, Browser)
-    assert hasattr(session, "loop") == True
+    assert hasattr(session, "loop")
     session.close()
     # assert count_chromium_process() == 0
+
+
+def test_browser_process():
+    for _ in range(3):
+        r = get()
+        r.html.render()
+
+        assert r.html.page is None
 
 
 @pytest.mark.asyncio
@@ -308,21 +316,9 @@ async def test_browser_session_fail():
         session.browser
 
 
-def test_browser_process():
-    for _ in range(3):
-        r = get()
-        r.html.render()
-
-        assert r.html.page == None
-
-
 @pytest.mark.asyncio
 async def test_async_browser_session():
     session = AsyncHTMLSession()
     browser = await session.browser
     assert isinstance(browser, Browser)
     await session.close()
-
-
-if __name__ == '__main__':
-    test_containing()
