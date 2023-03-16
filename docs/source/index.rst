@@ -83,7 +83,7 @@ But async is fun when fetching some sites at the same time:
     >>> async def get_google():
     ...    r = await asession.get('https://google.com/')
 
-    >>> session.run(get_pythonorg, get_reddit, get_google)
+    >>> asession.run(get_pythonorg, get_reddit, get_google)
 
 Grab a list of all links on the page, as–is (anchors excluded):
 
