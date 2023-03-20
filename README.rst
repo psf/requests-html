@@ -1,23 +1,37 @@
+
+=======================================
 Requests-HTML: HTML Parsing for Humans™
 =======================================
-
-.. image:: https://farm5.staticflickr.com/4695/39152770914_a3ab8af40d_k_d.jpg
 
 .. image:: https://travis-ci.com/psf/requests-html.svg?branch=master
     :target: https://travis-ci.com/psf/requests-html
 
-This library intends to make parsing HTML (e.g. scraping the web) as
-simple and intuitive as possible.
+.. image:: https://img.shields.io/pypi/v/requests-html
+    :target: https://pypi.org/project/requests-html/
 
-When using this library you automatically get:
+.. image:: https://img.shields.io/pypi/dm/requests-html
+    :target: https://pypi.org/project/requests-html/
+    
+.. image:: https://img.shields.io/conda/dn/conda-forge/requests-html
+    :target: https://github.com/conda-forge/requests-html-feedstock/blob/main/recipe/meta.yaml
 
-- **Full JavaScript support**!
-- *CSS Selectors* (a.k.a jQuery-style, thanks to PyQuery).
-- *XPath Selectors*, for the faint of heart.
-- Mocked user-agent (like a real web browser).
-- Automatic following of redirects.
-- Connection–pooling and cookie persistence.
-- The Requests experience you know and love, with magical parsing abilities.
+.. image:: https://img.shields.io/badge/python-3.7+-important
+    :target: https://python.org/
+
+A Python library for requesting and parsing HTML with psf/requests and Chromium.
+
+.. contents::
+
+Features
+========
+
+- **Full JS support**!
+- *CSS Selectors* with pyquery: ``.find()``, ``.pq``
+- *XPath Selectors* with lxml: ``.xpath()``, ``.lxml``
+- Mocked user-agent (like a real web browser)
+- Follows HTTP redirects
+- HTTP Connection pooling and cookie persistence
+- Downloads Chromium on first request or ``pyppeteer-install``
 - **Async Support**
 
 .. Other nice features include:
@@ -28,7 +42,7 @@ When using this library you automatically get:
 Tutorial & Usage
 ================
 
-Make a GET request to 'python.org', using Requests:
+Make a (blocking) GET request to 'python.org' with Requests and `HTMLSession`:
 
 .. code-block:: pycon
 
@@ -36,7 +50,7 @@ Make a GET request to 'python.org', using Requests:
     >>> session = HTMLSession()
     >>> r = session.get('https://python.org/')
 
-Try async and get some sites at the same time:
+Make multiple concurrent HTTP GET requests with `AsyncHTMLSession`:
 
 .. code-block:: pycon
 
@@ -65,7 +79,7 @@ Try async and get some sites at the same time:
     https://www.google.com/
     https://www.reddit.com/
 
-Note that the order of the objects in the results list represents the order they were returned in, not the order that the coroutines are passed to the ``run`` method, which is shown in the example by the order being different. 
+Note that the order of the objects in the `results` list represents the order the HTTP requests were returned in, not the order that the coroutines are passed to the ``AsyncHTMLSession.run()`` method (due to variable network and server latency).
 
 Grab a list of all links on the page, as–is (anchors excluded):
 
@@ -154,10 +168,10 @@ XPath is also supported:
    [<Element 'a' class=('px-2', 'py-4', 'show-on-focus', 'js-skip-to-content') href='#start-of-content' tabindex='1'>]
 
 
-JavaScript Support
+JS Support
 ==================
 
-Let's grab some text that's rendered by JavaScript. Until 2020, the Python 2.7 countdown clock (https://pythonclock.org) will serve as a good test page:
+Let's grab some text that requires JS to render. Until 2020, the Python 2.7 countdown clock (https://pythonclock.org) will serve as a good test page:
 
 .. code-block:: pycon
 
@@ -178,7 +192,7 @@ Notice the clock is missing. The ``render()`` method takes the response and rend
     >>> r.html.search('Python 2.7 will retire in...{}Enable Guido Mode')[0]
     '</h1>\n        </div>\n        <div class="python-27-clock is-countdown"><span class="countdown-row countdown-show6"><span class="countdown-section"><span class="countdown-amount">1</span><span class="countdown-period">Year</span></span><span class="countdown-section"><span class="countdown-amount">2</span><span class="countdown-period">Months</span></span><span class="countdown-section"><span class="countdown-amount">28</span><span class="countdown-period">Days</span></span><span class="countdown-section"><span class="countdown-amount">16</span><span class="countdown-period">Hours</span></span><span class="countdown-section"><span class="countdown-amount">52</span><span class="countdown-period">Minutes</span></span><span class="countdown-section"><span class="countdown-amount">46</span><span class="countdown-period">Seconds</span></span></span></div>\n        <div class="center">\n            <div class="guido-button-block">\n                <button class="js-guido-mode guido-button">'
 
-Let's clean it up a bit. This step is not needed, it just makes it a bit easier to visualize the returned html to see what we need to target to extract our required information. 
+Let's clean it up a bit. This step is not needed, it just makes it a bit easier to visualize the returned HTML to see what we need to target to extract our required information. 
 
 .. code-block:: pycon
 
@@ -204,7 +218,7 @@ Let's clean it up a bit. This step is not needed, it just makes it a bit easier 
  '            <div class="guido-button-block">\n'
  '                <button class="js-guido-mode guido-button">')
 
-The rendered html has all the same methods and attributes as above. Let's extract just the data that we want out of the clock into something easy to use elsewhere and introspect like a dictionary.
+The rendered HTML has all the same methods and attributes as above. Let's extract just the data that we want out of the clock into something easy to use elsewhere and introspect like a dictionary.
 
 .. code-block:: pycon
 	
@@ -225,16 +239,21 @@ Or you can do this async also:
     ...
     >>> results = asession.run(get_pyclock, get_pyclock, get_pyclock)
 
-The rest of the code operates the same way as the synchronous version except that ``results`` is a list containing multiple response objects however the same basic processes can be applied as above to extract the data you want. 
+The rest of the code operates the same way as the synchronous version except that ``results`` is a list containing multiple response. objects however the same basic processes can be applied as above to extract the data you want. 
 
-Note, the first time you ever run the ``render()`` method, it will download
-Chromium into your home directory (e.g. ``~/.pyppeteer/``). This only happens
-once.
+.. note::
+   The ``render()`` method will download Chromium into ``~/.pyppeteer/`` if it does not exist.
+   
+   Download Chromium ahead of time with:
+   
+   .. code:: bash
+   
+      $ pyppeteer-install
+
 
 Using without Requests
 ======================
-
-You can also use this library without Requests:
+You can use requests-html for HTML without Requests for HTTP:
 
 .. code-block:: pycon
 
@@ -247,10 +266,36 @@ You can also use this library without Requests:
 
 Installation
 ============
+Install requests-html and then download a local copy of Chromium;
+with `pip`:
 
 .. code-block:: shell
 
+    $ pip install requests-html
+    $ pyppeteer-install
+
+Install requests-html and then download a local copy of Chromium;
+with `pipenv`
+
+.. code-block:: shell
+    
     $ pipenv install requests-html
     ✨🍰✨
+    $ pyppeteer-install
 
-Only **Python 3.6 and above** is supported.
+Install requests-html and then download a local copy of Chromium;
+with `conda` or `mamba`:
+
+.. code-block:: shell
+
+    $ conda -c conda-forge install requests-html
+    $ pyppeteer-install
+
+
+Similar Work
+=============
+- https://en.wikipedia.org/wiki/Web_scraping
+- https://github.com/topics/web-scraping
+- https://github.com/lorien/awesome-web-scraping/blob/master/python.md
+- https://github.com/pyppeteer/pyppeteer (Unmaintained (2023))
+- https://github.com/microsoft/playwright-python
