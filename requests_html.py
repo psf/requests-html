@@ -600,10 +600,11 @@ class HTML(BaseParser):
                 cookies_render.append(self._convert_cookiejar_to_render(cookie))
         return cookies_render
 
-    def render(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False, cookies: list = [{}], send_cookies_session: bool = False):
+    def render(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False, cookies: list = [{}], send_cookies_session: bool = False, encoding: str = DEFAULT_ENCODING):
         """Reloads the response in Chromium, and replaces HTML content
         with an updated version, with JavaScript executed.
 
+        :param encoding: specify the encoding after processing. By default, "utf-8"
         :param retries: The number of times to retry loading the page in Chromium.
         :param script: JavaScript to execute upon page load (optional).
         :param wait: The number of seconds to wait before loading the page, preventing timeouts (optional).
@@ -671,12 +672,12 @@ class HTML(BaseParser):
         if not content:
             raise MaxRetries("Unable to render the page. Try increasing timeout")
 
-        html = HTML(url=self.url, html=content.encode(DEFAULT_ENCODING), default_encoding=DEFAULT_ENCODING)
+        html = HTML(url=self.url, html=content.encode(encoding), default_encoding=encoding)
         self.__dict__.update(html.__dict__)
         self.page = page
         return result
 
-    async def arender(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False, cookies: list = [{}], send_cookies_session: bool = False):
+    async def arender(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False, cookies: list = [{}], send_cookies_session: bool = False, encoding: str = DEFAULT_ENCODING):
         """ Async version of render. Takes same parameters. """
 
         self.browser = await self.session.browser
@@ -702,7 +703,7 @@ class HTML(BaseParser):
         if not content:
             raise MaxRetries("Unable to render the page. Try increasing timeout")
 
-        html = HTML(url=self.url, html=content.encode(DEFAULT_ENCODING), default_encoding=DEFAULT_ENCODING)
+        html = HTML(url=self.url, html=content.encode(encoding), default_encoding=encoding)
         self.__dict__.update(html.__dict__)
         self.page = page
         return result
