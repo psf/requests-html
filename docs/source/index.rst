@@ -219,7 +219,7 @@ Or you can do this async also:
     '<time>25</time>'
 
 Note, the first time you ever run the ``render()`` method, it will download
-Chromium into your home directory (e.g. ``~/.pyppeteer/``). This only happens
+Chromium into your home directory (e.g. ``~/.local/share/pyppeteer/``). This only happens
 once. You may also need to install a few `Linux packages <https://github.com/miyakogi/pyppeteer/issues/60>`_ to get pyppeteer working.
 
 Pagination
