@@ -671,7 +671,7 @@ class HTML(BaseParser):
         if not content:
             raise MaxRetries("Unable to render the page. Try increasing timeout")
 
-        html = HTML(url=self.url, html=content.encode(DEFAULT_ENCODING), default_encoding=DEFAULT_ENCODING)
+        html = HTML(url=self.url, html=content.encode(self.encoding), default_encoding=DEFAULT_ENCODING)
         self.__dict__.update(html.__dict__)
         self.page = page
         return result
@@ -702,7 +702,7 @@ class HTML(BaseParser):
         if not content:
             raise MaxRetries("Unable to render the page. Try increasing timeout")
 
-        html = HTML(url=self.url, html=content.encode(DEFAULT_ENCODING), default_encoding=DEFAULT_ENCODING)
+        html = HTML(url=self.url, html=content.encode(self.encoding), default_encoding=DEFAULT_ENCODING)
         self.__dict__.update(html.__dict__)
         self.page = page
         return result
