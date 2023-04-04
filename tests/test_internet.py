@@ -45,3 +45,10 @@ def test_async_run():
 
     assert len(r) == len(urls)
     assert isinstance(r[0], HTMLResponse)
+
+def test_wait_until(event_loop):
+    session = HTMLSession()
+
+    r = session.get('https://reddit.com/')
+    r.html.render(wait_until='networkidle0')
+    assert True
