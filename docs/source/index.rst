@@ -43,7 +43,7 @@ Installation
     $ pipenv install requests-html
     ✨🍰✨
 
-Only **Python 3.6** is supported.
+Only **Python 3.6** and above is supported.
 
 
 Tutorial & Usage
