@@ -758,18 +758,27 @@ class BaseSession(requests.Session):
     amongst other things.
     """
 
-    def __init__(self, mock_browser : bool = True, verify : bool = True,
-                 browser_args : list = ['--no-sandbox']):
+    def __init__(
+        self,
+        mock_browser : bool = True,
+        verify : bool = True,
+        browser_args : list = ['--no-sandbox'],
+        headers : dict = None,
+        port : str = None,
+    ):
         super().__init__()
 
         # Mock a web browser's user agent.
-        if mock_browser:
+        if mock_browser and not headers:
             self.headers['User-Agent'] = user_agent()
+        elif headers:
+            self.headers = headers
 
         self.hooks['response'].append(self.response_hook)
         self.verify = verify
 
         self.__browser_args = browser_args
+        self.port = port
 
 
     def response_hook(self, response, **kwargs) -> HTMLResponse:
