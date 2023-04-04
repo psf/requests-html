@@ -759,7 +759,7 @@ class BaseSession(requests.Session):
     """
 
     def __init__(self, mock_browser : bool = True, verify : bool = True,
-                 browser_args : list = ['--no-sandbox']):
+                 browser_args : list = ['--no-sandbox'], proxies=None):
         super().__init__()
 
         # Mock a web browser's user agent.
@@ -768,7 +768,7 @@ class BaseSession(requests.Session):
 
         self.hooks['response'].append(self.response_hook)
         self.verify = verify
-
+        self.proxies = proxies or {}
         self.__browser_args = browser_args
 
 
