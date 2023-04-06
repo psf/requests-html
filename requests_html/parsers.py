@@ -1,18 +1,17 @@
-import sys
 import asyncio
 from urllib.parse import urlparse, urlunparse, urljoin
-from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures._base import TimeoutError
-from functools import partial
-from typing import Set, Union, List, MutableMapping, Optional
+from typing import Union, Optional
 
-import pyppeteer
-import requests
+
+from requests_html.typing import _DefaultEncoding, _HTML, _RawHTML, _BaseHTML, _Encoding, _Text, _Containing, _Result, _Links, _URL, _Attrs, _NextSymbol, _Next
+from requests_html.globals import DEFAULT_ENCODING, DEFAULT_NEXT_SYMBOL, DEFAULT_URL
+from requests_html import _get_first_or_list, MaxRetries, cleaner
+from requests_html.sessions import AsyncHTMLSession, HTMLSession
+
 import http.cookiejar
 from pyquery import PyQuery
 
-from fake_useragent import UserAgent
-from lxml.html.clean import Cleaner
 import lxml
 from lxml import etree
 from lxml.html import HtmlElement
@@ -21,50 +20,6 @@ from lxml.html.soupparser import fromstring as soup_parse
 from parse import search as parse_search
 from parse import findall, Result
 from w3lib.encoding import html_to_unicode
-
-DEFAULT_ENCODING = 'utf-8'
-DEFAULT_URL = 'https://example.org/'
-DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.1.2 Safari/603.3.8'
-DEFAULT_NEXT_SYMBOL = ['next', 'more', 'older']
-
-cleaner = Cleaner()
-cleaner.javascript = True
-cleaner.style = True
-
-useragent = None
-
-# Typing.
-_Find = Union[List['Element'], 'Element']
-_XPath = Union[List[str], List['Element'], str, 'Element']
-_Result = Union[List['Result'], 'Result']
-_HTML = Union[str, bytes]
-_BaseHTML = str
-_UserAgent = str
-_DefaultEncoding = str
-_URL = str
-_RawHTML = bytes
-_Encoding = str
-_LXML = HtmlElement
-_Text = str
-_Search = Result
-_Containing = Union[str, List[str]]
-_Links = Set[str]
-_Attrs = MutableMapping
-_Next = Union['HTML', List[str]]
-_NextSymbol = List[str]
-
-# Sanity checking.
-try:
-    assert sys.version_info.major == 3
-    assert sys.version_info.minor > 5
-except AssertionError:
-    raise RuntimeError('Requests-HTML requires Python 3.6+!')
-
-
-class MaxRetries(Exception):
-
-    def __init__(self, message):
-        self.message = message
 
 
 class BaseParser:
@@ -363,6 +318,9 @@ class BaseParser:
         return url
 
 
+
+
+
 class Element(BaseParser):
     """An element of HTML.
 
@@ -401,6 +359,7 @@ class Element(BaseParser):
                     self._attrs[attr] = tuple(self._attrs[attr].split())
 
         return self._attrs
+
 
 
 class HTML(BaseParser):
@@ -707,139 +666,3 @@ class HTML(BaseParser):
         self.page = page
         return result
 
-
-class HTMLResponse(requests.Response):
-    """An HTML-enabled :class:`requests.Response <requests.Response>` object.
-    Effectively the same, but with an intelligent ``.html`` property added.
-    """
-
-    def __init__(self, session: Union['HTMLSession', 'AsyncHTMLSession']) -> None:
-        super(HTMLResponse, self).__init__()
-        self._html = None  # type: HTML
-        self.session = session
-
-    @property
-    def html(self) -> HTML:
-        if not self._html:
-            self._html = HTML(session=self.session, url=self.url, html=self.content, default_encoding=self.encoding)
-
-        return self._html
-
-    @classmethod
-    def _from_response(cls, response, session: Union['HTMLSession', 'AsyncHTMLSession']):
-        html_r = cls(session=session)
-        html_r.__dict__.update(response.__dict__)
-        return html_r
-
-
-def user_agent(style=None) -> _UserAgent:
-    """Returns an apparently legit user-agent, if not requested one of a specific
-    style. Defaults to a Chrome-style User-Agent.
-    """
-    global useragent
-    if (not useragent) and style:
-        useragent = UserAgent()
-
-    return useragent[style] if style else DEFAULT_USER_AGENT
-
-
-def _get_first_or_list(l, first=False):
-    if first:
-        try:
-            return l[0]
-        except IndexError:
-            return None
-    else:
-        return l
-
-
-class BaseSession(requests.Session):
-    """ A consumable session, for cookie persistence and connection pooling,
-    amongst other things.
-    """
-
-    def __init__(self, mock_browser : bool = True, verify : bool = True,
-                 browser_args : list = ['--no-sandbox']):
-        super().__init__()
-
-        # Mock a web browser's user agent.
-        if mock_browser:
-            self.headers['User-Agent'] = user_agent()
-
-        self.hooks['response'].append(self.response_hook)
-        self.verify = verify
-
-        self.__browser_args = browser_args
-
-
-    def response_hook(self, response, **kwargs) -> HTMLResponse:
-        """ Change response encoding and replace it by a HTMLResponse. """
-        if not response.encoding:
-            response.encoding = DEFAULT_ENCODING
-        return HTMLResponse._from_response(response, self)
-
-    @property
-    async def browser(self):
-        if not hasattr(self, "_browser"):
-            self._browser = await pyppeteer.launch(ignoreHTTPSErrors=not(self.verify), headless=True, args=self.__browser_args)
-
-        return self._browser
-
-
-class HTMLSession(BaseSession):
-
-    def __init__(self, **kwargs):
-        super(HTMLSession, self).__init__(**kwargs)
-
-    @property
-    def browser(self):
-        if not hasattr(self, "_browser"):
-            self.loop = asyncio.get_event_loop()
-            if self.loop.is_running():
-                raise RuntimeError("Cannot use HTMLSession within an existing event loop. Use AsyncHTMLSession instead.")
-            self._browser = self.loop.run_until_complete(super().browser)
-        return self._browser
-
-    def close(self):
-        """ If a browser was created close it first. """
-        if hasattr(self, "_browser"):
-            self.loop.run_until_complete(self._browser.close())
-        super().close()
-
-
-class AsyncHTMLSession(BaseSession):
-    """ An async consumable session. """
-
-    def __init__(self, loop=None, workers=None,
-                 mock_browser: bool = True, *args, **kwargs):
-        """ Set or create an event loop and a thread pool.
-
-            :param loop: Asyncio loop to use.
-            :param workers: Amount of threads to use for executing async calls.
-                If not pass it will default to the number of processors on the
-                machine, multiplied by 5. """
-        super().__init__(*args, **kwargs)
-
-        self.loop = loop or asyncio.get_event_loop()
-        self.thread_pool = ThreadPoolExecutor(max_workers=workers)
-
-    def request(self, *args, **kwargs):
-        """ Partial original request func and run it in a thread. """
-        func = partial(super().request, *args, **kwargs)
-        return self.loop.run_in_executor(self.thread_pool, func)
-
-    async def close(self):
-        """ If a browser was created close it first. """
-        if hasattr(self, "_browser"):
-            await self._browser.close()
-        super().close()
-
-    def run(self, *coros):
-        """ Pass in all the coroutines you want to run, it will wrap each one
-            in a task, run it and wait for the result. Return a list with all
-            results, this is returned in the same order coros are passed in. """
-        tasks = [
-            asyncio.ensure_future(coro()) for coro in coros
-        ]
-        done, _ = self.loop.run_until_complete(asyncio.wait(tasks))
-        return [t.result() for t in done]
