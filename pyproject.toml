@@ -1,0 +1,47 @@
+[tool.poetry]
+    name = "requests-html"
+    version = "0.10.0"
+    homepage = "https://github.com/psf/requests-html"
+    description = "HTML Parsing for Humans."
+    authors = ["Kenneth Reitz <me@kennethreitz.org>"]
+    readme = "README.rst"
+    license =  "MIT"
+    classifiers=[
+        # Trove classifiers
+        # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Programming Language :: Python :: Implementation :: PyPy'
+    ]
+
+    packages = [
+        { include = "src" }
+    ]
+
+    [tool.poetry.dependencies]
+        python = ">=3.6.0,<4.0"
+        requests = "*"
+        pyquery = "*"
+        fake-useragent = "*"
+        parse = "*"
+        beautifulsoup4 = "*"
+        w3lib = "*"
+        pyppeteer = '>=0.0.14'
+        rfc3986 = "*"
+
+    [tool.poetry.group.devel]
+        optional = true
+        [tool.poetry.group.devel.dependencies]
+            twine = "*"
+            requests-file = "*"
+            pytest = "*"
+            sphinx = "*"
+            mypy = "*"
+            pytest-asyncio = "*"
+            white = "*"
+
+[build-system]
+    requires = ["poetry-core>=1.0.0"]
+    build-backend = "poetry.core.masonry.api"
