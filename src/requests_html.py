@@ -661,10 +661,10 @@ class HTML(BaseParser):
         for i in range(retries):
             if not content:
                 try:
-
                     content, result, page = self.session.loop.run_until_complete(self._async_render(url=self.url, script=script, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout, keep_page=keep_page, cookies=cookies))
                 except TypeError:
                     pass
+
             else:
                 break
 
