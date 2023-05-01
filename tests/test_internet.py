@@ -1,5 +1,5 @@
 import pytest
-from requests_html import HTMLSession, AsyncHTMLSession, HTMLResponse
+from src.requests_html import HTMLSession, AsyncHTMLSession, HTMLResponse
 
 
 urls = [

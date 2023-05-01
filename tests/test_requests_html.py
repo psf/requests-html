@@ -4,8 +4,8 @@ from functools import partial
 import pytest
 from pyppeteer.browser import Browser
 from pyppeteer.page import Page
-from requests_html import HTMLSession, AsyncHTMLSession, HTML
 from requests_file import FileAdapter
+from src.requests_html import HTMLSession, AsyncHTMLSession, HTML
 
 session = HTMLSession()
 session.mount('file://', FileAdapter())

@@ -18,7 +18,7 @@
 
 
 # -- Project information -----------------------------------------------------
-import requests_html
+import src.requests_html as requests_html
 
 project = 'requests-HTML'
 copyright = u'MMXVIII. A <a href="http://kennethreitz.com/pages/open-projects.html">Kenneth Reitz</a> Project'
