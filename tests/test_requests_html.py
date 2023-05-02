@@ -2,8 +2,8 @@ import os
 from functools import partial
 
 import pytest
-from pyppeteer.browser import Browser
-from pyppeteer.page import Page
+from playwright.sync_api import Browser, Error
+from playwright.async_api import Browser as AsyncBrowser
 from requests_file import FileAdapter
 from src.requests_html import HTMLSession, AsyncHTMLSession, HTML
 
@@ -18,8 +18,8 @@ def get():
     return session.get(url)
 
 
-@pytest.fixture
-def async_get(event_loop):
+@pytest.fixture(scope='function')
+async def async_get(event_loop):
     """AsyncSession cannot be created global since it will create
         a different loop from pytest-asyncio. """
     async_session = AsyncHTMLSession()
@@ -27,7 +27,9 @@ def async_get(event_loop):
     path = os.path.sep.join((os.path.dirname(os.path.abspath(__file__)), 'python.html'))
     url = 'file://{}'.format(path)
 
-    return partial(async_session.get, url)
+    yield partial(async_session.get, url)
+
+    await async_session.close()
 
 
 def test_file_get():
@@ -39,6 +41,7 @@ def test_file_get():
 async def test_async_file_get(async_get):
     r = await async_get()
     assert r.status_code == 200
+    await r.html.session.close()
 
 
 def test_class_seperation():
@@ -91,6 +94,7 @@ def test_links():
 async def test_async_links(async_get):
     r = await async_get()
     about = r.html.find('#about', first=True)
+    await r.html.session.close()
 
     assert len(about.links) == 6
     assert len(about.absolute_links) == 6
@@ -177,6 +181,7 @@ def test_render():
 
     about = r.html.find('#about', first=True)
     assert len(about.links) == 6
+    r.html.session.close()
 
 
 @pytest.mark.render
@@ -198,7 +203,7 @@ async def test_async_render(async_get):
 
     about = r.html.find('#about', first=True)
     assert len(about.links) == 6
-    await r.html.browser.close()
+    await r.html.session.close()
 
 
 @pytest.mark.render
@@ -214,12 +219,13 @@ def test_bare_render():
             }
         }
     """
-    val = html.render(script=script, reload=False)
+    val = html.render(script=script)
     for value in ('width', 'height', 'deviceScaleFactor'):
         assert value in val
 
     assert html.find('html')
     assert 'https://httpbin.org' in html.links
+    html.session.close()
 
 
 @pytest.mark.render
@@ -236,13 +242,13 @@ async def test_bare_arender():
             }
         }
     """
-    val = await html.arender(script=script, reload=False)
+    val = await html.arender(script=script)
     for value in ('width', 'height', 'deviceScaleFactor'):
         assert value in val
 
     assert html.find('html')
     assert 'https://httpbin.org' in html.links
-    await html.browser.close()
+    await html.session.close()
 
 
 @pytest.mark.render
@@ -262,8 +268,8 @@ def test_bare_js_eval():
 
     html = HTML(html=doc)
     html.render()
-
     assert html.find('#replace', first=True).text == 'yolo'
+    html.session.close()
 
 
 @pytest.mark.render
@@ -286,7 +292,7 @@ async def test_bare_js_async_eval():
     await html.arender()
 
     assert html.find('#replace', first=True).text == 'yolo'
-    await html.browser.close()
+    await html.session.close()
 
 
 def test_browser_session():
@@ -295,15 +301,19 @@ def test_browser_session():
             since not doing that will leave the browser running. """
     session = HTMLSession()
     assert isinstance(session.browser, Browser)
-    assert hasattr(session, "loop")
     session.close()
     # assert count_chromium_process() == 0
 
 
 def test_browser_process():
     for _ in range(3):
-        r = get()
+        session = HTMLSession()
+        session.mount('file://', FileAdapter())
+        path = os.path.sep.join((os.path.dirname(os.path.abspath(__file__)), 'python.html'))
+        url = f'file://{path}'
+        r = session.get(url)
         r.html.render()
+        r.html.session.close()
 
         assert r.html.page is None
 
@@ -312,7 +322,7 @@ def test_browser_process():
 async def test_browser_session_fail():
     """ HTMLSession.browser should not be call within an existing event loop> """
     session = HTMLSession()
-    with pytest.raises(RuntimeError):
+    with pytest.raises(Error):
         session.browser
 
 
@@ -320,5 +330,5 @@ async def test_browser_session_fail():
 async def test_async_browser_session():
     session = AsyncHTMLSession()
     browser = await session.browser
-    assert isinstance(browser, Browser)
+    assert isinstance(browser, AsyncBrowser)
     await session.close()
