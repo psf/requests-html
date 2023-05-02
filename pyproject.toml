@@ -14,8 +14,9 @@ fake-useragent = "^1.1.3"
 parse = "^1.19.0"
 bs4 = "^0.0.1"
 w3lib = "^2.1.1"
-pyppeteer = "^1.0.2"
 rfc3986 = "^2.0.0"
+playwright = "^1.32.1"
+pytest-playwright = "^0.3.3"
 
 
 [tool.poetry.group.dev.dependencies]

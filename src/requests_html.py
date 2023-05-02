@@ -1,3 +1,4 @@
+import os
 import sys
 import asyncio
 from urllib.parse import urlparse, urlunparse, urljoin
@@ -6,7 +7,6 @@ from concurrent.futures._base import TimeoutError
 from functools import partial
 from typing import Set, Union, List, MutableMapping, Optional
 
-import pyppeteer
 import requests
 import http.cookiejar
 from pyquery import PyQuery
@@ -21,6 +21,9 @@ from lxml.html.soupparser import fromstring as soup_parse
 from parse import search as parse_search
 from parse import findall, Result
 from w3lib.encoding import html_to_unicode
+
+from playwright.sync_api import sync_playwright
+from playwright.async_api import async_playwright
 
 DEFAULT_ENCODING = 'utf-8'
 DEFAULT_URL = 'https://example.org/'
@@ -56,10 +59,12 @@ _NextSymbol = List[str]
 # Sanity checking.
 try:
     assert sys.version_info.major == 3
-    assert sys.version_info.minor > 5
+    assert sys.version_info.minor > 8
 except AssertionError:
-    raise RuntimeError('Requests-HTML requires Python 3.6+!')
+    raise RuntimeError('Requests-HTML requires Python 3.9+!')
 
+# install browsers
+os.system("playwright install")
 
 class MaxRetries(Exception):
 
@@ -502,49 +507,59 @@ class HTML(BaseParser):
     def add_next_symbol(self, next_symbol):
         self.next_symbol.append(next_symbol)
 
-    async def _async_render(self, *, url: str, script: str = None, scrolldown, sleep: int, wait: float, reload, content: Optional[str], timeout: Union[float, int], keep_page: bool, cookies: list = [{}]):
-        """ Handle page creation and js rendering. Internal use for render/arender methods. """
+    def _render(self, *, url: str, script: Optional[str] = None, content: Optional[str], keep_page: bool, cookies: Optional[list] = None, render_html: bool = False):
         try:
-            page = await self.browser.newPage()
-
-            # Wait before rendering the page, to prevent timeouts.
-            await asyncio.sleep(wait)
-
-            if cookies:
-                for cookie in cookies:
-                    if cookie:
-                        await page.setCookie(cookie)
-
-            # Load the given page (GET request, obviously.)
-            if reload:
-                await page.goto(url, options={'timeout': int(timeout * 1000)})
+            context = self.browser.new_context()
+            if cookies is not None:
+                context.add_cookies(cookies)
+            page = context.new_page()
+            if render_html:
+                page.goto(f'data:text/html,{self.html}')
             else:
-                await page.goto(f'data:text/html,{self.html}', options={'timeout': int(timeout * 1000)})
+                page.goto(url)
 
             result = None
-            if script:
+            if script is not None:
+                result = page.evaluate(script)
+
+            content = page.content()
+            if not keep_page:
+                page.close()
+                page = None
+            context.close()
+            return content, result, page
+        except TimeoutError:
+            page.close()
+            page = None
+            return None, None, None
+
+
+    async def _async_render(self, *, url: str, script: Optional[str] = None, content: Optional[str], keep_page: bool, cookies: Optional[list] = None, render_html: bool = False):
+        """ Handle page creation and js rendering. Internal use for render/arender methods. """
+        try:
+            context = await self.browser.new_context()
+            if cookies is not None:
+                await context.add_cookies(cookies)
+            page = await context.new_page()
+            if render_html:
+                await page.goto(f'data:text/html,{self.html}')
+            else:
+                await page.goto(url)
+
+            result = None
+            if script is not None:
                 result = await page.evaluate(script)
 
-            if scrolldown:
-                for _ in range(scrolldown):
-                    await page._keyboard.down('PageDown')
-                    await asyncio.sleep(sleep)
-            else:
-                await asyncio.sleep(sleep)
-
-            if scrolldown:
-                await page._keyboard.up('PageDown')
-
-            # Return the content of the page, JavaScript evaluated.
             content = await page.content()
             if not keep_page:
                 await page.close()
                 page = None
+            await context.close()
             return content, result, page
         except TimeoutError:
             await page.close()
             page = None
-            return None
+            return None, None, None
 
     def _convert_cookiejar_to_render(self, session_cookiejar):
         """
@@ -600,27 +615,16 @@ class HTML(BaseParser):
                 cookies_render.append(self._convert_cookiejar_to_render(cookie))
         return cookies_render
 
-    def render(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False, cookies: list = [{}], send_cookies_session: bool = False):
+    def render(self, retries: int = 8, script: str = None, keep_page: bool = False, cookies: Optional[list] = None, send_cookies_session: bool = False, render_html: bool = False):
         """Reloads the response in Chromium, and replaces HTML content
         with an updated version, with JavaScript executed.
 
         :param retries: The number of times to retry loading the page in Chromium.
         :param script: JavaScript to execute upon page load (optional).
-        :param wait: The number of seconds to wait before loading the page, preventing timeouts (optional).
-        :param scrolldown: Integer, if provided, of how many times to page down.
-        :param sleep: Integer, if provided, of how many seconds to sleep after initial render.
-        :param reload: If ``False``, content will not be loaded from the browser, but will be provided from memory.
         :param keep_page: If ``True`` will allow you to interact with the browser page through ``r.html.page``.
 
         :param send_cookies_session: If ``True`` send ``HTMLSession.cookies`` convert.
         :param cookies: If not ``empty`` send ``cookies``.
-
-        If ``scrolldown`` is specified, the page will scrolldown the specified
-        number of times, after sleeping the specified amount of time
-        (e.g. ``scrolldown=10, sleep=1``).
-
-        If just ``sleep`` is provided, the rendering will wait *n* seconds, before
-        returning.
 
         If ``script`` is specified, it will execute the provided JavaScript at
         runtime. Example:
@@ -644,47 +648,13 @@ class HTML(BaseParser):
             >>> r.html.render(script=script)
             {'width': 800, 'height': 600, 'deviceScaleFactor': 1}
 
-        Warning: the first time you run this method, it will download
-        Chromium into your home directory (``~/.pyppeteer``).
         """
 
         self.browser = self.session.browser  # Automatically create a event loop and browser
         content = None
 
-        # Automatically set Reload to False, if example URL is being used.
         if self.url == DEFAULT_URL:
-            reload = False
-
-        if send_cookies_session:
-           cookies = self._convert_cookiesjar_to_render()
-
-        for i in range(retries):
-            if not content:
-                try:
-                    content, result, page = self.session.loop.run_until_complete(self._async_render(url=self.url, script=script, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout, keep_page=keep_page, cookies=cookies))
-                except TypeError:
-                    pass
-
-            else:
-                break
-
-        if not content:
-            raise MaxRetries("Unable to render the page. Try increasing timeout")
-
-        html = HTML(url=self.url, html=content.encode(DEFAULT_ENCODING), default_encoding=DEFAULT_ENCODING)
-        self.__dict__.update(html.__dict__)
-        self.page = page
-        return result
-
-    async def arender(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False, cookies: list = [{}], send_cookies_session: bool = False):
-        """ Async version of render. Takes same parameters. """
-
-        self.browser = await self.session.browser
-        content = None
-
-        # Automatically set Reload to False, if example URL is being used.
-        if self.url == DEFAULT_URL:
-            reload = False
+            render_html = True
 
         if send_cookies_session:
            cookies = self._convert_cookiesjar_to_render()
@@ -692,8 +662,37 @@ class HTML(BaseParser):
         for _ in range(retries):
             if not content:
                 try:
+                    content, result, page = self._render(url=self.url, script=script, content=self.html, keep_page=keep_page, cookies=cookies, render_html=render_html)
+                except TypeError:
+                    pass
 
-                    content, result, page = await self._async_render(url=self.url, script=script, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout, keep_page=keep_page, cookies=cookies)
+            else:
+                break
+
+        if not content:
+            raise MaxRetries("Unable to render the page. Try increasing timeout")
+
+        html = HTML(url=self.url, html=content.encode(DEFAULT_ENCODING), default_encoding=DEFAULT_ENCODING, session=self.session)
+        self.__dict__.update(html.__dict__)
+        self.page = page
+        return result
+
+    async def arender(self, retries: int = 8, script: str = None, keep_page: bool = False, cookies: Optional[list] = None, send_cookies_session: bool = False, render_html: bool = False):
+        """ Async version of render. Takes same parameters. """
+
+        self.browser = await self.session.browser
+        content = None
+
+        if self.url == DEFAULT_URL:
+            render_html = True
+
+        if send_cookies_session:
+           cookies = self._convert_cookiesjar_to_render()
+
+        for _ in range(retries):
+            if not content:
+                try:
+                    content, result, page = await self._async_render(url=self.url, script=script, content=self.html, keep_page=keep_page, cookies=cookies, render_html=render_html)
                 except TypeError:
                     pass
             else:
@@ -702,7 +701,7 @@ class HTML(BaseParser):
         if not content:
             raise MaxRetries("Unable to render the page. Try increasing timeout")
 
-        html = HTML(url=self.url, html=content.encode(DEFAULT_ENCODING), default_encoding=DEFAULT_ENCODING)
+        html = HTML(url=self.url, html=content.encode(DEFAULT_ENCODING), default_encoding=DEFAULT_ENCODING, session=self.session)
         self.__dict__.update(html.__dict__)
         self.page = page
         return result
@@ -758,8 +757,7 @@ class BaseSession(requests.Session):
     amongst other things.
     """
 
-    def __init__(self, mock_browser : bool = True, verify : bool = True,
-                 browser_args : list = ['--no-sandbox']):
+    def __init__(self, mock_browser : bool = True, verify : bool = True):
         super().__init__()
 
         # Mock a web browser's user agent.
@@ -769,21 +767,12 @@ class BaseSession(requests.Session):
         self.hooks['response'].append(self.response_hook)
         self.verify = verify
 
-        self.__browser_args = browser_args
-
 
     def response_hook(self, response, **kwargs) -> HTMLResponse:
         """ Change response encoding and replace it by a HTMLResponse. """
         if not response.encoding:
             response.encoding = DEFAULT_ENCODING
         return HTMLResponse._from_response(response, self)
-
-    @property
-    async def browser(self):
-        if not hasattr(self, "_browser"):
-            self._browser = await pyppeteer.launch(ignoreHTTPSErrors=not(self.verify), headless=True, args=self.__browser_args)
-
-        return self._browser
 
 
 class HTMLSession(BaseSession):
@@ -794,16 +783,15 @@ class HTMLSession(BaseSession):
     @property
     def browser(self):
         if not hasattr(self, "_browser"):
-            self.loop = asyncio.get_event_loop()
-            if self.loop.is_running():
-                raise RuntimeError("Cannot use HTMLSession within an existing event loop. Use AsyncHTMLSession instead.")
-            self._browser = self.loop.run_until_complete(super().browser)
+            self.playwright = sync_playwright().start()
+            self._browser = self.playwright.chromium.launch()
         return self._browser
 
     def close(self):
         """ If a browser was created close it first. """
         if hasattr(self, "_browser"):
-            self.loop.run_until_complete(self._browser.close())
+            self._browser.close()
+            self.playwright.stop()
         super().close()
 
 
@@ -832,6 +820,7 @@ class AsyncHTMLSession(BaseSession):
         """ If a browser was created close it first. """
         if hasattr(self, "_browser"):
             await self._browser.close()
+            await self.playwright.stop()
         super().close()
 
     def run(self, *coros):
@@ -843,3 +832,10 @@ class AsyncHTMLSession(BaseSession):
         ]
         done, _ = self.loop.run_until_complete(asyncio.wait(tasks))
         return [t.result() for t in done]
+
+    @property
+    async def browser(self):
+        if not hasattr(self, "_browser"):
+            self.playwright = await async_playwright().start()
+            self._browser = await self.playwright.chromium.launch()
+        return self._browser
