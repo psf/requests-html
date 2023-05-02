@@ -18,7 +18,7 @@ def get():
     return session.get(url)
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture
 async def async_get(event_loop):
     """AsyncSession cannot be created global since it will create
         a different loop from pytest-asyncio. """

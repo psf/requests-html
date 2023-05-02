@@ -757,8 +757,7 @@ class BaseSession(requests.Session):
     amongst other things.
     """
 
-    def __init__(self, mock_browser : bool = True, verify : bool = True,
-                 browser_args : list = ['--no-sandbox']):
+    def __init__(self, mock_browser : bool = True, verify : bool = True):
         super().__init__()
 
         # Mock a web browser's user agent.
@@ -767,8 +766,6 @@ class BaseSession(requests.Session):
 
         self.hooks['response'].append(self.response_hook)
         self.verify = verify
-
-        self.__browser_args = browser_args
 
 
     def response_hook(self, response, **kwargs) -> HTMLResponse:
@@ -786,10 +783,6 @@ class HTMLSession(BaseSession):
     @property
     def browser(self):
         if not hasattr(self, "_browser"):
-            # self.loop = asyncio.get_event_loop()
-            # if self.loop.is_running():
-            #     raise RuntimeError("Cannot use HTMLSession within an existing event loop. Use AsyncHTMLSession instead.")
-            # self._browser = self.loop.run_until_complete(super().browser)
             self.playwright = sync_playwright().start()
             self._browser = self.playwright.chromium.launch()
         return self._browser
@@ -797,7 +790,6 @@ class HTMLSession(BaseSession):
     def close(self):
         """ If a browser was created close it first. """
         if hasattr(self, "_browser"):
-            # self.loop.run_until_complete(self._browser.close())
             self._browser.close()
             self.playwright.stop()
         super().close()
@@ -844,10 +836,6 @@ class AsyncHTMLSession(BaseSession):
     @property
     async def browser(self):
         if not hasattr(self, "_browser"):
-            # self.loop = asyncio.get_event_loop()
-            # if self.loop.is_running():
-            #     raise RuntimeError("Cannot use HTMLSession within an existing event loop. Use AsyncHTMLSession instead.")
-            # self._browser = self.loop.run_until_complete(super().browser)
             self.playwright = await async_playwright().start()
             self._browser = await self.playwright.chromium.launch()
         return self._browser
