@@ -2,10 +2,11 @@ import os
 from functools import partial
 
 import pytest
-from playwright.sync_api import Browser, Error
 from playwright.async_api import Browser as AsyncBrowser
+from playwright.sync_api import Browser, Error
 from requests_file import FileAdapter
-from src.requests_html import HTMLSession, AsyncHTMLSession, HTML
+
+from src.requests_html import HTML, AsyncHTMLSession, HTMLSession
 
 session = HTMLSession()
 session.mount("file://", FileAdapter())

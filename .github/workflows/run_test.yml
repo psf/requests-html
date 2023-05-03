@@ -23,12 +23,11 @@ jobs:
         pip install poetry
         poetry install
     - name: Lint
-      run: |
-        poetry run black *.py
+      run: poetry run pre-commit run --show-diff-on-failure --color=always --all-files
 
   test:
     name: Build
-    timeout-minutes: 45
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -47,4 +46,4 @@ jobs:
         pip install poetry
         poetry install
     - name: Run Tests
-      run: pytest tests/*.py
+      run: poetry run pytest tests/*.py
