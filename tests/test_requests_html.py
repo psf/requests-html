@@ -276,8 +276,8 @@ def test_bare_js_eval():
 
     html = HTML(html=doc)
     html.render()
-    assert html.find("#replace", first=True).text == "yolo"
     html.session.close()
+    assert html.find("#replace", first=True).text == "yolo"
 
 
 @pytest.mark.render
@@ -298,9 +298,8 @@ async def test_bare_js_async_eval():
 
     html = HTML(html=doc, async_=True)
     await html.arender()
-
-    assert html.find("#replace", first=True).text == "yolo"
     await html.session.close()
+    assert html.find("#replace", first=True).text == "yolo"
 
 
 def test_browser_session():

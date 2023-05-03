@@ -4,22 +4,21 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures._base import TimeoutError
 from functools import partial
-from typing import Set, Union, List, MutableMapping, Optional
+from typing import Union, MutableMapping, Optional
 from urllib.parse import urlparse, urlunparse, urljoin
 
 import http.cookiejar
 import requests
-from pyquery import PyQuery
+from pyquery import PyQuery  # type: ignore
 
 import lxml
-from fake_useragent import UserAgent
+from fake_useragent import UserAgent  # type: ignore
 from lxml.html.clean import Cleaner
 from lxml import etree
 from lxml.html import HtmlElement
 from lxml.html import tostring as lxml_html_tostring
 from lxml.html.soupparser import fromstring as soup_parse
-from parse import search as parse_search
-from parse import findall, Result
+from parse import findall, Result, search as parse_search  # type: ignore
 from playwright.sync_api import sync_playwright
 from playwright.async_api import async_playwright
 from w3lib.encoding import html_to_unicode
@@ -37,24 +36,24 @@ cleaner.style = True
 useragent = None
 
 # Typing.
-_Find = Union[List["Element"], "Element"]
-_XPath = Union[List[str], List["Element"], str, "Element"]
-_Result = Union[List["Result"], "Result"]
-_HTML = Union[str, bytes]
+_Find = Union[list["Element"], "Element"]
+_XPath = Union[list[str], list["Element"], str, "Element"]
+_Result = Union[list["Result"], "Result"]
+_HTML = Optional[Union[str, bytes]]
 _BaseHTML = str
 _UserAgent = str
-_DefaultEncoding = str
+_DefaultEncoding = Optional[str]
+_Encoding = Optional[str]
 _URL = str
 _RawHTML = bytes
-_Encoding = str
-_LXML = HtmlElement
+_LXML = Optional[HtmlElement]
 _Text = str
 _Search = Result
-_Containing = Union[str, List[str]]
-_Links = Set[str]
+_Containing = Optional[Union[str, list[str]]]
+_Links = set[str]
 _Attrs = MutableMapping
-_Next = Union["HTML", List[str]]
-_NextSymbol = List[str]
+_Next = Optional[Union["HTML", list[str], requests.Response]]
+_NextSymbol = Optional[list[str]]
 
 # Sanity checking.
 try:
@@ -94,9 +93,9 @@ class BaseParser:
         self.url = url
         self.skip_anchors = True
         self.default_encoding = default_encoding
-        self._encoding = None
+        self._encoding: _Encoding = None
         self._html = html.encode(DEFAULT_ENCODING) if isinstance(html, str) else html
-        self._lxml = None
+        self._lxml: _LXML = None
         self._pq = None
 
     @property
@@ -110,22 +109,8 @@ class BaseParser:
             return (
                 etree.tostring(self.element, encoding="unicode")
                 .strip()
-                .encode(self.encoding)
+                .encode(self.encoding if self.encoding is not None else '')
             )
-
-    @property
-    def html(self) -> _BaseHTML:
-        """Unicode representation of the HTML content
-        (`learn more <http://www.diveintopython3.net/strings.html>`_).
-        """
-        if self._html:
-            return self.raw_html.decode(self.encoding, errors="replace")
-        else:
-            return etree.tostring(self.element, encoding="unicode").strip()
-
-    @html.setter
-    def html(self, html: str) -> None:
-        self._html = html.encode(self.encoding)
 
     @raw_html.setter
     def raw_html(self, html: bytes) -> None:
@@ -133,11 +118,26 @@ class BaseParser:
         self._html = html
 
     @property
+    def html(self) -> _BaseHTML:
+        """Unicode representation of the HTML content
+        (`learn more <http://www.diveintopython3.net/strings.html>`_).
+        """
+        if self._html:
+            return self.raw_html.decode(self.encoding if self.encoding is not None else '', errors="replace")
+        else:
+            return etree.tostring(self.element, encoding="unicode").strip()
+
+    @html.setter
+    def html(self, html: str) -> None:
+        self._html = html.encode(self.encoding if self.encoding is not None else '')
+
+
+    @property
     def encoding(self) -> _Encoding:
         """The encoding string to be used, extracted from the HTML and
         :class:`HTMLResponse <HTMLResponse>` headers.
         """
-        if self._encoding:
+        if self._encoding is not None:
             return self._encoding
 
         # Scan meta tags for charset.
@@ -145,11 +145,11 @@ class BaseParser:
             self._encoding = html_to_unicode(self.default_encoding, self._html)[0]
             # Fall back to requests' detected encoding if decode fails.
             try:
-                self.raw_html.decode(self.encoding, errors="replace")
+                self.raw_html.decode(self.encoding if self.encoding is not None else '', errors="replace")
             except UnicodeDecodeError:
                 self._encoding = self.default_encoding
 
-        return self._encoding if self._encoding else self.default_encoding
+        return self._encoding if self._encoding is not None else self.default_encoding
 
     @encoding.setter
     def encoding(self, enc: str) -> None:
@@ -200,7 +200,7 @@ class BaseParser:
         containing: _Containing = None,
         clean: bool = False,
         first: bool = False,
-        _encoding: str = None,
+        _encoding: str = '',
     ) -> _Find:
         """Given a CSS Selector, returns a list of
         :class:`Element <Element>` objects or a single one.
@@ -263,7 +263,7 @@ class BaseParser:
         *,
         clean: bool = False,
         first: bool = False,
-        _encoding: str = None,
+        _encoding: str = '',
     ) -> _XPath:
         """Given an XPath selector, returns a list of
         :class:`Element <Element>` objects or a single one.
@@ -302,7 +302,8 @@ class BaseParser:
             elements = []
 
             for element in elements_copy:
-                element.raw_html = lxml_html_tostring(cleaner.clean_html(element.lxml))
+                if isinstance(element, Element):
+                    element.raw_html = lxml_html_tostring(cleaner.clean_html(element.lxml))
                 elements.append(element)
 
         return _get_first_or_list(elements, first)
@@ -382,7 +383,7 @@ class BaseParser:
 
         # Support for <base> tag.
         base = self.find("base", first=True)
-        if base:
+        if base and isinstance(base, Element):
             result = base.attrs.get("href", "").strip()
             if result:
                 return result
@@ -394,10 +395,7 @@ class BaseParser:
         parsed["path"] = "/".join(parsed["path"].split("/")[:-1]) + "/"
 
         # Reconstruct the url with the modified path
-        parsed = (v for v in parsed.values())
-        url = urlunparse(parsed)
-
-        return url
+        return urlunparse(tuple(v for v in parsed.values()))
 
 
 class Element(BaseParser):
@@ -408,19 +406,6 @@ class Element(BaseParser):
     :param default_encoding: Which encoding to default to.
     """
 
-    __slots__ = [
-        "element",
-        "url",
-        "skip_anchors",
-        "default_encoding",
-        "_encoding",
-        "_html",
-        "_lxml",
-        "_pq",
-        "_attrs",
-        "session",
-    ]
-
     def __init__(
         self, *, element, url: _URL, default_encoding: _DefaultEncoding = None
     ) -> None:
@@ -430,7 +415,7 @@ class Element(BaseParser):
         self.element = element
         self.tag = element.tag
         self.lineno = element.sourceline
-        self._attrs = None
+        self._attrs: _Attrs = {}
 
     def __repr__(self) -> str:
         attrs = ["{}={}".format(attr, repr(self.attrs[attr])) for attr in self.attrs]
@@ -441,7 +426,7 @@ class Element(BaseParser):
         """Returns a dictionary of the attributes of the :class:`Element <Element>`
         (`learn more <https://www.w3schools.com/tags/ref_attributes.asp>`_).
         """
-        if self._attrs is None:
+        if not self._attrs:
             self._attrs = {k: v for k, v in self.element.items()}
 
             # Split class and rel up, as there are usually many of them:
@@ -463,10 +448,10 @@ class HTML(BaseParser):
     def __init__(
         self,
         *,
-        session: Union["HTMLSession", "AsyncHTMLSession"] = None,
+        session: Optional["BaseSession"] = None,
         url: str = DEFAULT_URL,
         html: _HTML,
-        default_encoding: str = DEFAULT_ENCODING,
+        default_encoding: _DefaultEncoding = DEFAULT_ENCODING,
         async_: bool = False,
     ) -> None:
         # Convert incoming unicode HTML into bytes.
@@ -688,7 +673,7 @@ class HTML(BaseParser):
     def render(
         self,
         retries: int = 8,
-        script: str = None,
+        script: Optional[str] = None,
         keep_page: bool = False,
         cookies: Optional[list] = None,
         send_cookies_session: bool = False,
@@ -772,7 +757,7 @@ class HTML(BaseParser):
     async def arender(
         self,
         retries: int = 8,
-        script: str = None,
+        script: Optional[str] = None,
         keep_page: bool = False,
         cookies: Optional[list] = None,
         send_cookies_session: bool = False,
@@ -824,9 +809,9 @@ class HTMLResponse(requests.Response):
     Effectively the same, but with an intelligent ``.html`` property added.
     """
 
-    def __init__(self, session: Union["HTMLSession", "AsyncHTMLSession"]) -> None:
+    def __init__(self, session: "BaseSession") -> None:
         super(HTMLResponse, self).__init__()
-        self._html = None  # type: HTML
+        self._html: Optional[HTML] = None
         self.session = session
 
     @property
@@ -843,22 +828,22 @@ class HTMLResponse(requests.Response):
 
     @classmethod
     def _from_response(
-        cls, response, session: Union["HTMLSession", "AsyncHTMLSession"]
+        cls, response, session: "BaseSession"
     ):
         html_r = cls(session=session)
         html_r.__dict__.update(response.__dict__)
         return html_r
 
 
-def user_agent(style=None) -> _UserAgent:
+def user_agent(style: Optional[str] = None) -> _UserAgent:
     """Returns an apparently legit user-agent, if not requested one of a specific
     style. Defaults to a Chrome-style User-Agent.
     """
     global useragent
-    if (not useragent) and style:
+    if not useragent:
         useragent = UserAgent()
 
-    return useragent[style] if style else DEFAULT_USER_AGENT
+    return useragent[style] if style is not None else DEFAULT_USER_AGENT
 
 
 def _get_first_or_list(l, first=False):
@@ -891,6 +876,10 @@ class BaseSession(requests.Session):
         if not response.encoding:
             response.encoding = DEFAULT_ENCODING
         return HTMLResponse._from_response(response, self)
+
+    @property
+    def browser(self):
+        pass
 
 
 class HTMLSession(BaseSession):
