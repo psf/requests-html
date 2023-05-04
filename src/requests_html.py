@@ -16,7 +16,7 @@ from lxml.html import HtmlElement
 from lxml.html import tostring as lxml_html_tostring
 from lxml.html.clean import Cleaner
 from lxml.html.soupparser import fromstring as soup_parse
-from parse import Result, findall
+from parse import Result, findall  # type: ignore
 from parse import search as parse_search  # type: ignore
 from playwright.async_api import async_playwright
 from playwright.sync_api import sync_playwright
