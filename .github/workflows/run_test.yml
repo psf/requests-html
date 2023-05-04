@@ -24,7 +24,9 @@ jobs:
       with:
         python-version: "3.9"
     - name: Install dependencies
-      run: curl -sSL https://install.python-poetry.org | python3 -
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        poetry install
     - name: Lint
       run: poetry run pre-commit run --show-diff-on-failure --color=always --all-files
 
@@ -44,6 +46,8 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
-      run: curl -sSL https://install.python-poetry.org | python3 -
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        poetry install
     - name: Run Tests
       run: poetry run pytest tests/*.py
