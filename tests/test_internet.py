@@ -18,6 +18,7 @@ urls = [
 def test_pagination(url: str):
     session = HTMLSession()
     r = session.get(url)
+    assert isinstance(r, HTMLResponse)
     assert next(r.html)
 
 
