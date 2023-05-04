@@ -9,7 +9,7 @@ import os
 import sys
 from shutil import rmtree
 
-from setuptools import setup, Command
+from setuptools import Command, setup
 
 # Package meta-data.
 NAME = "requests-html"
@@ -47,7 +47,6 @@ class UploadCommand(Command):
     """Support setup.py upload."""
 
     description = "Build and publish the package."
-    user_options = []
 
     @staticmethod
     def status(s):

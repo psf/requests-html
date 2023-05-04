@@ -58,14 +58,14 @@ Try async and get some sites at the same time:
     >>> results # check the requests all returned a 200 (success) code
     [<Response [200]>, <Response [200]>, <Response [200]>]
     >>> # Each item in the results list is a response object and can be interacted with as such
-    >>> for result in results: 
+    >>> for result in results:
     ...     print(result.html.url)
-    ... 
+    ...
     https://www.python.org/
     https://www.google.com/
     https://www.reddit.com/
 
-Note that the order of the objects in the results list represents the order they were returned in, not the order that the coroutines are passed to the ``run`` method, which is shown in the example by the order being different. 
+Note that the order of the objects in the results list represents the order they were returned in, not the order that the coroutines are passed to the ``run`` method, which is shown in the example by the order being different.
 
 Grab a list of all links on the page, as–is (anchors excluded):
 
@@ -178,7 +178,7 @@ Notice the clock is missing. The ``render()`` method takes the response and rend
     >>> r.html.search('Python 2.7 will retire in...{}Enable Guido Mode')[0]
     '</h1>\n        </div>\n        <div class="python-27-clock is-countdown"><span class="countdown-row countdown-show6"><span class="countdown-section"><span class="countdown-amount">1</span><span class="countdown-period">Year</span></span><span class="countdown-section"><span class="countdown-amount">2</span><span class="countdown-period">Months</span></span><span class="countdown-section"><span class="countdown-amount">28</span><span class="countdown-period">Days</span></span><span class="countdown-section"><span class="countdown-amount">16</span><span class="countdown-period">Hours</span></span><span class="countdown-section"><span class="countdown-amount">52</span><span class="countdown-period">Minutes</span></span><span class="countdown-section"><span class="countdown-amount">46</span><span class="countdown-period">Seconds</span></span></span></div>\n        <div class="center">\n            <div class="guido-button-block">\n                <button class="js-guido-mode guido-button">'
 
-Let's clean it up a bit. This step is not needed, it just makes it a bit easier to visualize the returned html to see what we need to target to extract our required information. 
+Let's clean it up a bit. This step is not needed, it just makes it a bit easier to visualize the returned html to see what we need to target to extract our required information.
 
 .. code-block:: pycon
 
@@ -207,7 +207,7 @@ Let's clean it up a bit. This step is not needed, it just makes it a bit easier 
 The rendered html has all the same methods and attributes as above. Let's extract just the data that we want out of the clock into something easy to use elsewhere and introspect like a dictionary.
 
 .. code-block:: pycon
-	
+
 	>>> periods = [element.text for element in r.html.find('.countdown-period')]
 	>>> amounts = [element.text for element in r.html.find('.countdown-amount')]
 	>>> countdown_data = dict(zip(periods, amounts))
@@ -225,7 +225,7 @@ Or you can do this async also:
     ...
     >>> results = asession.run(get_pyclock, get_pyclock, get_pyclock)
 
-The rest of the code operates the same way as the synchronous version except that ``results`` is a list containing multiple response objects however the same basic processes can be applied as above to extract the data you want. 
+The rest of the code operates the same way as the synchronous version except that ``results`` is a list containing multiple response objects however the same basic processes can be applied as above to extract the data you want.
 
 Note, the first time you ever run the ``render()`` method, it will download
 Chromium into your home directory (e.g. ``~/.pyppeteer/``). This only happens

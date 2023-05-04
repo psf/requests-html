@@ -1,28 +1,27 @@
 import asyncio
+import http.cookiejar
 import os
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures._base import TimeoutError
 from functools import partial
-from typing import Union, MutableMapping, Optional
-from urllib.parse import urlparse, urlunparse, urljoin
-
-import http.cookiejar
-import requests
-from pyquery import PyQuery  # type: ignore
+from typing import MutableMapping, Optional, Union
+from urllib.parse import urljoin, urlparse, urlunparse
 
 import lxml
+import requests
 from fake_useragent import UserAgent  # type: ignore
-from lxml.html.clean import Cleaner
 from lxml import etree
 from lxml.html import HtmlElement
 from lxml.html import tostring as lxml_html_tostring
+from lxml.html.clean import Cleaner
 from lxml.html.soupparser import fromstring as soup_parse
-from parse import findall, Result, search as parse_search  # type: ignore
-from playwright.sync_api import sync_playwright
+from parse import Result, findall  # type: ignore
+from parse import search as parse_search  # type: ignore
 from playwright.async_api import async_playwright
+from playwright.sync_api import sync_playwright
+from pyquery import PyQuery  # type: ignore
 from w3lib.encoding import html_to_unicode
-
 
 DEFAULT_ENCODING = "utf-8"
 DEFAULT_URL = "https://example.org/"
@@ -109,7 +108,7 @@ class BaseParser:
             return (
                 etree.tostring(self.element, encoding="unicode")
                 .strip()
-                .encode(self.encoding if self.encoding is not None else '')
+                .encode(self.encoding if self.encoding is not None else "")
             )
 
     @raw_html.setter
@@ -123,14 +122,15 @@ class BaseParser:
         (`learn more <http://www.diveintopython3.net/strings.html>`_).
         """
         if self._html:
-            return self.raw_html.decode(self.encoding if self.encoding is not None else '', errors="replace")
+            return self.raw_html.decode(
+                self.encoding if self.encoding is not None else "", errors="replace"
+            )
         else:
             return etree.tostring(self.element, encoding="unicode").strip()
 
     @html.setter
     def html(self, html: str) -> None:
-        self._html = html.encode(self.encoding if self.encoding is not None else '')
-
+        self._html = html.encode(self.encoding if self.encoding is not None else "")
 
     @property
     def encoding(self) -> _Encoding:
@@ -145,7 +145,9 @@ class BaseParser:
             self._encoding = html_to_unicode(self.default_encoding, self._html)[0]
             # Fall back to requests' detected encoding if decode fails.
             try:
-                self.raw_html.decode(self.encoding if self.encoding is not None else '', errors="replace")
+                self.raw_html.decode(
+                    self.encoding if self.encoding is not None else "", errors="replace"
+                )
             except UnicodeDecodeError:
                 self._encoding = self.default_encoding
 
@@ -200,7 +202,7 @@ class BaseParser:
         containing: _Containing = None,
         clean: bool = False,
         first: bool = False,
-        _encoding: str = '',
+        _encoding: str = "",
     ) -> _Find:
         """Given a CSS Selector, returns a list of
         :class:`Element <Element>` objects or a single one.
@@ -263,7 +265,7 @@ class BaseParser:
         *,
         clean: bool = False,
         first: bool = False,
-        _encoding: str = '',
+        _encoding: str = "",
     ) -> _XPath:
         """Given an XPath selector, returns a list of
         :class:`Element <Element>` objects or a single one.
@@ -303,7 +305,9 @@ class BaseParser:
 
             for element in elements_copy:
                 if isinstance(element, Element):
-                    element.raw_html = lxml_html_tostring(cleaner.clean_html(element.lxml))
+                    element.raw_html = lxml_html_tostring(
+                        cleaner.clean_html(element.lxml)
+                    )
                 elements.append(element)
 
         return _get_first_or_list(elements, first)
@@ -827,9 +831,7 @@ class HTMLResponse(requests.Response):
         return self._html
 
     @classmethod
-    def _from_response(
-        cls, response, session: "BaseSession"
-    ):
+    def _from_response(cls, response, session: "BaseSession"):
         html_r = cls(session=session)
         html_r.__dict__.update(response.__dict__)
         return html_r

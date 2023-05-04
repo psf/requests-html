@@ -16,19 +16,21 @@ bs4 = "^0.0.1"
 w3lib = "^2.1.1"
 rfc3986 = "^2.0.0"
 playwright = "^1.32.1"
-pytest-playwright = "^0.3.3"
 
 
 [tool.poetry.group.dev.dependencies]
 twine = "^4.0.2"
 requests-file = "^1.5.1"
 pytest = "^7.3.1"
+pytest-asyncio = "^0.21.0"
+pytest-playwright = "^0.3.3"
 sphinx = "^7.0.0"
 mypy = "^1.2.0"
-pytest-asyncio = "^0.21.0"
 black = "^23.3.0"
 lxml-stubs = "^0.4.0"
 types-requests = "^2.29.0.0"
+pre-commit = "^3.3.1"
+isort = "^5.12.0"
 
 [build-system]
 requires = ["poetry-core"]
