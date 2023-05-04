@@ -1,0 +1,18 @@
+name: Upload Python Package
+on:
+  release:
+    types: [published]
+jobs:
+  deploy-pypi:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.9
+    - name: Publish
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN}}
+        poetry publish --build

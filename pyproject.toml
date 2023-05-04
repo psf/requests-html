@@ -1,10 +1,12 @@
 [tool.poetry]
 name = "requests-html-playwright"
 version = "0.10.1"
-description = ""
+description = "Requests-HTML(with microsoft/playwright-python): HTML Parsing for Humans™"
 authors = ["Asugawara <asgasw@gmail.com>"]
 readme = "README.rst"
 packages = [{include = "src"}]
+homepage = "https://github.com/Asugawara/requests-html-playwright"
+repository = "https://github.com/Asugawara/requests-html-playwright"
 
 [tool.poetry.dependencies]
 python = "^3.9"
