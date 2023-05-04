@@ -3,7 +3,7 @@ name = "requests-html-playwright"
 version = "0.11.0"
 description = "Requests-HTML(with microsoft/playwright-python): HTML Parsing for Humans™"
 authors = ["Asugawara <asgasw@gmail.com>"]
-readme = "README.rst"
+readme = "README.md"
 packages = [{include = "src"}]
 homepage = "https://github.com/Asugawara/requests-html-playwright"
 repository = "https://github.com/Asugawara/requests-html-playwright"
