@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "requests-html-playwright"
-version = "0.10.1"
+version = "0.11.0"
 description = "Requests-HTML(with microsoft/playwright-python): HTML Parsing for Humans™"
 authors = ["Asugawara <asgasw@gmail.com>"]
 readme = "README.rst"
@@ -21,12 +21,10 @@ playwright = "^1.32.1"
 
 
 [tool.poetry.group.dev.dependencies]
-twine = "^4.0.2"
 requests-file = "^1.5.1"
 pytest = "^7.3.1"
 pytest-asyncio = "^0.21.0"
 pytest-playwright = "^0.3.3"
-sphinx = "^7.0.0"
 mypy = "^1.2.0"
 black = "^23.3.0"
 lxml-stubs = "^0.4.0"
