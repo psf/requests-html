@@ -2,9 +2,10 @@ import asyncio
 import http.cookiejar
 import os
 import sys
+import time
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures._base import TimeoutError
-from functools import partial
+from functools import partial, wraps
 from typing import MutableMapping, Optional, Union
 from urllib.parse import urljoin, urlparse, urlunparse
 
@@ -47,7 +48,6 @@ _URL = str
 _RawHTML = bytes
 _LXML = Optional[HtmlElement]
 _Text = str
-_Search = Result
 _Containing = Optional[Union[str, list[str]]]
 _Links = set[str]
 _Attrs = MutableMapping
@@ -65,9 +65,23 @@ except AssertionError:
 os.system("playwright install")
 
 
-class MaxRetries(Exception):
-    def __init__(self, message):
-        self.message = message
+class Retry:
+    def __init__(self, retries: int = 3, backoff_base: int = 2) -> None:
+        self.retries = retries + 1
+        self.backoff_base = backoff_base
+
+    def __call__(self, func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            for i in range(self.retries):
+                try:
+                    return func(*args, **kwargs)
+                except TypeError:
+                    pass
+                time.sleep(self.backoff_base ** (i + 1))
+            raise RuntimeError("Unable to render the page. Try increasing timeout")
+
+        return wrapper
 
 
 class BaseParser:
@@ -502,11 +516,7 @@ class HTML(BaseParser):
                     if "page" in candidate.attrs["href"]:
                         return candidate.attrs["href"]
 
-            try:
-                # Resort to the last candidate.
-                return candidates[-1].attrs["href"]
-            except IndexError:
-                return None
+            return candidates[-1].attrs["href"] if candidates else None
 
         __next = get_next()
         if __next:
@@ -543,9 +553,7 @@ class HTML(BaseParser):
             response = await self.session.get(url)
             return response.html
 
-    def add_next_symbol(self, next_symbol):
-        self.next_symbol.append(next_symbol)
-
+    @Retry()
     def _render(
         self,
         *,
@@ -578,9 +586,9 @@ class HTML(BaseParser):
             return content, result, page
         except TimeoutError:
             page.close()
-            page = None
             return None, None, None
 
+    @Retry()
     async def _async_render(
         self,
         *,
@@ -614,7 +622,6 @@ class HTML(BaseParser):
             return content, result, page
         except TimeoutError:
             await page.close()
-            page = None
             return None, None, None
 
     def _convert_cookiejar_to_render(self, session_cookiejar):
@@ -676,7 +683,6 @@ class HTML(BaseParser):
 
     def render(
         self,
-        retries: int = 8,
         script: Optional[str] = None,
         keep_page: bool = False,
         cookies: Optional[list] = None,
@@ -728,25 +734,14 @@ class HTML(BaseParser):
         if send_cookies_session:
             cookies = self._convert_cookiesjar_to_render()
 
-        for _ in range(retries):
-            if not content:
-                try:
-                    content, result, page = self._render(
-                        url=self.url,
-                        script=script,
-                        content=self.html,
-                        keep_page=keep_page,
-                        cookies=cookies,
-                        render_html=render_html,
-                    )
-                except TypeError:
-                    pass
-
-            else:
-                break
-
-        if not content:
-            raise MaxRetries("Unable to render the page. Try increasing timeout")
+        content, result, page = self._render(
+            url=self.url,
+            script=script,
+            content=self.html,
+            keep_page=keep_page,
+            cookies=cookies,
+            render_html=render_html,
+        )
 
         html = HTML(
             url=self.url,
@@ -760,7 +755,6 @@ class HTML(BaseParser):
 
     async def arender(
         self,
-        retries: int = 8,
         script: Optional[str] = None,
         keep_page: bool = False,
         cookies: Optional[list] = None,
@@ -778,24 +772,14 @@ class HTML(BaseParser):
         if send_cookies_session:
             cookies = self._convert_cookiesjar_to_render()
 
-        for _ in range(retries):
-            if not content:
-                try:
-                    content, result, page = await self._async_render(
-                        url=self.url,
-                        script=script,
-                        content=self.html,
-                        keep_page=keep_page,
-                        cookies=cookies,
-                        render_html=render_html,
-                    )
-                except TypeError:
-                    pass
-            else:
-                break
-
-        if not content:
-            raise MaxRetries("Unable to render the page. Try increasing timeout")
+        content, result, page = await self._async_render(
+            url=self.url,
+            script=script,
+            content=self.html,
+            keep_page=keep_page,
+            cookies=cookies,
+            render_html=render_html,
+        )
 
         html = HTML(
             url=self.url,
@@ -849,13 +833,7 @@ def user_agent(style: Optional[str] = None) -> _UserAgent:
 
 
 def _get_first_or_list(l, first=False):
-    if first:
-        try:
-            return l[0]
-        except IndexError:
-            return None
-    else:
-        return l
+    return l[0] if first and l else l
 
 
 class BaseSession(requests.Session):
@@ -871,7 +849,6 @@ class BaseSession(requests.Session):
             self.headers["User-Agent"] = user_agent()
 
         self.hooks["response"].append(self.response_hook)
-        self.verify = verify
 
     def response_hook(self, response, **kwargs) -> HTMLResponse:
         """Change response encoding and replace it by a HTMLResponse."""

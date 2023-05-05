@@ -237,10 +237,6 @@ except that `results` is a list containing multiple response objects
 however the same basic processes can be applied as above to extract the
 data you want.
 
-Note, the first time you ever run the `render()` method, it will
-download Chromium into your home directory (e.g. `~/.pyppeteer/`). This
-only happens once.
-
 # Using without Requests
 
 You can also use this library without Requests:
