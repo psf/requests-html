@@ -1,4 +1,8 @@
 ![image](https://github.com/Asugawara/requests-html-playwright/actions/workflows/run_test.yml/badge.svg)
+![PyPI](https://img.shields.io/pypi/v/requests-html-playwright?color=green)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/requests-html-playwright)
+![GitHub](https://img.shields.io/github/license/Asugawara/requests-html-playwright)
+
 # Requests-HTML(with microsoft/playwright-python): HTML Parsing for Humans™
 
 This library intends to make parsing HTML (e.g. scraping the web) as
