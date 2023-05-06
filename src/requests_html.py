@@ -6,7 +6,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures._base import TimeoutError
 from functools import partial, wraps
-from typing import MutableMapping, Optional, Union
+from typing import Any, Optional, Union
 from urllib.parse import urljoin, urlparse, urlunparse
 
 import lxml
@@ -19,6 +19,7 @@ from lxml.html.clean import Cleaner
 from lxml.html.soupparser import fromstring as soup_parse
 from parse import Result, findall  # type: ignore
 from parse import search as parse_search  # type: ignore
+from playwright._impl._api_structures import SetCookieParam
 from playwright.async_api import async_playwright
 from playwright.sync_api import sync_playwright
 from pyquery import PyQuery  # type: ignore
@@ -26,19 +27,17 @@ from w3lib.encoding import html_to_unicode
 
 DEFAULT_ENCODING = "utf-8"
 DEFAULT_URL = "https://example.org/"
-DEFAULT_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.1.2 Safari/603.3.8"
+DEFAULT_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"
 DEFAULT_NEXT_SYMBOL = ["next", "more", "older"]
 
 cleaner = Cleaner()
 cleaner.javascript = True
 cleaner.style = True
 
-useragent = None
-
 # Typing.
 _Find = Union[list["Element"], "Element"]
 _XPath = Union[list[str], list["Element"], str, "Element"]
-_Result = Union[list["Result"], "Result"]
+_Result = Union[list[Result], Result]
 _HTML = Optional[Union[str, bytes]]
 _BaseHTML = str
 _UserAgent = str
@@ -50,9 +49,10 @@ _LXML = Optional[HtmlElement]
 _Text = str
 _Containing = Optional[Union[str, list[str]]]
 _Links = set[str]
-_Attrs = MutableMapping
+_Attrs = dict
 _Next = Optional[Union["HTML", list[str], requests.Response]]
 _NextSymbol = Optional[list[str]]
+_Session = Union["HTMLSession", "AsyncHTMLSession"]
 
 # Sanity checking.
 try:
@@ -466,7 +466,7 @@ class HTML(BaseParser):
     def __init__(
         self,
         *,
-        session: Optional["BaseSession"] = None,
+        session: Optional[_Session] = None,
         url: str = DEFAULT_URL,
         html: _HTML,
         default_encoding: _DefaultEncoding = DEFAULT_ENCODING,
@@ -561,9 +561,9 @@ class HTML(BaseParser):
         script: Optional[str] = None,
         content: Optional[str],
         keep_page: bool,
-        cookies: Optional[list] = None,
+        cookies: Optional[list[SetCookieParam]] = None,
         render_html: bool = False,
-    ):
+    ) -> tuple[Optional[str], Optional[Any], Optional[Any]]:
         try:
             context = self.browser.new_context()
             if cookies is not None:
@@ -596,10 +596,10 @@ class HTML(BaseParser):
         script: Optional[str] = None,
         content: Optional[str],
         keep_page: bool,
-        cookies: Optional[list] = None,
+        cookies: Optional[list[SetCookieParam]] = None,
         render_html: bool = False,
-    ):
-        """Handle page creation and js rendering. Internal use for render/arender methods."""
+    ) -> tuple[Optional[str], Optional[Any], Optional[Any]]:
+        """Handle page creation and js rendering. Internal use for arender methods."""
         try:
             context = await self.browser.new_context()
             if cookies is not None:
@@ -624,49 +624,19 @@ class HTML(BaseParser):
             await page.close()
             return None, None, None
 
-    def _convert_cookiejar_to_render(self, session_cookiejar):
+    def _convert_cookiejar_to_render(
+        self, session_cookiejar: http.cookiejar.CookieJar
+    ) -> SetCookieParam:
         """
-        Convert HTMLSession.cookies:cookiejar[] for browser.newPage().setCookie
+        Convert HTMLSession.cookies:cookiejar[] for SetCookieParam
         """
-        # |  setCookie(self, *cookies:dict) -> None
-        # |      Set cookies.
-        # |
-        # |      ``cookies`` should be dictionaries which contain these fields:
-        # |
-        # |      * ``name`` (str): **required**
-        # |      * ``value`` (str): **required**
-        # |      * ``url`` (str)
-        # |      * ``domain`` (str)
-        # |      * ``path`` (str)
-        # |      * ``expires`` (number): Unix time in seconds
-        # |      * ``httpOnly`` (bool)
-        # |      * ``secure`` (bool)
-        # |      * ``sameSite`` (str): ``'Strict'`` or ``'Lax'``
-        cookie_render = {}
+        cookie_render: SetCookieParam = {}
 
-        def __convert(cookiejar, key):
-            try:
-                v = eval("cookiejar." + key)
-                if not v:
-                    kv = ""
-                else:
-                    kv = {key: v}
-            except:
-                kv = ""
-            return kv
+        def __convert(cookiejar: http.cookiejar.CookieJar, key: str):
+            v = getattr(cookiejar, key, None)
+            return "" if v is None else {key: v}
 
-        keys = [
-            "name",
-            "value",
-            "url",
-            "domain",
-            "path",
-            "sameSite",
-            "expires",
-            "httpOnly",
-            "secure",
-        ]
-        for key in keys:
+        for key in SetCookieParam.__annotations__:
             cookie_render.update(__convert(session_cookiejar, key))
         return cookie_render
 
@@ -749,7 +719,8 @@ class HTML(BaseParser):
             default_encoding=DEFAULT_ENCODING,
             session=self.session,
         )
-        self.__dict__.update(html.__dict__)
+        for k, v in html.__dict__.items():
+            setattr(self, k, v)
         self.page = page
         return result
 
@@ -787,7 +758,8 @@ class HTML(BaseParser):
             default_encoding=DEFAULT_ENCODING,
             session=self.session,
         )
-        self.__dict__.update(html.__dict__)
+        for k, v in html.__dict__.items():
+            setattr(self, k, v)
         self.page = page
         return result
 
@@ -797,14 +769,14 @@ class HTMLResponse(requests.Response):
     Effectively the same, but with an intelligent ``.html`` property added.
     """
 
-    def __init__(self, session: "BaseSession") -> None:
+    def __init__(self, session: _Session) -> None:
         super(HTMLResponse, self).__init__()
         self._html: Optional[HTML] = None
         self.session = session
 
     @property
     def html(self) -> HTML:
-        if not self._html:
+        if self._html is None:
             self._html = HTML(
                 session=self.session,
                 url=self.url,
@@ -815,9 +787,10 @@ class HTMLResponse(requests.Response):
         return self._html
 
     @classmethod
-    def _from_response(cls, response, session: "BaseSession"):
+    def _from_response(cls, session: _Session, response: requests.Response):
         html_r = cls(session=session)
-        html_r.__dict__.update(response.__dict__)
+        for k, v in response.__dict__.items():
+            setattr(html_r, k, v)
         return html_r
 
 
@@ -825,67 +798,46 @@ def user_agent(style: Optional[str] = None) -> _UserAgent:
     """Returns an apparently legit user-agent, if not requested one of a specific
     style. Defaults to a Chrome-style User-Agent.
     """
-    global useragent
-    if not useragent:
-        useragent = UserAgent()
-
-    return useragent[style] if style is not None else DEFAULT_USER_AGENT
+    return UserAgent()[style] if style is not None else DEFAULT_USER_AGENT
 
 
 def _get_first_or_list(l, first=False):
     return l[0] if first and l else l
 
 
-class BaseSession(requests.Session):
-    """A consumable session, for cookie persistence and connection pooling,
-    amongst other things.
-    """
-
-    def __init__(self, mock_browser: bool = True, verify: bool = True):
-        super().__init__()
-
-        # Mock a web browser's user agent.
-        if mock_browser:
-            self.headers["User-Agent"] = user_agent()
-
-        self.hooks["response"].append(self.response_hook)
-
-    def response_hook(self, response, **kwargs) -> HTMLResponse:
-        """Change response encoding and replace it by a HTMLResponse."""
-        if not response.encoding:
-            response.encoding = DEFAULT_ENCODING
-        return HTMLResponse._from_response(response, self)
-
-    @property
-    def browser(self):
-        pass
+def response_hook(
+    session: _Session, response: requests.Response, *args, **kwargs
+) -> HTMLResponse:
+    """Change response encoding and replace it by a HTMLResponse."""
+    if not response.encoding:
+        response.encoding = DEFAULT_ENCODING
+    return HTMLResponse._from_response(session, response)
 
 
-class HTMLSession(BaseSession):
-    def __init__(self, **kwargs):
-        super(HTMLSession, self).__init__(**kwargs)
+class HTMLSession(requests.Session):
+    def __init__(self, *args, **kwargs):
+        super(HTMLSession, self).__init__(*args, **kwargs)
+        self.hooks["response"].append(partial(response_hook, self))
 
     @property
     def browser(self):
         if not hasattr(self, "_browser"):
-            self.playwright = sync_playwright().start()
-            self._browser = self.playwright.chromium.launch()
+            self._playwright = sync_playwright().start()
+            self._browser = self._playwright.chromium.launch()
         return self._browser
 
     def close(self):
         """If a browser was created close it first."""
         if hasattr(self, "_browser"):
             self._browser.close()
-            self.playwright.stop()
+            self._playwright.stop()
         super().close()
 
 
-class AsyncHTMLSession(BaseSession):
+class AsyncHTMLSession(requests.Session):
     """An async consumable session."""
 
-    def __init__(
-        self, loop=None, workers=None, mock_browser: bool = True, *args, **kwargs
-    ):
+    def __init__(self, loop=None, workers=None, *args, **kwargs):
         """Set or create an event loop and a thread pool.
 
         :param loop: Asyncio loop to use.
@@ -893,6 +845,7 @@ class AsyncHTMLSession(BaseSession):
             If not pass it will default to the number of processors on the
             machine, multiplied by 5."""
         super().__init__(*args, **kwargs)
+        self.hooks["response"].append(partial(response_hook, self))
 
         self.loop = loop or asyncio.get_event_loop()
         self.thread_pool = ThreadPoolExecutor(max_workers=workers)
@@ -906,7 +859,7 @@ class AsyncHTMLSession(BaseSession):
         """If a browser was created close it first."""
         if hasattr(self, "_browser"):
             await self._browser.close()
-            await self.playwright.stop()
+            await self._playwright.stop()
         super().close()
 
     def run(self, *coros):
@@ -920,6 +873,6 @@ class AsyncHTMLSession(BaseSession):
     @property
     async def browser(self):
         if not hasattr(self, "_browser"):
-            self.playwright = await async_playwright().start()
-            self._browser = await self.playwright.chromium.launch()
+            self._playwright = await async_playwright().start()
+            self._browser = await self._playwright.chromium.launch()
         return self._browser
