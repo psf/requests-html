@@ -14,10 +14,10 @@ requests = "^2.29.0"
 pyquery = "^2.0.0"
 fake-useragent = "^1.1.3"
 parse = "^1.19.0"
-bs4 = "^0.0.1"
 w3lib = "^2.1.1"
 rfc3986 = "^2.0.0"
 playwright = "^1.32.1"
+beautifulsoup4 = "^4.12.2"
 
 
 [tool.poetry.group.dev.dependencies]
