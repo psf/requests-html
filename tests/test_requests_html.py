@@ -1,9 +1,9 @@
 import os
+import pytest
+
 from functools import partial
 
-import pytest
 from pyppeteer.browser import Browser
-from pyppeteer.page import Page
 from requests_html import HTMLSession, AsyncHTMLSession, HTML
 from requests_file import FileAdapter
 
@@ -322,3 +322,14 @@ async def test_async_browser_session():
     browser = await session.browser
     assert isinstance(browser, Browser)
     await session.close()
+
+
+@pytest.mark.asyncio
+async def test_async_context_manager():
+    async with AsyncHTMLSession() as s:
+        try:
+            results = await s.get('https://www.google.com')
+            assert results.status_code == 200
+        except ConnectionError:
+            # if the user has no connection skip this test
+            pass
