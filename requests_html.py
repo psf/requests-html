@@ -1,19 +1,20 @@
 import sys
 import asyncio
+import pyppeteer
+import requests
+import http.cookiejar
+import lxml
+
+from typing import Set, Union, List, MutableMapping, Optional
+
 from urllib.parse import urlparse, urlunparse, urljoin
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures._base import TimeoutError
 from functools import partial
-from typing import Set, Union, List, MutableMapping, Optional
-
-import pyppeteer
-import requests
-import http.cookiejar
 from pyquery import PyQuery
 
 from fake_useragent import UserAgent
 from lxml.html.clean import Cleaner
-import lxml
 from lxml import etree
 from lxml.html import HtmlElement
 from lxml.html import tostring as lxml_html_tostring
@@ -771,7 +772,6 @@ class BaseSession(requests.Session):
 
         self.__browser_args = browser_args
 
-
     def response_hook(self, response, **kwargs) -> HTMLResponse:
         """ Change response encoding and replace it by a HTMLResponse. """
         if not response.encoding:
@@ -822,6 +822,12 @@ class AsyncHTMLSession(BaseSession):
 
         self.loop = loop or asyncio.get_event_loop()
         self.thread_pool = ThreadPoolExecutor(max_workers=workers)
+
+    async def __aenter__(self) -> 'AsyncHTMLSession':
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        await self.close()
 
     def request(self, *args, **kwargs):
         """ Partial original request func and run it in a thread. """
