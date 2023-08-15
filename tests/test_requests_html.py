@@ -326,6 +326,17 @@ async def test_async_browser_session():
 
 @pytest.mark.asyncio
 async def test_async_context_manager():
+    """
+    Test the behavior of the async context manager for AsyncHTMLSession.
+
+    This test case validates that the AsyncHTMLSession instance can be used
+    as an asynchronous context manager, and the session can successfully make
+    an HTTP GET request within the context.
+
+    Note: If the user has no connection, a ConnectionError may occur, and the
+    test will be skipped.
+
+    """
     async with AsyncHTMLSession() as s:
         try:
             results = await s.get('https://www.google.com')
