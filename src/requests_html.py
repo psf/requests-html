@@ -66,17 +66,17 @@ os.system("playwright install")
 
 
 class Retry:
-    def __init__(self, retries: int = 3, backoff_base: int = 2) -> None:
-        self.retries = retries + 1
+    def __init__(self, tries: int = 3, backoff_base: int = 2) -> None:
+        self.tries = tries
         self.backoff_base = backoff_base
 
     def __call__(self, func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            for i in range(self.retries):
+            for i in range(self.tries):
                 try:
                     return func(*args, **kwargs)
-                except TypeError:
+                except Exception:
                     pass
                 time.sleep(self.backoff_base ** (i + 1))
             raise RuntimeError("Unable to render the page. Try increasing timeout")
@@ -119,8 +119,11 @@ class BaseParser:
         if self._html:
             return self._html
         else:
+            element = (
+                self.element.root if isinstance(self.element, PyQuery) else self.element
+            )
             return (
-                etree.tostring(self.element, encoding="unicode")
+                etree.tostring(element, encoding="unicode")
                 .strip()
                 .encode(self.encoding if self.encoding is not None else "")
             )
@@ -140,7 +143,10 @@ class BaseParser:
                 self.encoding if self.encoding is not None else "", errors="replace"
             )
         else:
-            return etree.tostring(self.element, encoding="unicode").strip()
+            element = (
+                self.element.root if isinstance(self.element, PyQuery) else self.element
+            )
+            return etree.tostring(element, encoding="unicode").strip()
 
     @html.setter
     def html(self, html: str) -> None:

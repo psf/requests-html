@@ -1,22 +1,59 @@
+import importlib
 import os
+import sys
 from functools import partial
+from unittest.mock import Mock, patch
 
 import pytest
 from playwright.async_api import Browser as AsyncBrowser
 from playwright.sync_api import Browser, Error
 from requests_file import FileAdapter
 
-from src.requests_html import HTML, AsyncHTMLSession, HTMLSession
+from src.requests_html import HTML, AsyncHTMLSession, HTMLSession, Retry
 
-session = HTMLSession()
-session.mount("file://", FileAdapter())
+
+@pytest.mark.parametrize("version", ("3.9", "3.10", "3.11", "3.12"))
+def test_import(version: str):
+    major, minor = map(int, version.split("."))
+    with patch.object(sys, "version_info") as mock_version, patch.dict("sys.modules"):
+        mock_version.major = major
+        mock_version.minor = minor
+        del sys.modules["src.requests_html"]
+        assert importlib.import_module("src.requests_html")
+
+
+@pytest.mark.parametrize("version", ("3.7", "3.8"))
+def test_import_fail(version: str):
+    major, minor = map(int, version.split("."))
+    with patch.object(sys, "version_info") as mock_version, patch.dict("sys.modules"):
+        mock_version.major = major
+        mock_version.minor = minor
+        del sys.modules["src.requests_html"]
+        with pytest.raises(RuntimeError):
+            importlib.import_module("src.requests_html")
+
+
+@pytest.mark.parametrize("tries", (3, 4, 5))
+def test_retry(tries):
+    @Retry(tries=tries, backoff_base=0.1)
+    def tmp_func(mock):
+        mock()
+
+    mock = Mock(side_effect=Exception)
+    with pytest.raises(RuntimeError):
+        tmp_func(mock)
+    assert mock.call_count == tries
 
 
 def get():
-    path = os.path.sep.join((os.path.dirname(os.path.abspath(__file__)), "python.html"))
-    url = f"file://{path}"
-
-    return session.get(url)
+    with HTMLSession() as session:
+        session.mount("file://", FileAdapter())
+        path = os.path.sep.join(
+            (os.path.dirname(os.path.abspath(__file__)), "python.html")
+        )
+        url = f"file://{path}"
+        res = session.get(url)
+    return res
 
 
 @pytest.fixture
@@ -127,6 +164,15 @@ def test_html_loading():
     assert "https://httpbin.org" in html.links
     assert isinstance(html.raw_html, bytes)
     assert isinstance(html.html, str)
+    # use etree.tostring()
+    html.raw_html = ""
+    assert isinstance(html.raw_html, bytes)
+    html.html = ""
+    assert isinstance(html.html, str)
+
+    assert repr(html) == "<HTML url='https://example.org/'>"
+    for h in iter(html):
+        assert repr(h) == "<HTML url='https://example.org/'>"
 
 
 def test_anchor_links():
@@ -310,18 +356,11 @@ def test_browser_session():
     session = HTMLSession()
     assert isinstance(session.browser, Browser)
     session.close()
-    # assert count_chromium_process() == 0
 
 
 def test_browser_process():
     for _ in range(3):
-        session = HTMLSession()
-        session.mount("file://", FileAdapter())
-        path = os.path.sep.join(
-            (os.path.dirname(os.path.abspath(__file__)), "python.html")
-        )
-        url = f"file://{path}"
-        r = session.get(url)
+        r = get()
         r.html.render()
         r.html.session.close()
 
