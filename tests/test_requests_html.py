@@ -1,5 +1,8 @@
+import importlib
 import os
+import sys
 from functools import partial
+from unittest.mock import patch
 
 import pytest
 from playwright.async_api import Browser as AsyncBrowser
@@ -8,15 +11,37 @@ from requests_file import FileAdapter
 
 from src.requests_html import HTML, AsyncHTMLSession, HTMLSession
 
-session = HTMLSession()
-session.mount("file://", FileAdapter())
+
+@pytest.mark.parametrize("version", ("3.9", "3.10", "3.11", "3.12"))
+def test_import(version: str):
+    major, minor = map(int, version.split("."))
+    with patch.object(sys, "version_info") as mock_version, patch.dict("sys.modules"):
+        mock_version.major = major
+        mock_version.minor = minor
+        del sys.modules["src.requests_html"]
+        assert importlib.import_module("src.requests_html")
+
+
+@pytest.mark.parametrize("version", ("3.7", "3.8"))
+def test_import_fail(version: str):
+    major, minor = map(int, version.split("."))
+    with patch.object(sys, "version_info") as mock_version, patch.dict("sys.modules"):
+        mock_version.major = major
+        mock_version.minor = minor
+        del sys.modules["src.requests_html"]
+        with pytest.raises(RuntimeError):
+            importlib.import_module("src.requests_html")
 
 
 def get():
-    path = os.path.sep.join((os.path.dirname(os.path.abspath(__file__)), "python.html"))
-    url = f"file://{path}"
-
-    return session.get(url)
+    with HTMLSession() as session:
+        session.mount("file://", FileAdapter())
+        path = os.path.sep.join(
+            (os.path.dirname(os.path.abspath(__file__)), "python.html")
+        )
+        url = f"file://{path}"
+        res = session.get(url)
+    return res
 
 
 @pytest.fixture
@@ -310,18 +335,11 @@ def test_browser_session():
     session = HTMLSession()
     assert isinstance(session.browser, Browser)
     session.close()
-    # assert count_chromium_process() == 0
 
 
 def test_browser_process():
     for _ in range(3):
-        session = HTMLSession()
-        session.mount("file://", FileAdapter())
-        path = os.path.sep.join(
-            (os.path.dirname(os.path.abspath(__file__)), "python.html")
-        )
-        url = f"file://{path}"
-        r = session.get(url)
+        r = get()
         r.html.render()
         r.html.session.close()
 
