@@ -164,6 +164,15 @@ def test_html_loading():
     assert "https://httpbin.org" in html.links
     assert isinstance(html.raw_html, bytes)
     assert isinstance(html.html, str)
+    # use etree.tostring()
+    html.raw_html = ""
+    assert isinstance(html.raw_html, bytes)
+    html.html = ""
+    assert isinstance(html.html, str)
+
+    assert repr(html) == "<HTML url='https://example.org/'>"
+    for h in iter(html):
+        assert repr(h) == "<HTML url='https://example.org/'>"
 
 
 def test_anchor_links():

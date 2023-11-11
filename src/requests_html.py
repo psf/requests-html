@@ -119,8 +119,11 @@ class BaseParser:
         if self._html:
             return self._html
         else:
+            element = (
+                self.element.root if isinstance(self.element, PyQuery) else self.element
+            )
             return (
-                etree.tostring(self.element, encoding="unicode")
+                etree.tostring(element, encoding="unicode")
                 .strip()
                 .encode(self.encoding if self.encoding is not None else "")
             )
@@ -140,7 +143,10 @@ class BaseParser:
                 self.encoding if self.encoding is not None else "", errors="replace"
             )
         else:
-            return etree.tostring(self.element, encoding="unicode").strip()
+            element = (
+                self.element.root if isinstance(self.element, PyQuery) else self.element
+            )
+            return etree.tostring(element, encoding="unicode").strip()
 
     @html.setter
     def html(self, html: str) -> None:
