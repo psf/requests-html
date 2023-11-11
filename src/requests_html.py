@@ -66,17 +66,17 @@ os.system("playwright install")
 
 
 class Retry:
-    def __init__(self, retries: int = 3, backoff_base: int = 2) -> None:
-        self.retries = retries + 1
+    def __init__(self, tries: int = 3, backoff_base: int = 2) -> None:
+        self.tries = tries
         self.backoff_base = backoff_base
 
     def __call__(self, func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            for i in range(self.retries):
+            for i in range(self.tries):
                 try:
                     return func(*args, **kwargs)
-                except TypeError:
+                except Exception:
                     pass
                 time.sleep(self.backoff_base ** (i + 1))
             raise RuntimeError("Unable to render the page. Try increasing timeout")

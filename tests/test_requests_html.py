@@ -2,14 +2,14 @@ import importlib
 import os
 import sys
 from functools import partial
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 from playwright.async_api import Browser as AsyncBrowser
 from playwright.sync_api import Browser, Error
 from requests_file import FileAdapter
 
-from src.requests_html import HTML, AsyncHTMLSession, HTMLSession
+from src.requests_html import HTML, AsyncHTMLSession, HTMLSession, Retry
 
 
 @pytest.mark.parametrize("version", ("3.9", "3.10", "3.11", "3.12"))
@@ -31,6 +31,18 @@ def test_import_fail(version: str):
         del sys.modules["src.requests_html"]
         with pytest.raises(RuntimeError):
             importlib.import_module("src.requests_html")
+
+
+@pytest.mark.parametrize("tries", (3, 4, 5))
+def test_retry(tries):
+    @Retry(tries=tries, backoff_base=0.1)
+    def tmp_func(mock):
+        mock()
+
+    mock = Mock(side_effect=Exception)
+    with pytest.raises(RuntimeError):
+        tmp_func(mock)
+    assert mock.call_count == tries
 
 
 def get():
