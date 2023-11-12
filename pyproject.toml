@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "requests-html-playwright"
-version = "0.11.0"
+version = "0.11.1"
 description = "Requests-HTML(with microsoft/playwright-python): HTML Parsing for Humans™"
 authors = ["Asugawara <asgasw@gmail.com>"]
 readme = "README.md"
