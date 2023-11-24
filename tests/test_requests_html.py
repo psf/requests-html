@@ -9,7 +9,12 @@ from playwright.async_api import Browser as AsyncBrowser
 from playwright.sync_api import Browser, Error
 from requests_file import FileAdapter
 
-from src.requests_html import HTML, AsyncHTMLSession, HTMLSession, Retry
+from requests_html_playwright.requests_html import (
+    HTML,
+    AsyncHTMLSession,
+    HTMLSession,
+    Retry,
+)
 
 
 @pytest.mark.parametrize("version", ("3.9", "3.10", "3.11", "3.12"))
@@ -18,8 +23,8 @@ def test_import(version: str):
     with patch.object(sys, "version_info") as mock_version, patch.dict("sys.modules"):
         mock_version.major = major
         mock_version.minor = minor
-        del sys.modules["src.requests_html"]
-        assert importlib.import_module("src.requests_html")
+        del sys.modules["requests_html_playwright.requests_html"]
+        assert importlib.import_module("requests_html_playwright.requests_html")
 
 
 @pytest.mark.parametrize("version", ("3.7", "3.8"))
@@ -28,9 +33,9 @@ def test_import_fail(version: str):
     with patch.object(sys, "version_info") as mock_version, patch.dict("sys.modules"):
         mock_version.major = major
         mock_version.minor = minor
-        del sys.modules["src.requests_html"]
+        del sys.modules["requests_html_playwright.requests_html"]
         with pytest.raises(RuntimeError):
-            importlib.import_module("src.requests_html")
+            importlib.import_module("requests_html_playwright.requests_html")
 
 
 @pytest.mark.parametrize("tries", (3, 4, 5))

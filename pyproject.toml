@@ -4,7 +4,7 @@ version = "0.11.2"
 description = "Requests-HTML(with microsoft/playwright-python): HTML Parsing for Humans™"
 authors = ["Asugawara <asgasw@gmail.com>"]
 readme = "README.md"
-packages = [{include = "requests-html-playwright"}]
+packages = [{include = "requests_html_playwright"}]
 homepage = "https://github.com/Asugawara/requests-html-playwright"
 repository = "https://github.com/Asugawara/requests-html-playwright"
 license = "MIT"
@@ -47,6 +47,9 @@ lxml-stubs = "^0.4.0"
 types-requests = "^2.31.0.0"
 pre-commit = "^3.5.0"
 isort = "^5.12.0"
+
+[tool.isort]
+profile = "black"
 
 [build-system]
 requires = ["poetry-core>=1.7.0"]
