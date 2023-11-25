@@ -1,12 +1,27 @@
 [tool.poetry]
 name = "requests-html-playwright"
-version = "0.11.1"
+version = "0.11.2"
 description = "Requests-HTML(with microsoft/playwright-python): HTML Parsing for Humans™"
 authors = ["Asugawara <asgasw@gmail.com>"]
 readme = "README.md"
-packages = [{include = "src"}]
+packages = [{include = "requests_html_playwright"}]
 homepage = "https://github.com/Asugawara/requests-html-playwright"
 repository = "https://github.com/Asugawara/requests-html-playwright"
+license = "MIT"
+keywords = [
+  "requests-html",
+  "playwright"
+]
+classifiers=[
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: Implementation :: PyPy"
+]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -32,6 +47,9 @@ lxml-stubs = "^0.4.0"
 types-requests = "^2.31.0.0"
 pre-commit = "^3.5.0"
 isort = "^5.12.0"
+
+[tool.isort]
+profile = "black"
 
 [build-system]
 requires = ["poetry-core>=1.7.0"]

@@ -1,6 +1,10 @@
 import pytest
 
-from src.requests_html import AsyncHTMLSession, HTMLResponse, HTMLSession
+from requests_html_playwright.requests_html import (
+    AsyncHTMLSession,
+    HTMLResponse,
+    HTMLSession,
+)
 
 urls = [
     "https://xkcd.com/1957/",
