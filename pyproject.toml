@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "requests-html-playwright"
-version = "0.11.2"
+version = "0.12.0"
 description = "Requests-HTML(with microsoft/playwright-python): HTML Parsing for Humans™"
 authors = ["Asugawara <asgasw@gmail.com>"]
 readme = "README.md"
@@ -50,6 +50,14 @@ isort = "^5.12.0"
 
 [tool.isort]
 profile = "black"
+
+[[tool.mypy.overrides]]
+module = [
+    "fake_useragent.*",
+    "parse.*",
+    "pyquery.*",
+]
+ignore_missing_imports = true
 
 [build-system]
 requires = ["poetry-core>=1.7.0"]

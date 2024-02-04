@@ -354,11 +354,12 @@ async def test_bare_js_async_eval():
     assert html.find("#replace", first=True).text == "yolo"
 
 
-def test_browser_session():
+@pytest.mark.parametrize("browser_type", ("chromium", "firefox", "webkit"))
+def test_browser_session(browser_type):
     """Test browser instances is created and properly close when session is closed.
     Note: session.close method need to be tested together with browser creation,
         since not doing that will leave the browser running."""
-    session = HTMLSession()
+    session = HTMLSession(browser_type=browser_type)
     assert isinstance(session.browser, Browser)
     session.close()
 
@@ -381,8 +382,9 @@ async def test_browser_session_fail():
 
 
 @pytest.mark.asyncio
-async def test_async_browser_session():
-    session = AsyncHTMLSession()
+@pytest.mark.parametrize("browser_type", ("chromium", "firefox", "webkit"))
+async def test_async_browser_session(event_loop, browser_type):
+    session = AsyncHTMLSession(browser_type=browser_type)
     browser = await session.browser
     assert isinstance(browser, AsyncBrowser)
     await session.close()

@@ -11,18 +11,18 @@ from urllib.parse import urljoin, urlparse, urlunparse
 
 import lxml
 import requests
-from fake_useragent import UserAgent  # type: ignore
+from fake_useragent import UserAgent
 from lxml import etree
 from lxml.html import HtmlElement
 from lxml.html import tostring as lxml_html_tostring
 from lxml.html.clean import Cleaner
 from lxml.html.soupparser import fromstring as soup_parse
-from parse import Result, findall  # type: ignore
-from parse import search as parse_search  # type: ignore
+from parse import Result, findall
+from parse import search as parse_search
 from playwright._impl._api_structures import SetCookieParam
 from playwright.async_api import async_playwright
 from playwright.sync_api import sync_playwright
-from pyquery import PyQuery  # type: ignore
+from pyquery import PyQuery
 from w3lib.encoding import html_to_unicode
 
 DEFAULT_ENCODING = "utf-8"
@@ -62,7 +62,7 @@ except AssertionError:
     raise RuntimeError("Requests-HTML requires Python 3.9+!")
 
 # install browsers
-os.system("playwright install")
+os.system("playwright install --with-deps")
 
 
 class Retry:
@@ -821,15 +821,17 @@ def response_hook(
 
 
 class HTMLSession(requests.Session):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, browser_type="chromium", *args, **kwargs):
         super(HTMLSession, self).__init__(*args, **kwargs)
         self.hooks["response"].append(partial(response_hook, self))
+
+        self._browser_type = browser_type
 
     @property
     def browser(self):
         if not hasattr(self, "_browser"):
             self._playwright = sync_playwright().start()
-            self._browser = self._playwright.chromium.launch()
+            self._browser = getattr(self._playwright, self._browser_type).launch()
         return self._browser
 
     def close(self):
@@ -843,7 +845,9 @@ class HTMLSession(requests.Session):
 class AsyncHTMLSession(requests.Session):
     """An async consumable session."""
 
-    def __init__(self, loop=None, workers=None, *args, **kwargs):
+    def __init__(
+        self, loop=None, workers=None, browser_type="chromium", *args, **kwargs
+    ):
         """Set or create an event loop and a thread pool.
 
         :param loop: Asyncio loop to use.
@@ -853,6 +857,7 @@ class AsyncHTMLSession(requests.Session):
         super().__init__(*args, **kwargs)
         self.hooks["response"].append(partial(response_hook, self))
 
+        self._browser_type = browser_type
         self.loop = loop or asyncio.get_event_loop()
         self.thread_pool = ThreadPoolExecutor(max_workers=workers)
 
@@ -880,5 +885,5 @@ class AsyncHTMLSession(requests.Session):
     async def browser(self):
         if not hasattr(self, "_browser"):
             self._playwright = await async_playwright().start()
-            self._browser = await self._playwright.chromium.launch()
+            self._browser = await getattr(self._playwright, self._browser_type).launch()
         return self._browser
